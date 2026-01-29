@@ -1,0 +1,23 @@
+---
+#...
+# Git-deck card header
+# OBS! DON'T REMOVE CARD HEADERS
+#...
+Title: Code scripts needed to run test locally.
+Tags:
+Creator:
+AssignedTo:
+# Time tracker settings
+tartAt:
+EndAt:
+---
+The goal of this card is to code some scripts to run tests.
+
+# DOD (definition of done):
+The DI scripts are coded and tested
+
+# TODO:
+- [] 1.
+
+# Reports:
+*

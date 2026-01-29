@@ -20,14 +20,15 @@ GitHub workflow files are added.
 # TODO:
 - [x] 1. Install pm and git-deck
 - [x] 2. Add GitHub Workflow
-- [ ] 3. Add step-1-cards
+- [x] 3. Add actiom secret-TAP to the repo
+- [x] 3. Add step-1-cards
 
 # Reports:
 * git-deck and GitHub workflow are initialized.
 * A board named EventManagment was added
 * A workflow to update DECK was added
 * Plan to continue working
-> 1. Creating skeleton (both code and test parts) 
+> 1. Create skeleton (both code and test parts) 
 > 2. Start to document (creating README and other document files)
 > 3. Start using a separated branch instead main to develop
 >> * How to automate it
