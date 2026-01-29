@@ -56,20 +56,24 @@ gantt
 > > 6. plan next steps
 > </details>
 
-## 001-0003
-> **Initialize documents** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+## 001-0002
+> **Create skeleton - both code and test parts** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 > <details >
 >     <summary>Details</summary>
-> The goal of this card is to create document templates.
+> The goal of this card is to create a skeleton for the project
 > 
 > # DOD (definition of done):
-> Templates are created.
+> Skeleton for main codes are added.
+> Skeleton for tests are added.
+> Skeleton for documents are added.
 > 
 > # TODO:
-> - [] 1.
+> - [x] 1. Create main code skeleton
+> - [x] 2. Test skeletons
+> - [x] 3, README and other document skeletons
 > 
 > # Reports:
-> *
+> * An empty class with two test skeletons were created
 > </details>
 
 ## 001-0004
@@ -152,21 +156,17 @@ gantt
 > *
 > </details>
 
-## 001-0002
-> **Create skeleton - both code and test parts** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+## 001-0003
+> **Initialize documents** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 > <details open>
 >     <summary>Details</summary>
-> The goal of this card is to create a skeleton for the project
+> The goal of this card is to create document templates.
 > 
 > # DOD (definition of done):
-> Skeleton for main codes are added.
-> Skeleton for tests are added.
-> Skeleton for documents are added.
+> Templates are created.
 > 
 > # TODO:
-> - [ ] 1. Create main code skeleton
-> - [ ] 2. Test skeletons
-> - [ ] 3, README and other document skeletons
+> - [] 1.
 > 
 > # Reports:
 > *
