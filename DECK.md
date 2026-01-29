@@ -25,24 +25,35 @@ gantt
 
 # 1 - EventManagement
 
-## 001-0002
-> **Create skeleton - both code and test parts** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+## 001-0001
+> **Add deck and github workflow to the repo.** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 > <details >
 >     <summary>Details</summary>
-> The goal of this card is to create a skeleton for the project
+> The goal of this card is to add git-deck and github actions files to the repo.
 > 
 > # DOD (definition of done):
-> Skeleton for main codes are added.
-> Skeleton for tests are added.
-> Skeleton for documents are added.
+> Git-deck is initialized.
+> GitHub workflow files are added.
 > 
 > # TODO:
-> - [ ] 1. Create main code skeleton
-> - [ ] 2. Test skeletons
-> - [ ] 3, README and other document skeletons
+> - [x] 1. Install pm and git-deck
+> - [x] 2. Add GitHub Workflow
+> - [x] 3. Add actiom secret-TAP to the repo
+> - [x] 3. Add step-1-cards
 > 
 > # Reports:
-> *
+> * git-deck and GitHub workflow are initialized.
+> * A board named EventManagment was added
+> * A workflow to update DECK was added
+> * Plan to continue working
+> > 1. Create skeleton (both code and test parts) 
+> > 2. Start to document (creating README and other document files)
+> > 3. Start using a separated branch instead main to develop
+> >> * How to automate it
+> >> * Create a action and way to merge the develop branch to the main branch both automatically when all tests are passed and manually via running an action
+> > 4. Build/create/develop local test flows (DI)
+> > 5. Integrate local and remote workflows
+> > 6. plan next steps
 > </details>
 
 ## 001-0003
@@ -141,33 +152,22 @@ gantt
 > *
 > </details>
 
-## 001-0001
-> **Add deck and github workflow to the repo.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+## 001-0002
+> **Create skeleton - both code and test parts** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 > <details open>
 >     <summary>Details</summary>
-> The goal of this card is to add git-deck and github actions files to the repo.
+> The goal of this card is to create a skeleton for the project
 > 
 > # DOD (definition of done):
-> Git-deck is initialized.
-> GitHub workflow files are added.
+> Skeleton for main codes are added.
+> Skeleton for tests are added.
+> Skeleton for documents are added.
 > 
 > # TODO:
-> - [x] 1. Install pm and git-deck
-> - [x] 2. Add GitHub Workflow
-> - [x] 3. Add actiom secret-TAP to the repo
-> - [x] 3. Add step-1-cards
+> - [ ] 1. Create main code skeleton
+> - [ ] 2. Test skeletons
+> - [ ] 3, README and other document skeletons
 > 
 > # Reports:
-> * git-deck and GitHub workflow are initialized.
-> * A board named EventManagment was added
-> * A workflow to update DECK was added
-> * Plan to continue working
-> > 1. Create skeleton (both code and test parts) 
-> > 2. Start to document (creating README and other document files)
-> > 3. Start using a separated branch instead main to develop
-> >> * How to automate it
-> >> * Create a action and way to merge the develop branch to the main branch both automatically when all tests are passed and manually via running an action
-> > 4. Build/create/develop local test flows (DI)
-> > 5. Integrate local and remote workflows
-> > 6. plan next steps
+> *
 > </details>
