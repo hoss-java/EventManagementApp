@@ -19,9 +19,9 @@ Skeleton for tests are added.
 Skeleton for documents are added.
 
 # TODO:
-- [ ] 1. Create main code skeleton
-- [ ] 2. Test skeletons
-- [ ] 3, README and other document skeletons
+- [x] 1. Create main code skeleton
+- [x] 2. Test skeletons
+- [x] 3, README and other document skeletons
 
 # Reports:
-*
+* An empty class with two test skeletons were created
