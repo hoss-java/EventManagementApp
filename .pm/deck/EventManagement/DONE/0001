@@ -1,0 +1,38 @@
+---
+#...
+# Git-deck card header
+# OBS! DON'T REMOVE CARD HEADERS
+#...
+Title: Add deck and github workflow to the repo.
+Tags:
+Creator:
+AssignedTo:
+# Time tracker settings
+tartAt:
+EndAt:
+---
+The goal of this card is to add git-deck and github actions files to the repo.
+
+# DOD (definition of done):
+Git-deck is initialized.
+GitHub workflow files are added.
+
+# TODO:
+- [x] 1. Install pm and git-deck
+- [x] 2. Add GitHub Workflow
+- [x] 3. Add actiom secret-TAP to the repo
+- [x] 3. Add step-1-cards
+
+# Reports:
+* git-deck and GitHub workflow are initialized.
+* A board named EventManagment was added
+* A workflow to update DECK was added
+* Plan to continue working
+> 1. Create skeleton (both code and test parts) 
+> 2. Start to document (creating README and other document files)
+> 3. Start using a separated branch instead main to develop
+>> * How to automate it
+>> * Create a action and way to merge the develop branch to the main branch both automatically when all tests are passed and manually via running an action
+> 4. Build/create/develop local test flows (DI)
+> 5. Integrate local and remote workflows
+> 6. plan next steps
