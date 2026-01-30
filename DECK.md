@@ -160,13 +160,15 @@ gantt
 > **Initialize documents** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 > <details open>
 >     <summary>Details</summary>
-> The goal of this card is to create document templates.
+> The goal of this card is to create document templates, and a summery of the project an its aims.
 > 
 > # DOD (definition of done):
-> Templates are created.
+> Templates are created and initialized.
 > 
 > # TODO:
-> - [] 1.
+> - [ ] 1. Update README with a summery of all that have been done until now
+> - [ ] 2. Aim of the project.
+> - [ ] 3. An overview of the plan
 > 
 > # Reports:
 > *
