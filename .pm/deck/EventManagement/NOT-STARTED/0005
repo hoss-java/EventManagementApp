@@ -3,7 +3,7 @@
 # Git-deck card header
 # OBS! DON'T REMOVE CARD HEADERS
 #...
-Title: Create a pre-action to merge dev branch to the main branch.
+Title: Create a pre-action to merge the develop branch to the main branch.
 Tags:
 Creator:
 AssignedTo:
