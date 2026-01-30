@@ -76,18 +76,19 @@ gantt
 > * An empty class with two test skeletons were created
 > </details>
 
-## 001-0004
-> **Spike how to structure working with dev and main branch.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+## 001-0003
+> **Initialize documents** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 > <details >
 >     <summary>Details</summary>
-> The goal of this card is to spike how to work with two branches, dev and main in a structured way,
+> The goal of this card is to create document templates, and a summery of the project an its aims.
 > 
 > # DOD (definition of done):
-> All findings are documented
+> Templates are created and initialized.
 > 
 > # TODO:
-> - [ ] 1. Start to push on a dev branch
-> - [ ] 2. Create a action to merge the dev branch to the main if a commit passed tests, or had some kind of command message in its commit files.
+> - [x] 1. Update README with a summery of all that have been done until now
+> - [x] 2. Aim of the project.
+> - [x] 3. An overview of the plan
 > 
 > # Reports:
 > *
@@ -156,19 +157,18 @@ gantt
 > *
 > </details>
 
-## 001-0003
-> **Initialize documents** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+## 001-0004
+> **Spike how to structure working with dev and main branch.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 > <details open>
 >     <summary>Details</summary>
-> The goal of this card is to create document templates, and a summery of the project an its aims.
+> The goal of this card is to spike how to work with two branches, dev and main in a structured way,
 > 
 > # DOD (definition of done):
-> Templates are created and initialized.
+> All findings are documented
 > 
 > # TODO:
-> - [ ] 1. Update README with a summery of all that have been done until now
-> - [ ] 2. Aim of the project.
-> - [ ] 3. An overview of the plan
+> - [ ] 1. Start to push on a dev branch
+> - [ ] 2. Create a action to merge the dev branch to the main if a commit passed tests, or had some kind of command message in its commit files.
 > 
 > # Reports:
 > *
