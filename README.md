@@ -78,6 +78,6 @@
 * Step 3: Implement tests for both unit and block levels.
 * Step 4: Automate testing and integrating it to GitHub workflows
 * Step 5: Add advanced/required futures according the project scenario
-* Step 6: Documenting
+* Step 6: Documenting and summarizing findings, developments, and integrations.
 * Step 7: Touch a service implementation of the project
 
