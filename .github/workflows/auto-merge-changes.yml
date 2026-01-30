@@ -1,0 +1,53 @@
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  check-and-merge:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Set up Bash
+      - name: Set up Bash
+        shell: bash
+        run: echo "Bash is set up"
+
+      # Step 3: Read the list of files and folders
+      - name: Read files list
+        id: readfiles
+        run: |
+          SOURCE_BRANCH=develop
+          TARGET_BRANCH=main
+          FILES_TO_CHECK=$(grep -v '^\s*#' /.gitautomarge | awk '{print $1}')
+          echo "FILES_TO_CHECK=${FILES_TO_CHECK}" >> $GITHUB_ENV
+
+      # Step 4: Check for changes in the specified files
+      - name: Auto-check for changes
+        id: check-changes
+        run: |
+          for file in ${FILES_TO_CHECK}; do
+            if git diff --name-only HEAD^ HEAD | grep -q "$file"; then
+              echo "File changed: $file"
+              echo "file_changed=true" >> $GITHUB_ENV
+              break
+            fi
+          done
+
+      # Step 5: Copy and push changes if any file was changed
+      - name: Auto-copy and Push Changes
+        if: env.file_changed == 'true'
+        run: |
+          git checkout ${TARGET_BRANCH}
+          for file in ${FILES_TO_CHECK}; do
+            git checkout ${SOURCE_BRANCH} -- "$file"
+          done
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Auto-merge from ${SOURCE_BRANCH} to ${TARGET_BRANCH}"
+          git push origin ${TARGET_BRANCH}

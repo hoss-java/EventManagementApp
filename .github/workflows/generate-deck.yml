@@ -2,6 +2,8 @@ name: Generate DECK.md
 
 on:
   push:
+    branches:
+      - main
     paths:
       - '.pm/**'
 
