@@ -23,9 +23,13 @@ jobs:
         run: |
           SOURCE_BRANCH=develop
           TARGET_BRANCH=main
-          FILES_TO_CHECK=$(grep -v '^\s*#' /.gitautomarge | awk '{print $1}')
-          echo "FILES_TO_CHECK=${FILES_TO_CHECK}" >> $GITHUB_ENV
-
+          if [[ -f .gitautomarge ]]; then
+            FILES_TO_CHECK=$(grep -v '^\s*#' .gitautomarge | awk '{print $1}')
+            echo "FILES_TO_CHECK=${FILES_TO_CHECK}" >> $GITHUB_ENV
+          else
+            echo "File list not found!"
+            exit 1
+          fi
       # Step 4: Check for changes in the specified files
       - name: Auto-check for changes
         id: check-changes
