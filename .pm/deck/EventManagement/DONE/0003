@@ -17,9 +17,9 @@ The goal of this card is to create document templates, and a summery of the proj
 Templates are created and initialized.
 
 # TODO:
-- [ ] 1. Update README with a summery of all that have been done until now
-- [ ] 2. Aim of the project.
-- [ ] 3. An overview of the plan
+- [x] 1. Update README with a summery of all that have been done until now
+- [x] 2. Aim of the project.
+- [x] 3. An overview of the plan
 
 # Reports:
 *
