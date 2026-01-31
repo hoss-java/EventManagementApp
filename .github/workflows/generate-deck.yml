@@ -82,7 +82,9 @@ jobs:
       - name: Checkout the source (develop)
         run: |
           git checkout ${SOURCE_BRANCH}
-          git stash drop
+          if git stash list | grep -q .; then
+            git stash drop
+          fi
           if [ -f DECK.md ]; then
             rm DECK.md
           fi
