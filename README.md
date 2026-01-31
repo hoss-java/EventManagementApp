@@ -80,4 +80,20 @@
 * Step 5: Add advanced/required futures according the project scenario ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 * Step 6: Documenting and summarizing findings, developments, and integrations. ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 * Step 7: Touch a service implementation of the project ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+ 
+```mermaid
+graph TD
+    A(Develop) -->|Push Code| B(Main)
+    A -->|GitHub Action| C(README.md updated in Main)
+    A -->|Commit --mergetomain| B
+    B -->|Run Tests| D{Tests Passed?}
+    D -->|Yes| E(Integration Merge into Release)
+    D -->|No| F(Stop Process)
 
+    style A fill:#f9f,stroke:#333,stroke-width:4px;
+    style B fill:#bbf,stroke:#333,stroke-width:4px;
+    style C fill:#bbf,stroke:#333,stroke-width:2px;
+    style D fill:#ff0,stroke:#333,stroke-width:4px,stroke-dasharray: 5, 5;
+    style E fill:#afa,stroke:#333,stroke-width:4px;
+    style F fill:#fbb,stroke:#333,stroke-width:4px;
+```
