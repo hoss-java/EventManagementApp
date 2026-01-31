@@ -267,69 +267,10 @@ gantt
 > * So according to this new design, the only files that needs to be merged to the `main` automatically is `README.md`.
 > * There is also no needs to generate `DECK.md` on the `main` branch. The main is not contained git-deck `.pm/` files anymore. So the action to generate DECK on the main can removed.
 > * The action to generate DECK is run on the `develop` and push the generated `DECK.md`to the `main`
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->
-> ```mermaid
-> graph TD
->     A(Develop) -->|Push Code| B(Main)
->     A -->|GitHub Action| C(README.md updated in Main)
->     A -->|Commit " —mergetomain"| B
->     B -->|Run Tests| D{Tests Passed?}
->     D -->|Yes| E(Integration Merge into Release)
->     D -->|No| F(Stop Process)
->     
->     style A fill:#f9f,stroke:#333,stroke-width:4px;
->     style B fill:#bbf,stroke:#333,stroke-width:4px;
->     style C fill:#bbf,stroke:#333,stroke-width:2px;
->     style D fill:#ff0,stroke:#333,stroke-width:4px,stroke-dasharray: 5, 5;
->     style E fill:#afa,stroke:#333,stroke-width:4px;
->     style F fill:#fbb,stroke:#333,stroke-width:4px;
-> ```
-> </details>
-
-ioaSDASIO 
-asdas
-asldajsi 
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 > 
 > 
 > ```mermaid
 > graph TD
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->     A(`develop`) -->|Push auto-generated files (DECK)| B(`main`)
->     A -->|Push default files (README)| B
->     A -->|Run Tests| D{Tests Passed?}
->     D -->|Yes? Merge into `main`| B
->     B -->|Run Tests| E{Tests Passed?}
->     E -->|Yes?  Merge into `release`| C(`release`)
-> ```
-> 
-> ## Findings
-> dsdasdsa
-> </details>
->>>>>>> Stashed changes
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 >     A(develop) -->|Push auto-generated files (DECK)| B(main)
 >     A -->|Push default files (README)| B
 >     A -->|Run Tests| D{Tests Passed?}
@@ -339,20 +280,5 @@ asldajsi
 > ```
 > 
 > ## Findings
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
+> aasdfsdfsdweqwewqwerwerds
 > </details>
->>>>>>> Stashed changes
-=======
-> asassdfds
-> </details>
->>>>>>> Stashed changes
-=======
-> aa
-> </details>
->>>>>>> Stashed changes
-=======
-> aasdfsdfsdwerwerds
-> </details>
->>>>>>> Stashed changes
