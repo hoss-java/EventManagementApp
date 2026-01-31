@@ -2,9 +2,9 @@ name: Generate DECK.md
 
 on:
   workflow_run:
-    workflows: ["Auto-Merge changes"]  # Depends on 
+    workflows: ["Auto-Merge changes"]
     types:
-      - completed  # Ensure this is set to completed
+      - completed
 
 permissions: # Add permissions here at the workflow level
   contents: write
