@@ -1,0 +1,13 @@
+# File pipeline-on-develop.yml
+name: pipeline-on-develop
+
+on:
+  push:
+    branches:
+      - develop  # Commit changes here will trigger the action
+
+jobs:
+  call_generate_deck:
+    needs: do-merge
+    uses: ./.github/workflows/generate-deck.yml
+    with: {}

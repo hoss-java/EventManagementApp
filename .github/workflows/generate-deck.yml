@@ -2,12 +2,7 @@
 name: generate-deck
 
 on:
-  workflow_dispatch:
   workflow_call:
-  workflow_run:
-    workflows: [auto-merge-changes]  # Depends on Workflow A
-    types:
-      - completed
 
 permissions: # Add permissions here at the workflow level
   contents: write
