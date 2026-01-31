@@ -61,6 +61,7 @@ jobs:
       - name: Checkout and pop stash on the target (main)
         run: |
           git checkout ${TARGET_BRANCH}
+          git pull origin ${TARGET_BRANCH} --rebase
           if [ -f DECK.md ]; then
             rm DECK.md
           fi
