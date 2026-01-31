@@ -5,7 +5,9 @@ on:
     branches:
       - develop  # Commit changes here will trigger the action
   workflow_run:
-    workflows: ["Generate DECK.md and push to the main"]  # Depends on 
+    workflows: ["Generate DECK.md"]  # Depends on 
+    types:
+      - completed  # Ensure this is set to completed
 
 permissions: # Add permissions here at the workflow level
   contents: write
@@ -93,5 +95,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
-          git commit -m "Auto-merge from ${SOURCE_BRANCH} to ${TARGET_BRANCH}"
+          git commit -m "[AUTO-GENARATE] Auto-merge from ${SOURCE_BRANCH} to ${TARGET_BRANCH}"
           git push origin ${TARGET_BRANCH}
