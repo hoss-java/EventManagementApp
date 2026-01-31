@@ -267,6 +267,7 @@ gantt
 > * So according to this new design, the only files that needs to be merged to the `main` automatically is `README.md`.
 > * There is also no needs to generate `DECK.md` on the `main` branch. The main is not contained git-deck `.pm/` files anymore. So the action to generate DECK on the main can removed.
 > * The action to generate DECK is run on the `develop` and push the generated `DECK.md`to the `main`
+<<<<<<< Updated upstream
 >
 > ```mermaid
 > graph TD
@@ -289,3 +290,20 @@ gantt
 ioaSDASIO 
 asdas
 asldajsi 
+=======
+> 
+> 
+> ```mermaid
+> graph TD
+>     A(`develop`) -->|Push auto-generated files (DECK)| B(`main`)
+>     A -->|Push default files (README)| B
+>     A -->|Run Tests| D{Tests Passed?}
+>     D -->|Yes? Merge into `main`| B
+>     B -->|Run Tests| E{Tests Passed?}
+>     E -->|Yes?  Merge into `release`| C(`release`)
+> ```
+> 
+> ## Findings
+> dsdasdsa
+> </details>
+>>>>>>> Stashed changes
