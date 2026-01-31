@@ -40,8 +40,11 @@ jobs:
         id: check-changes
         run: |
           set -x
-          # Get the list of changed files in the current commit
-          CHANGED_FILES=$(git diff --name-only HEAD)
+          # Fetch the latest state of the develop branch
+          git fetch origin develop
+
+          # Get the list of changed files between the current commit and the last commit on develop
+          CHANGED_FILES=$(git diff --name-only origin/develop HEAD)
 
           # Check if any files in FILES_TO_CHECK have changed
           for file in ${FILES_TO_CHECK}; do
@@ -51,7 +54,6 @@ jobs:
               break
             fi
           done
-
       # Step 5: Copy and push changes if any file was changed
       - name: Auto-copy and Push Changes
         if: env.file_changed == 'true'
