@@ -349,4 +349,23 @@ gantt
 > >      - name: Step B
 > >        run: echo "Running Workflow B after Workflow A"
 > >```
+> 
+> * **OBS!** In multi-trigger actions, the initial trigger always activates the actions. For example if in the `on` section `push` and `workflow_run` both are defined as triggers (example below `Auto-Merge changes`) and also the second action (`Generate DECK.md`) is defined to be activates by `push`, the first one (`Auto-Merge changes`) will not wait for the second (`Generate DECK.md`). Both start in the same time by `push`.
+> ```
+> name: Auto-Merge changes
+> 
+> on:
+>   push:
+>     branches:
+>       - develop  # Commit changes here will trigger the action
+>   workflow_run:
+>     workflows: ["Generate DECK.md"]  # Depends on 
+>     types:
+>       - completed  # Ensure this is set to completed
+> ```
+> 
+> * **OBS!** **GitHub only fires workflow_run for workflows whose workflow file exists on the repository default branch (usually main)**
+> * References
+> > * https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
+> sdfsdsdfew rsdf sdfds 
 > </details>
