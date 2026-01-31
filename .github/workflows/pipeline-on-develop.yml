@@ -20,4 +20,5 @@ jobs:
   call_generate:
     needs: do-merge
     uses: ./.github/workflows/generate-deck.yml
-    with: {}
+    with:
+      commit_sha: ${{ github.sha }}
