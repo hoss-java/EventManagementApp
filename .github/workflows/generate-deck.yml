@@ -2,10 +2,10 @@
 name: Generate DECK.md
 
 on:
-  repository_dispatch:
-    types: [pm-files-updated]
-  # Fallback trigger
-  workflow_dispatch:
+  workflow_run:
+    workflows: ["Auto-Merge changes"]  # Depends on Workflow A
+    types:
+      - completed
 
 permissions: # Add permissions here at the workflow level
   contents: write
