@@ -47,6 +47,18 @@ jobs:
           # Get the list of changed files between the develop branch and the main branch
           CHANGED_FILES=$(git diff --name-only origin/main..origin/develop)
 
+          # Get the list of files to check
+          if [[ -f .gitautomarge ]]; then
+            FILES_TO_CHECK=$(grep -v '^\s*#' .gitautomarge | awk '{print $1}' | tr '\n' ' ')
+            if [[ -z "$FILES_TO_CHECK" ]]; then
+              echo "No valid files to check!"
+              exit 1
+            fi
+          else
+            echo "File list not found!"
+            exit 1
+          fi
+
           # Check if any files in FILES_TO_CHECK have changed
           for file in ${FILES_TO_CHECK}; do
             if echo "$CHANGED_FILES" | grep -q "$file"; then
