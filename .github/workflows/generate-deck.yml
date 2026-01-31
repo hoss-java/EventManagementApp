@@ -38,24 +38,24 @@ jobs:
           chmod +x .github/scripts/git-deck-tools.sh
           ./.github/scripts/git-deck-tools.sh generate-markdown
 
-      # Step 3: Configure Git
+      # Step 4: Configure Git
       - name: Configure git
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
-      # Step 4: Commit and stach DECK.md on the source branch (develop)
+      # Step 5: Commit and stach DECK.md on the source branch (develop)
       - name: Commit and stach on the source (develop)
         run: |
           git add DECK.md
-          git commit
+          git commit -m "[AUTO] Committing DECK.md on develop branch"  # Specify a commit message
           git stash
-      # Step 5: Checkout and pop stash the target branch (main)
+      # Step 6: Checkout and pop stash the target branch (main)
       - name: Checkout and pop stash on the target (main)
         run: |
           git checkout ${TARGET_BRANCH}
           git stash pop
-      # Step 6: check DECK.md and commit changes if it exists
+      # Step 7: check DECK.md and commit changes if it exists
       - name: Commit changes if DECK.md exists
         run: |
           if [ -f DECK.md ]; then
@@ -66,7 +66,7 @@ jobs:
             echo "DECK.md does not exist, skipping commit."
           fi
 
-      # Step 7: Checkout and remove DECK.md from the source branch (develop)
+      # Step 8: Checkout and remove DECK.md from the source branch (develop)
       - name: Checkout the source (develop)
         run: |
           git checkout ${SOURCE_BRANCH}
