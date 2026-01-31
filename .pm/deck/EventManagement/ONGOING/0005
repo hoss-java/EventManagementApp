@@ -40,13 +40,13 @@ A GitHub action is developed and implemented.
 
 ```mermaid
 graph TD
-    A[**develop branch**] -->|Push auto-generated files| B[**main branch**]
+    A[**`develop branch`**] -->|Push auto-generated files| B[**`main branch`**]
     A -->|Push default files| B
     A -->|Run Tests| D{Tests Passed?}
     D -->|Yes| B
     D -->|No| A
     B -->|Run Tests| E{Tests Passed?}
-    E -->|Yes| C[**release branch**]
+    E -->|Yes| C[**`release branch`**]
     E -->|No| B
     C -.->|Implement| F((production))
 ```
