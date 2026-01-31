@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - develop  # Commit changes here will trigger the action
+  workflow_run:
+    workflows: ["Generate DECK.md and push to the main"]  # Depends on 
 
 permissions: # Add permissions here at the workflow level
   contents: write
