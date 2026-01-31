@@ -4,6 +4,8 @@ name: Generate DECK.md
 on:
   repository_dispatch:
     types: [pm-files-updated]
+  # Fallback trigger
+  workflow_dispatch:
 
 permissions: # Add permissions here at the workflow level
   contents: write
