@@ -95,15 +95,15 @@ jobs:
           if [ -f DECK.md ]; then
             git add DECK.md
             git stash
-            echo "commit_and_stach=true" >> "$GITHUB_OUTPUT"
+            echo "stashed=true" >> "$GITHUB_OUTPUT"
           else
             echo "DECK.md does not exist, skipping pusshing the target."
-            echo "commit_and_stach=false" >> "$GITHUB_OUTPUT"
+            echo "stashed=false" >> "$GITHUB_OUTPUT"
           fi
       # Step 6: Checkout and pop stash the target branch (main)
       - name: Checkout and pop stash on the target (main)
         if: steps.check_changes.outputs.no_changes == 'false' &&
-          steps.commit_and_stach.outputs.no_changes == 'true'
+          steps.commit_and_stach.outputs.stashed  == 'true'
         run: |
           git checkout ${TARGET_BRANCH}
           if [ -f DECK.md ]; then
@@ -114,7 +114,7 @@ jobs:
       # Step 7: check DECK.md and commit changes if it exists
       - name: Commit changes if DECK.md exists
         if: steps.check_changes.outputs.no_changes == 'false' &&
-          steps.commit_and_stach.outputs.no_changes == 'true'
+          steps.commit_and_stach.outputs.stashed  == 'true'
         run: |
           if [ -f DECK.md ]; then
             git add DECK.md
@@ -128,7 +128,7 @@ jobs:
       # Step 8: Checkout and remove DECK.md from the source branch (develop)
       - name: Checkout the source (develop)
         if: steps.check_changes.outputs.no_changes == 'false' &&
-          steps.commit_and_stach.outputs.no_changes == 'true'
+          steps.commit_and_stach.outputs.stashed  == 'true'
         run: |
           git checkout ${SOURCE_BRANCH}
           if git stash list | grep -q .; then
