@@ -43,6 +43,7 @@ jobs:
           echo "Listing .pm/ (if present):"
           ls -la .pm/ || echo ".pm/ not present"
           echo "=== diff ==="
+          cat .pm/deck/EventManagement/ONGOING/0005
           if git diff --exit-code HEAD -- .pm/; then
              echo "No changes detected in .pm/ directory. Exiting without an error."
             echo "no_changes=true" >> "$GITHUB_OUTPUT"
