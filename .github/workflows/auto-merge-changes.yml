@@ -100,4 +100,5 @@ jobs:
         #if: steps.check_changes.outputs.pm_changed == 'true'
         uses: peter-evans/repository-dispatch@v2
         with:
+          token: ${{ secrets.TAP }}  # IMPORTANT
           event-type: pm-files-updated
