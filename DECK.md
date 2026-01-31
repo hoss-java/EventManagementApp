@@ -423,31 +423,39 @@ gantt
 > > * https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
 > </details>
 
-## 001-0007
-> **Integrate local and remode workflows.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+## 001-0006
+> **Plan and create stories for next steps.** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 > <details >
 >     <summary>Details</summary>
-> The goal of this card is to integrate local workflow scripts with GitHub workflow actions.
+> The goal of this card is to plan for next steps.
 > 
 > # DOD (definition of done):
-> All findings are documented.
-> Both local and remote workflows follow the same patterns.
+> Related cards are added to the board.
 > 
 > # TODO:
-> - [] 1.
+> - [x] 1. List what needs to do on this step
+> - [x] 2. Create cards
 > 
 > # Reports:
-> *
+> ## What need to do
+> 1. Start with main class and its test
+> 2. Automate local and remote repos to run test automatically
+> 3. Implement an UI class (+ it tests)
+> 4. Implement a simple block test
+> 5. Implement an event class
+> 6. Implement a participants class
+> 7. Implement a report manager class
+> 8. Implement a DB layer
 > </details>
 
 ## 001-0008
-> **Plan and create stories for next steps** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> **Automate local and remote repos to run test automatically.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 > <details >
 >     <summary>Details</summary>
-> The goal of this card is to plan for next steps.
+> The goal of this card is to add needed actions to GIHub workflow to run tests.
 > 
 > # DOD (definition of done):
-> Related cards are added to the board.
+> GitHub workflows uses tests results to verify commits.
 > 
 > # TODO:
 > - [] 1.
@@ -456,18 +464,111 @@ gantt
 > *
 > </details>
 
-## 001-0006
-> **Plan and create stories for next steps.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
-> <details open>
+## 001-0009
+> **Implement an UI class and it tests** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
 >     <summary>Details</summary>
-> The goal of this card is to plan for next steps.
+> The goal of this card is to implement an UI class.
 > 
 > # DOD (definition of done):
-> Related cards are added to the board.
+> A UI class with basic requiments are implemented.
 > 
 > # TODO:
-> - [ ] 1. List what needs to do on this step
-> - [ ] 2. Create cards
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0010
+> **Implement a simple block test.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to implement a simple block test system to project.
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0011
+> **Implement an event class.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to implement a class for manage events.
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0012
+> **Implement a participants class.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to implement a class for participants.
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0013
+> **Implement a report manager class.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to implement a report  manager.
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0014
+> **Implement a DB layer.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to implement a DB layer
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0007
+> **Start with main class and its test.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+> <details open>
+>     <summary>Details</summary>
+> The goal of this card is to develop a basic main class with its tests.
+> 
+> # DOD (definition of done):
+> A main class is created.
+> Tests are added.
+> Boths local and remote DI run tests as a part of the workflow
+> All findings are documented.
+> 
+> # TODO:
+> - [ ] 1. Create the main class
 > 
 > # Reports:
 > *
