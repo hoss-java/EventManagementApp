@@ -40,11 +40,12 @@ A GitHub action is developed and implemented.
 
 ```mermaid
 graph TD
-    A(Develop) -->|Push Code| B(Main)
-    A -->|GitHub Action| C(README.md updated in Main)
-    A -->|Commit --mergetomain| B
-    B -->|Run Tests| D{Tests Passed?}
-    D -->|Yes| E(Integration Merge into Release)
-    D -->|No| F(Stop Process)
+    A(`develop`) -->|Push auto-generated files (DECK)| B(`main`)
+    A -->|Push default files (README)| B
+    A -->|Run Tests| D{Tests Passed?}
+    D -->|Yes? Merge into `main`| B
+    B -->|Run Tests| E{Tests Passed?}
+    E -->|Yes?  Merge into `release`| C(`release`)
 ```
-sdfsd
+
+## Findings
