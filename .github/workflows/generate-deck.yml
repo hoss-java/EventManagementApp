@@ -64,7 +64,7 @@ jobs:
           if [ -f DECK.md ]; then
             rm DECK.md
           fi
-          git pull origin ${TARGET_BRANCH} --rebase
+          git pull origin ${TARGET_BRANCH}
           git stash pop || echo "No stash entries found, skipping pop."
 
       # Step 7: check DECK.md and commit changes if it exists
