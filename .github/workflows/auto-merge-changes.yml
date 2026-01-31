@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - develop  # Commit changes here will trigger the action
+  workflow_dispatch:
 
 permissions: # Add permissions here at the workflow level
   contents: write
