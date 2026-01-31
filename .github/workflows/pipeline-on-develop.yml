@@ -17,7 +17,15 @@ jobs:
       - name: Do merge
         run: echo "merge work"
 
-  call_generate_deck:
+  refresh_and_call:
     needs: do-merge
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: develop
+      - name: Commit any local changes (noop)
+        run: echo "checkout refreshed"
     uses: ./.github/workflows/generate-deck.yml
     with: {}
