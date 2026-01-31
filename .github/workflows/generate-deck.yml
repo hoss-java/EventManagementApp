@@ -35,6 +35,9 @@ jobs:
       # Step 3: Run the script
       - name: Run Script
         run: |
+          if [ -f DECK.md ]; then
+            rm DECK.md
+          fi
           chmod +x .github/scripts/git-deck-tools.sh
           ./.github/scripts/git-deck-tools.sh generate-markdown
 
