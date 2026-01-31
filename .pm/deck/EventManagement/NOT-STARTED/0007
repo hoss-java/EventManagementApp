@@ -1,0 +1,24 @@
+---
+#...
+# Git-deck card header
+# OBS! DON'T REMOVE CARD HEADERS
+#...
+Title: Integrate local and remode workflows.
+Tags:
+Creator:
+AssignedTo:
+# Time tracker settings
+tartAt:
+EndAt:
+---
+The goal of this card is to integrate local workflow scripts with GitHub workflow actions.
+
+# DOD (definition of done):
+All findings are documented.
+Both local and remote workflows follow the same patterns.
+
+# TODO:
+- [] 1.
+
+# Reports:
+*
