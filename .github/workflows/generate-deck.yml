@@ -34,6 +34,15 @@ jobs:
         id: check_changes
         run: |
           # Check if there are any changes in the .pm/ directory
+          echo "=== git info ==="
+          git --version
+          git status --short --branch
+          echo "Current ref: $GITHUB_REF"
+          echo "Current commit:"
+          git log -1 --pretty=oneline
+          echo "Listing .pm/ (if present):"
+          ls -la .pm/ || echo ".pm/ not present"
+          echo "=== diff ==="
           if git diff --exit-code HEAD -- .pm/; then
              echo "No changes detected in .pm/ directory. Exiting without an error."
             echo "no_changes=true" >> "$GITHUB_OUTPUT"
