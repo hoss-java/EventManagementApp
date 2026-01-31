@@ -117,6 +117,8 @@ graph TD
 
 #### GitHub workflows' actions
 
+***This repo is use piplines to manage workflows' actions***
+
 Three methods to chain GitHub Actions
 
 1. **Separate workflows (cross-workflow pipeline)**  
@@ -210,7 +212,6 @@ Recommendation
 
 
 * **OBS!** **GitHub only fires workflow_run for workflows whose workflow file exists on the repository default branch (usually main)**
-
 
 * References
 > * https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
