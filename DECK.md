@@ -271,6 +271,7 @@ gantt
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 >
 > ```mermaid
 > graph TD
@@ -300,10 +301,13 @@ asldajsi
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 > 
 > 
 > ```mermaid
 > graph TD
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
@@ -324,6 +328,8 @@ asldajsi
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 >     A(develop) -->|Push auto-generated files (DECK)| B(main)
 >     A -->|Push default files (README)| B
 >     A -->|Run Tests| D{Tests Passed?}
@@ -335,6 +341,7 @@ asldajsi
 > ## Findings
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 > </details>
 >>>>>>> Stashed changes
 =======
@@ -343,5 +350,9 @@ asldajsi
 >>>>>>> Stashed changes
 =======
 > aa
+> </details>
+>>>>>>> Stashed changes
+=======
+> aasdfsdfsdwerwerds
 > </details>
 >>>>>>> Stashed changes
