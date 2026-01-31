@@ -1,9 +1,11 @@
 # File: .github/workflows/generate-deck.yml
-name: Generate DECK.md
+name: generate-deck
 
 on:
+  workflow_dispatch:
+  workflow_call:
   workflow_run:
-    workflows: ["Auto-Merge changes"]  # Depends on Workflow A
+    workflows: [auto-merge-changes]  # Depends on Workflow A
     types:
       - completed
 

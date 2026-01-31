@@ -1,5 +1,5 @@
 # File: .github/workflows/auto-merge-changes.yml
-name: Auto-Merge changes
+name: auto-merge-changes
 
 on:
   workflow_dispatch:
