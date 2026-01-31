@@ -95,3 +95,9 @@ jobs:
           git add .
           git commit -m "[AUTO-GENARATE] Auto-merge from ${SOURCE_BRANCH} to ${TARGET_BRANCH}"
           git push origin ${TARGET_BRANCH}
+      # Conditional workflow dispatch
+      - name: Trigger Next Workflow
+        if: steps.check_changes.outputs.pm_changed == 'true'
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          event-type: pm-files-updated
