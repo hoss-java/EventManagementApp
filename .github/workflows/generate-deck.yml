@@ -52,7 +52,6 @@ jobs:
         run: |
           if [ -f DECK.md ]; then
             git add DECK.md
-            git commit -m "[AUTO] Committing DECK.md on develop branch"
             git stash
           else
             echo "DECK.md does not exist, skipping pusshing the target."
