@@ -3,7 +3,7 @@
 # Git-deck card header
 # OBS! DON'T REMOVE CARD HEADERS
 #...
-Title: Code scripts needed to run test locally.
+Title: Plan and create stories for next steps.
 Tags:
 Creator:
 AssignedTo:
@@ -17,7 +17,8 @@ The goal of this card is to plan for next steps.
 Related cards are added to the board.
 
 # TODO:
-- [] 1.
+- [ ] 1. List what needs to do on this step
+- [ ] 2. Create cards
 
 # Reports:
 *

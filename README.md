@@ -73,10 +73,144 @@
 
 ### An overview of the plan
 
-* Step 1: Implementing a git branch base workflow ![status](https://img.shields.io/badge/status-ONGOING-yellow)
-* Step 2: Develop a basic code according the project scenario ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+* Step 1: Implementing a git branch base workflow ![status](https://img.shields.io/badge/status-DONE-brightgreen)
+* Step 2: Develop a basic code according the project scenario ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 * Step 3: Implement tests for both unit and block levels. ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 * Step 4: Automate testing and integrating it to GitHub workflows ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 * Step 5: Add advanced/required futures according the project scenario ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 * Step 6: Documenting and summarizing findings, developments, and integrations. ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 * Step 7: Touch a service implementation of the project ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+
+### Findigs summary
+
+#### The repo topology
+
+* The repository will now include three branches.
+> |Branch Type|Common Names|
+> |:-|:-|
+> |Development Branch|`develop`|
+> |Main Branch|`main`|
+> |Release Branch|`release`|
+
+* During working on workflow automation' action it was realized there is no need copy/merge git-deck (`.pm/`) files and its related files such as `.gitdefault` (and potentially `.gitignore`) from the `develop` branch to the `main` branch
+ 
+> * git-dek and kanban boards a part of develop flows, not a part of the code.
+> * The `main` branch serves as a repository for the ready to use code (beta version of the final code), which is used for intermediate testing of integrations between various components of the project. Once the code passes all tests, it will be merged into the 'release' branch.
+> * The `release` branch serves as a repository for the final code (ready to implement).
+
+* So according to this new design, the only files that needs to be merged to the `main` automatically is `README.md`.
+* There is also no needs to generate `DECK.md` on the `main` branch. The main is not contained git-deck `.pm/` files anymore. So the action to generate DECK on the main can removed.
+* The action to generate DECK is run on the `develop` and push the generated `DECK.md`to the `main`
+
+```mermaid
+graph TD
+    A[**`develop branch`**] -->|Push auto-generated files| B[**`main branch`**]
+    A -->|Push default files| B
+    A -->|Run Tests| D{Tests Passed?}
+    D -->|Yes| B
+    D -->|No| A
+    B -->|Run Tests| E{Tests Passed?}
+    E -->|Yes| C[**`release branch`**]
+    E -->|No| B
+    C -.->|Implement| F((production))
+```
+
+#### GitHub workflows' actions
+
+Three methods to chain GitHub Actions
+
+1. **Separate workflows (cross-workflow pipeline)**  
+   - Create distinct workflows and chain them using `workflow_run` or `repository_dispatch` so one workflow triggers the next.  
+   - Example: workflow A finishes → workflow B starts via `workflow_run` with `types: [completed]`.  
+   - **Limitations:** `workflow_run` only triggers when the upstream workflow runs on the default branch (commonly main); passing complex artifacts requires explicit upload/download; cross-repo triggers need extra auth (PAT or repository_dispatch).
+
+2. **Single workflow — ordered jobs/steps**  
+   - Define multiple jobs in one workflow and enforce order with `needs` (or use ordered steps within a job).  
+   - Use `concurrency`, `if` conditions, or matrix strategy to control parallelism and conditional execution.  
+   - **Limitations:** Very large workflows become harder to maintain; long-running workflows may delay other jobs; limited cross-repo orchestration.
+
+3. **Orchestrator / reusable pipeline action**  
+   - Use a reusable workflow (`workflow_call`) or a custom orchestrator action that triggers workflows via the GitHub API/gh to run and coordinate other workflows (including cross-repo).  
+   - Offers dynamic branching, retries, and centralized control; requires handling auth if using the API.  
+   - **Limitations:** Custom orchestrator actions need a PAT for API triggers (manage secrets/permissions); more complex to implement; API rate limits and auth scopes apply. Reusable workflows cannot be called across forks without extra configuration.
+
+Summary
+
+| Method | When to use | Key idea | Example trigger | Key limitations |
+|---|---:|---|---|---|
+| 1) Separate workflows | Clear stage separation, independent retries | Chain workflows using `workflow_run` or `repository_dispatch` | workflow A → workflow B via `workflow_run` | `workflow_run` only for default branch; artifact passing harder; cross-repo auth needed |
+| 2) Single workflow | Simple pipeline, easy artifact sharing | Define jobs/steps in one workflow; use `needs` | jobA → jobB (needs: [jobA]) | Harder to maintain when large; less flexible cross-repo |
+| 3) Orchestrator / reusable pipeline | Complex runtime orchestration or cross-repo control | Use `workflow_call` or custom action to orchestrate runs via API | Orchestrator triggers workflow_dispatch or calls reusable workflow | Requires PAT/auth for API; possible rate limits; added complexity |
+
+Minimal examples
+
+1) Single workflow (ordered jobs)
+```yaml
+name: CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps: [...]
+  test:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps: [...]
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps: [...]
+```
+
+2) Separate workflows (workflow_run)
+workflow A (build):
+```yaml
+on: [push]
+# produces artifacts
+```
+workflow B (test/deploy):
+```yaml
+on:
+  workflow_run:
+    workflows: ["workflow A name"]
+    types: [completed]
+# Note: triggers only when workflow A ran on the default branch
+```
+
+3) Orchestrator / reusable pipeline
+- Reusable pipeline (pipeline.yml):
+```yaml
+on:
+  workflow_call:
+    inputs:
+      run-tests: { type: boolean, required: false, default: true }
+jobs:
+  build: {...}
+  test:
+    needs: [build]
+    if: ${{ inputs.run-tests }}
+  deploy:
+    needs: [test]
+```
+- Caller workflow (calls pipeline):
+```yaml
+on: [workflow_dispatch]
+jobs:
+  call-pipeline:
+    uses: ./.github/workflows/pipeline.yml
+    with:
+      run-tests: true
+```
+Or: use a custom orchestrator action/step that calls the GitHub API (`workflow_dispatch`) or `gh` to trigger workflows across repos; remember to store PAT in secrets.
+
+Recommendation
+- Prefer single workflow for small/simple pipelines and easy artifact sharing.  
+- Use separate workflows with `workflow_run` when you want stage separation and independent retries, but watch default-branch limitations.  
+- Use reusable workflows (`workflow_call`) or a custom orchestrator action for reusable pipelines or complex cross-repo orchestration; manage auth and rate limits carefully.
+
+
+* **OBS!** **GitHub only fires workflow_run for workflows whose workflow file exists on the repository default branch (usually main)**
+
+
+* References
+> * https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
