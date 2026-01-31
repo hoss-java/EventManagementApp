@@ -22,3 +22,9 @@ jobs:
     uses: ./.github/workflows/generate-deck.yml
     with:
       commit_sha: ${{ github.sha }}
+
+  call_automerge:
+    needs: call_generate
+    uses: ./.github/workflows/auto-merge-changes.yml
+    with:
+      commit_sha: ${{ github.sha }}

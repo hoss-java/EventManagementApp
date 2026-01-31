@@ -2,10 +2,11 @@
 name: auto-merge-changes
 
 on:
-  workflow_dispatch:
-#  push:
-#    branches:
-#      - develop  # Commit changes here will trigger the action
+  workflow_call:
+    inputs:
+      commit_sha:
+        required: true
+        type: string
 
 permissions: # Add permissions here at the workflow level
   contents: write
@@ -23,17 +24,34 @@ jobs:
 
     steps:
       # Step 1: Checkout the repository
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout repo (fetch all)
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all branches
+          fetch-depth: 0
 
       # Step 2: Set up Bash
       - name: Set up Bash
         shell: bash
         run: echo "Bash is set up"
 
-      # Step 3: Read the list of files and folders
+      # Step 3: Check out requested commit
+      - name: Check out requested commit
+        run: |
+          echo "Requested commit: ${{ inputs.commit_sha }}"
+          git fetch origin develop --unshallow || true
+          git fetch origin develop
+          git fetch --all --tags
+          git checkout --force ${{ inputs.commit_sha }}
+          git rev-parse HEAD
+          git log -1 --oneline
+
+      # Step 4: Debug git state
+      - name: Debug git state
+        run: |
+          git status --short --branch
+          git log -3 --oneline
+
+      # Step 5: Read the list of files and folders
       - name: Read files list
         id: readfiles
         run: |
@@ -49,7 +67,8 @@ jobs:
             echo "File list not found!"
             exit 0
           fi
-      # Step 4: Check for changes in the specified files
+
+      # Step 6: Check for changes in the specified files
       - name: Auto-check for changes
         id: check-changes
         run: |
@@ -81,7 +100,8 @@ jobs:
               break
             fi
           done
-      # Step 5: Copy and push changes if any file was changed
+
+      # Step 7: Copy and push changes if any file was changed
       - name: Auto-copy and Push Changes
         if: env.file_changed == 'true'
         run: |
