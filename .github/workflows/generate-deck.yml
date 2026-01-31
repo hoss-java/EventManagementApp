@@ -46,12 +46,12 @@ jobs:
       - name: Checkout target branch
         run: |
           git fetch origin ${TARGET_BRANCH}
-          git checkout ${TARGET_BRANCH} || git checkout -b ${TARGET_BRANCH}  # Create the branch if it doesn't exist
+          git checkout ${TARGET_BRANCH}  # Checkout the main branch
 
       # Step 6: Pull the latest changes
       - name: Pull latest changes from remote
         run: |
-          git pull origin ${TARGET_BRANCH}  # Pull changes to make sure it's up-to-date
+          git pull origin ${TARGET_BRANCH} --no-rebase  # Use merge strategy
 
       # Step 7: Commit and push changes
       - name: Commit changes

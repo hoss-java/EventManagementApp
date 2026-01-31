@@ -47,4 +47,3 @@ graph TD
     D -->|Yes| E(Integration Merge into Release)
     D -->|No| F(Stop Process)
 ```
-
