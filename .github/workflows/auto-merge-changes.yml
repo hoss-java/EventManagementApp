@@ -21,6 +21,7 @@ jobs:
       - name: Read files list
         id: readfiles
         run: |
+          set -x
           SOURCE_BRANCH=develop
           TARGET_BRANCH=main
           if [[ -f .gitautomarge ]]; then
@@ -38,6 +39,7 @@ jobs:
       - name: Auto-check for changes
         id: check-changes
         run: |
+          set -x
           # Get the list of changed files in the current commit
           CHANGED_FILES=$(git diff --name-only HEAD)
 
@@ -54,6 +56,7 @@ jobs:
       - name: Auto-copy and Push Changes
         if: env.file_changed == 'true'
         run: |
+          set -x
           git checkout ${TARGET_BRANCH}
           for file in ${FILES_TO_CHECK}; do
             git checkout ${SOURCE_BRANCH} -- "$file"
