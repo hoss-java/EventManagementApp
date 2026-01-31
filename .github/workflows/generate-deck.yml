@@ -34,22 +34,18 @@ jobs:
         shell: bash
         run: echo "Bash is set up" # This line ensures `run` is present
 
+      - name: Debug git state
+        run: |
+          git status --short --branch
+          git log -3 --oneline
+          ls -la .pm/ || echo ".pm/ missing"
+
       # Step 3: Run the script
       - name: Run Script
         id: check_changes
         run: |
-          # Check if there are any changes in the .pm/ directory
-          echo "=== git info ==="
-          git --version
-          git status --short --branch
-          echo "Current ref: $GITHUB_REF"
-          echo "Current commit:"
-          git log -1 --pretty=oneline
-          echo "Listing .pm/ (if present):"
-          ls -la .pm/ || echo ".pm/ not present"
-          echo "=== diff ==="
-          #cat .pm/deck/EventManagement/ONGOING/0005
-          if git diff --exit-code HEAD -- .pm/; then
+          git fetch origin develop --depth=1
+          if git diff --exit-code origin/develop -- .pm/; then
              echo "No changes detected in .pm/ directory. Exiting without an error."
             echo "no_changes=true" >> "$GITHUB_OUTPUT"
           else
