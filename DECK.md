@@ -269,6 +269,7 @@ gantt
 > * The action to generate DECK is run on the `develop` and push the generated `DECK.md`to the `main`
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 >
 > ```mermaid
 > graph TD
@@ -294,10 +295,13 @@ asldajsi
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 > 
 > 
 > ```mermaid
 > graph TD
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 >     A(`develop`) -->|Push auto-generated files (DECK)| B(`main`)
 >     A -->|Push default files (README)| B
@@ -312,6 +316,8 @@ asldajsi
 > </details>
 >>>>>>> Stashed changes
 =======
+=======
+>>>>>>> Stashed changes
 >     A(develop) -->|Push auto-generated files (DECK)| B(main)
 >     A -->|Push default files (README)| B
 >     A -->|Run Tests| D{Tests Passed?}
@@ -321,5 +327,10 @@ asldajsi
 > ```
 > 
 > ## Findings
+<<<<<<< Updated upstream
+> </details>
+>>>>>>> Stashed changes
+=======
+> asassdfds
 > </details>
 >>>>>>> Stashed changes
