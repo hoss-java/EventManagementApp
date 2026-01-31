@@ -31,36 +31,44 @@ jobs:
 
       # Step 3: Run the script
       - name: Run Script
+        id: check_changes
         run: |
           # Check if there are any changes in the .pm/ directory
           if git diff --exit-code HEAD -- .pm/; then
              echo "No changes detected in .pm/ directory. Exiting without an error."
-             exit 0
+            echo "no_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "no_changes=false" >> "$GITHUB_OUTPUT"
+            if [ -f DECK.md ]; then
+              rm DECK.md
+            fi
+            chmod +x .github/scripts/git-deck-tools.sh
+            ./.github/scripts/git-deck-tools.sh generate-markdown
           fi
-          if [ -f DECK.md ]; then
-            rm DECK.md
-          fi
-          chmod +x .github/scripts/git-deck-tools.sh
-          ./.github/scripts/git-deck-tools.sh generate-markdown
-
       # Step 4: Configure Git
       - name: Configure git
+        if: steps.check_changes.outputs.no_changes == 'false'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
       # Step 5: Commit and stach DECK.md on the source branch (develop)
       - name: Commit and stach on the source (develop)
+        id: commit_and_stach
+        if: steps.check_changes.outputs.no_changes == 'false'
         run: |
           if [ -f DECK.md ]; then
             git add DECK.md
             git stash
+            echo "commit_and_stach=true" >> "$GITHUB_OUTPUT"
           else
             echo "DECK.md does not exist, skipping pusshing the target."
-            exit 1
+            echo "commit_and_stach=false" >> "$GITHUB_OUTPUT"
           fi
       # Step 6: Checkout and pop stash the target branch (main)
       - name: Checkout and pop stash on the target (main)
+        if: steps.check_changes.outputs.no_changes == 'false' &&
+          steps.commit_and_stach.outputs.no_changes == 'true'
         run: |
           git checkout ${TARGET_BRANCH}
           if [ -f DECK.md ]; then
@@ -70,6 +78,8 @@ jobs:
 
       # Step 7: check DECK.md and commit changes if it exists
       - name: Commit changes if DECK.md exists
+        if: steps.check_changes.outputs.no_changes == 'false' &&
+          steps.commit_and_stach.outputs.no_changes == 'true'
         run: |
           if [ -f DECK.md ]; then
             git add DECK.md
@@ -82,6 +92,8 @@ jobs:
 
       # Step 8: Checkout and remove DECK.md from the source branch (develop)
       - name: Checkout the source (develop)
+        if: steps.check_changes.outputs.no_changes == 'false' &&
+          steps.commit_and_stach.outputs.no_changes == 'true'
         run: |
           git checkout ${SOURCE_BRANCH}
           if git stash list | grep -q .; then
