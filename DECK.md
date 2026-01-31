@@ -282,13 +282,25 @@ gantt
 >     C -.->|Implement| F((production))
 > 
 >     style A stroke:#ff0000,stroke-width:2px
+> 
 >     style B stroke:#ff0000,stroke-width:2px
+> 
 >     style C stroke:#ff0000,stroke-width:2px
+> 
 >     style D stroke:#ff0000,stroke-width:2px
+> 
 >     style E stroke:#ff0000,stroke-width:2px
+> 
 >     style P stroke:#ff0000,stroke-width:2px
 > 
->     linkStyle default stroke:#ff0000,stroke-width:2px
+>     %% Apply red color only when specific conditions are met
+>     style D fill:#f00,stroke-width:2px
+>     style E fill:#f00,stroke-width:2px
+>     
+>     %% Example condition handling
+>     %% Assume you want to highlight cases based on test results
+>     linkStyle 6 stroke:#ff0000,stroke-width:2px
+>     linkStyle 5 stroke:none
 > ```
 > 
 > ## Findings
