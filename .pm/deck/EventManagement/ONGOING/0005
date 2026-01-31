@@ -24,3 +24,32 @@ A GitHub action is developed and implemented.
 > * However I thing removing a file ( in this case an YAML action file) that is not used or ignored makes a repo more clear.
 > * For now it will be kept for a while but it will be removed from `develop` when designing actions are completely done.
 * A new action name `auto-merge-changes.yml` was added to the `develop`  branch to read a list of files and folders from a file named `.gitautomarge` from the root of the `develop` branch and push them to main automatically after pushing to the `develop`
+
+## Updating rge design for git branches and their connections
+ 
+* During working on workflow automation' action it was realized there is no need copy/merge git-deck (`.pm/`) files and its related files such as `.gitdefault` (and potentially `.gitignore`) from the `develop` branch to the `main` branch
+ 
+> * git-dek and kanban boards a part of develop flows, not a part of the code.
+> * The `main` branch serves as a repository for the ready to use code (beta version of the final code), which is used for intermediate testing of integrations between various components of the project. Once the code passes all tests, it will be merged into the 'release' branch.
+> * The `release` branch serves as a repository for the final code (ready to implement).
+
+* So according to this new design, the only files that needs to be merged to the `main` automatically is `README.md`.
+* There is also no needs to generate `DECK.md` on the `main` branch. The main is not contained git-deck `.pm/` files anymore. So the action to generate DECK on the main can removed.
+* The action to generate DECK is run on the `develop` and push the generated `DECK.md`to the `main`
+ 
+```mermaid
+graph TD
+    A(Develop) -->|Push Code| B(Main)
+    A -->|GitHub Action| C(README.md updated in Main)
+    A -->|Commit " —mergetomain"| B
+    B -->|Run Tests| D{Tests Passed?}
+    D -->|Yes| E(Integration Merge into Release)
+    D -->|No| F(Stop Process)
+    
+    style A fill:#f9f,stroke:#333,stroke-width:4px;
+    style B fill:#bbf,stroke:#333,stroke-width:4px;
+    style C fill:#bbf,stroke:#333,stroke-width:2px;
+    style D fill:#ff0,stroke:#333,stroke-width:4px,stroke-dasharray: 5, 5;
+    style E fill:#afa,stroke:#333,stroke-width:4px;
+    style F fill:#fbb,stroke:#333,stroke-width:4px;
+```

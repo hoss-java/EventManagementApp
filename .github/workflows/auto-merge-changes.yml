@@ -1,13 +1,9 @@
-name: Auto-merge changes
-
-env:
-  SOURCE_BRANCH: develop
-  TARGET_BRANCH: main
+name: Auto-Merge changes
 
 on:
   push:
     branches:
-      - develop
+      - develop  # Commit changes here will trigger the action
 
 permissions: # Add permissions here at the workflow level
   contents: write
@@ -17,6 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
+    env:
+      SOURCE_BRANCH: develop
+      TARGET_BRANCH: main
 
     steps:
       # Step 1: Checkout the repository
@@ -34,9 +34,9 @@ jobs:
       - name: Read files list
         id: readfiles
         run: |
-          set -x
-          if [[ -f .gitautomarge ]]; then
-            FILES_TO_CHECK=$(grep -v '^\s*#' .gitautomarge | awk '{print $1}' | tr '\n' ' ' | xargs)
+          #set -x
+          if [[ -f .gitmainauto ]]; then
+            FILES_TO_CHECK=$(grep -v '^\s*#' .gitmainauto | awk '{print $1}' | tr '\n' ' ' | xargs)
             if [[ -z "$FILES_TO_CHECK" ]]; then
               echo "No valid files to check!"
               exit 1
@@ -50,7 +50,7 @@ jobs:
       - name: Auto-check for changes
         id: check-changes
         run: |
-          set -x
+          #set -x
           # Fetch the latest state of both branches
           git fetch origin ${TARGET_BRANCH}
           git fetch origin ${SOURCE_BRANCH}
@@ -82,7 +82,7 @@ jobs:
       - name: Auto-copy and Push Changes
         if: env.file_changed == 'true'
         run: |
-          set -x
+          #set -x
           git checkout ${TARGET_BRANCH}
           for file in ${FILES_TO_CHECK}; do
             git checkout ${SOURCE_BRANCH} -- "$file"
