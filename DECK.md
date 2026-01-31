@@ -270,15 +270,15 @@ gantt
 > 
 > 
 > ```mermaid
-> graph TD
->     A(develop) -->|Push auto-generated files (DECK)| B(main)
+>     A[develop] -->|Push auto-generated files (DECK)| B[main]
 >     A -->|Push default files (README)| B
 >     A -->|Run Tests| D{Tests Passed?}
->     D -->|Yes? Merge into main| B
+>     D -->|Yes| B
+>     D -->|No| A
 >     B -->|Run Tests| E{Tests Passed?}
->     E -->|Yes?  Merge into release| C(release)
+>     E -->|Yes| C[release]
+>     E -->|No| B
 > ```
 > 
 > ## Findings
-> aasdfsdfsdweqwewqwerwerds
 > </details>
