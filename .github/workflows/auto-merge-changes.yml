@@ -102,11 +102,3 @@ jobs:
         with:
           token: ${{ secrets.TAP }}  # IMPORTANT
           event-type: pm-files-updated
-
-          # Optional: Add debug payload
-          client-payload: |
-          {
-            "ref": "${{ github.ref }}",
-            "sha": "${{ github.sha }}",
-            "repository": "${{ github.repository }}"
-          }
