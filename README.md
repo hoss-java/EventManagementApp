@@ -80,14 +80,14 @@
 * Step 5: Add advanced/required futures according the project scenario ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 * Step 6: Documenting and summarizing findings, developments, and integrations. ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 * Step 7: Touch a service implementation of the project ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+
  
 ```mermaid
 graph TD
-    A(`develop`) -->|Push auto-generated files (DECK)| B(`main`)
+    A(develop) -->|Push auto-generated files (DECK)| B(main)
     A -->|Push default files (README)| B
     A -->|Run Tests| D{Tests Passed?}
-    D -->|Yes? Merge into `main`| B
+    D -->|Yes? Merge into main| B
     B -->|Run Tests| E{Tests Passed?}
-    E -->|Yes?  Merge into `release`| C(`release`)
+    E -->|Yes?  Merge into release| C(release)
 ```
-
