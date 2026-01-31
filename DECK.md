@@ -270,6 +270,7 @@ gantt
 > 
 > 
 > ```mermaid
+> graph TD
 >     A[develop] -->|Push auto-generated files (DECK)| B[main]
 >     A -->|Push default files (README)| B
 >     A -->|Run Tests| D{Tests Passed?}
