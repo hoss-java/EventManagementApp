@@ -97,7 +97,7 @@ jobs:
           git push origin ${TARGET_BRANCH}
       # Conditional workflow dispatch
       - name: Trigger Next Workflow
-        if: steps.check_changes.outputs.pm_changed == 'true'
+        #if: steps.check_changes.outputs.pm_changed == 'true'
         uses: peter-evans/repository-dispatch@v2
         with:
           event-type: pm-files-updated
