@@ -1,8 +1,8 @@
 # File: .github/workflows/auto-merge-changes.yml
 name: auto-merge-changes
 
-#on:
-#  workflow_dispatch:
+on:
+  workflow_dispatch:
 #  push:
 #    branches:
 #      - develop  # Commit changes here will trigger the action
