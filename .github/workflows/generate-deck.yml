@@ -42,7 +42,13 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
-      # Step 5: Commit and push changes
+      # Step 5: Checkout the target branch (main)
+      - name: Checkout target branch
+        run: |
+          git fetch origin ${TARGET_BRANCH}
+          git checkout ${TARGET_BRANCH} || git checkout -b ${TARGET_BRANCH}  # Create the branch if it doesn't exist
+
+      # Step 6: Commit and push changes
       - name: Commit changes
         run: |
           git add DECK.md
