@@ -40,11 +40,12 @@ jobs:
         id: check-changes
         run: |
           set -x
-          # Fetch the latest state of the develop branch
+          # Fetch the latest state of both branches
+          git fetch origin main
           git fetch origin develop
 
-          # Get the list of changed files between the current commit and the last commit on develop
-          CHANGED_FILES=$(git diff --name-only origin/develop HEAD)
+          # Get the list of changed files between the develop branch and the main branch
+          CHANGED_FILES=$(git diff --name-only origin/main..origin/develop)
 
           # Check if any files in FILES_TO_CHECK have changed
           for file in ${FILES_TO_CHECK}; do
