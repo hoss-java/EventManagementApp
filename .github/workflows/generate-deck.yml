@@ -1,11 +1,10 @@
 name: Generate DECK.md
 
 on:
-  push:
-    branches:
-      - develop
-    paths:
-      - '.pm/**'
+  workflow_run:
+    workflows: ["Auto-Merge changes"]  # Depends on 
+    types:
+      - completed  # Ensure this is set to completed
 
 permissions: # Add permissions here at the workflow level
   contents: write
@@ -35,6 +34,11 @@ jobs:
       # Step 3: Run the script
       - name: Run Script
         run: |
+          # Check if there are any changes in the .pm/ directory
+          if git diff --exit-code HEAD -- .pm/; then
+             echo "No changes detected in .pm/ directory. Exiting without an error."
+             exit 0
+          fi
           if [ -f DECK.md ]; then
             rm DECK.md
           fi

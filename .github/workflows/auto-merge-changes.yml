@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - develop  # Commit changes here will trigger the action
-  workflow_run:
-    workflows: ["Generate DECK.md"]  # Depends on 
-    types:
-      - completed  # Ensure this is set to completed
 
 permissions: # Add permissions here at the workflow level
   contents: write
@@ -49,7 +45,7 @@ jobs:
             echo "FILES_TO_CHECK=${FILES_TO_CHECK}" >> $GITHUB_ENV
           else
             echo "File list not found!"
-            exit 1
+            exit 0
           fi
       # Step 4: Check for changes in the specified files
       - name: Auto-check for changes
@@ -72,7 +68,7 @@ jobs:
             fi
           else
             echo "File list not found!"
-            exit 1
+            exit 0
           fi
 
           # Check if any files in FILES_TO_CHECK have changed
