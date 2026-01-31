@@ -61,6 +61,9 @@ jobs:
       - name: Checkout and pop stash on the target (main)
         run: |
           git checkout ${TARGET_BRANCH}
+          if [ -f DECK.md ]; then
+            rm DECK.md
+          fi
           git stash pop || echo "No stash entries found, skipping pop."
 
       # Step 7: check DECK.md and commit changes if it exists
