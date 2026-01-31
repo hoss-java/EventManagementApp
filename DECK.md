@@ -271,6 +271,7 @@ gantt
 > 
 > ```mermaid
 > graph TD
+<<<<<<< Updated upstream
 >     A(Develop) -->|Push Code| B(Main)
 >     A -->|GitHub Action| C(README.md updated in Main)
 >     A -->|Commit --mergetomain| B
@@ -279,4 +280,15 @@ gantt
 >     D -->|No| F(Stop Process)
 > ```
 > sdfsd
+=======
+>     A(`develop`) -->|Push auto-generated files (DECK)| B(`main`)
+>     A -->|Push default files (README)| B
+>     A -->|Run Tests| D{Tests Passed?}
+>     D -->|Yes? Merge into `main`| B
+>     B -->|Run Tests| E{Tests Passed?}
+>     E -->|Yes?  Merge into `release`| C(`release`)
+> ```
+> 
+> ## Findings
+>>>>>>> Stashed changes
 > </details>
