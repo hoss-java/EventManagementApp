@@ -1,0 +1,26 @@
+---
+#...
+# Git-deck card header
+# OBS! DON'T REMOVE CARD HEADERS
+#...
+Title: Start with main class and its test.
+Tags: EventMan STEP2
+Creator:
+AssignedTo:
+# Time tracker settings
+tartAt:
+EndAt:
+---
+The goal of this card is to develop a basic main class with its tests.
+
+# DOD (definition of done):
+A main class is created.
+Tests are added.
+Boths local and remote DI run tests as a part of the workflow
+All findings are documented.
+
+# TODO:
+- [ ] 1. Create the main class
+
+# Reports:
+*

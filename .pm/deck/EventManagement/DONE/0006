@@ -1,0 +1,32 @@
+---
+#...
+# Git-deck card header
+# OBS! DON'T REMOVE CARD HEADERS
+#...
+Title: Plan and create stories for next steps.
+Tags: EventMan STEP2
+Creator:
+AssignedTo:
+# Time tracker settings
+tartAt:
+EndAt:
+---
+The goal of this card is to plan for next steps.
+
+# DOD (definition of done):
+Related cards are added to the board.
+
+# TODO:
+- [x] 1. List what needs to do on this step
+- [x] 2. Create cards
+
+# Reports:
+## What need to do
+1. Start with main class and its test
+2. Automate local and remote repos to run test automatically
+3. Implement an UI class (+ it tests)
+4. Implement a simple block test
+5. Implement an event class
+6. Implement a participants class
+7. Implement a report manager class
+8. Implement a DB layer

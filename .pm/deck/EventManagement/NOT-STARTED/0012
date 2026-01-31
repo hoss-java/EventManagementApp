@@ -3,7 +3,7 @@
 # Git-deck card header
 # OBS! DON'T REMOVE CARD HEADERS
 #...
-Title: Automate local and remote repos to run test automatically.
+Title: Implement a participants class.
 Tags: EventMan STEP2
 Creator:
 AssignedTo:
@@ -11,10 +11,9 @@ AssignedTo:
 tartAt:
 EndAt:
 ---
-The goal of this card is to add needed actions to GIHub workflow to run tests.
+The goal of this card is to implement a class for participants.
 
 # DOD (definition of done):
-GitHub workflows uses tests results to verify commits.
 
 # TODO:
 - [] 1.
