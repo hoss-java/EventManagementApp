@@ -48,7 +48,12 @@ jobs:
           git fetch origin ${TARGET_BRANCH}
           git checkout ${TARGET_BRANCH} || git checkout -b ${TARGET_BRANCH}  # Create the branch if it doesn't exist
 
-      # Step 6: Commit and push changes
+      # Step 6: Pull the latest changes
+      - name: Pull latest changes from remote
+        run: |
+          git pull origin ${TARGET_BRANCH}  # Pull changes to make sure it's up-to-date
+
+      # Step 7: Commit and push changes
       - name: Commit changes
         run: |
           git add DECK.md
