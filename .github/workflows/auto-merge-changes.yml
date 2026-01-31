@@ -1,7 +1,11 @@
+env:
+  SOURCE_BRANCH: develop
+  TARGET_BRANCH: main
+
 on:
   push:
     branches:
-      - develop
+      - ${SOURCE_BRANCH}
 
 jobs:
   check-and-merge:
@@ -22,8 +26,6 @@ jobs:
         id: readfiles
         run: |
           set -x
-          SOURCE_BRANCH=develop
-          TARGET_BRANCH=main
           if [[ -f .gitautomarge ]]; then
             FILES_TO_CHECK=$(grep -v '^\s*#' .gitautomarge | awk '{print $1}' | tr '\n' ' ' | xargs)
             if [[ -z "$FILES_TO_CHECK" ]]; then
