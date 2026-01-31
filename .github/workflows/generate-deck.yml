@@ -1,11 +1,11 @@
+# File: .github/workflows/generate-deck.yml
 name: Generate DECK.md
 
 on:
   workflow_dispatch:
   workflow_run:
     workflows: ["Auto-Merge changes"]
-    types:
-      - completed
+    types: [completed]
 
 permissions: # Add permissions here at the workflow level
   contents: write
