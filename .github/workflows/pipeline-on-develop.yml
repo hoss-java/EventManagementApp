@@ -7,6 +7,13 @@ on:
       - develop  # Commit changes here will trigger the action
 
 jobs:
+  do-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Do merge
+        run: echo "merge work"
+
   call_generate_deck:
     needs: do-merge
     uses: ./.github/workflows/generate-deck.yml
