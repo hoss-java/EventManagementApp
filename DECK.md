@@ -189,58 +189,9 @@ gantt
 > >>```
 > </details>
 
-## 001-0006
-> **Code scripts needed to run test locally.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> The goal of this card is to code some scripts to run tests.
-> 
-> # DOD (definition of done):
-> The DI scripts are coded and tested
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0007
-> **Integrate local and remode workflows.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> The goal of this card is to integrate local workflow scripts with GitHub workflow actions.
-> 
-> # DOD (definition of done):
-> All findings are documented.
-> Both local and remote workflows follow the same patterns.
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0008
-> **Plan and create stories for next steps** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> The goal of this card is to plan for next steps.
-> 
-> # DOD (definition of done):
-> Related cards are added to the board.
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
 ## 001-0005
-> **Create a pre-action to merge the dev branch to the main branch.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
-> <details open>
+> **Create a pre-action to merge the dev branch to the main branch.** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
+> <details >
 >     <summary>Details</summary>
 > The goal of this card is to push some files (from a list) push to the `develop`branch to the main automatically.
 > 
@@ -268,7 +219,6 @@ gantt
 > * There is also no needs to generate `DECK.md` on the `main` branch. The main is not contained git-deck `.pm/` files anymore. So the action to generate DECK on the main can removed.
 > * The action to generate DECK is run on the `develop` and push the generated `DECK.md`to the `main`
 > 
-> 
 > ```mermaid
 > graph TD
 >     A[**`develop branch`**] -->|Push auto-generated files| B[**`main branch`**]
@@ -284,7 +234,14 @@ gantt
 > 
 > ## Findings
 > 
-> * GitHub Job Ordering - Define job ordering in a workflow
+> ### multi-jobs' action and jobs orders
+> There are several method that can be used to run multi-actions in a repo
+> 
+> 1. If the actions can run concurrently without conflicts, creating actions YAML files and adding them to GitHub Workflows work fine.
+> 2. If the actions must run in a specific order or cannot run in parallel, it needs to trigger them sequentially by each other.
+> 
+> ### GitHub Job Ordering
+> * Define job ordering in a workflow
 > 
 > ```name: CI Workflow
 > 
@@ -315,7 +272,7 @@ gantt
 >         run: echo "This is Job 3"
 > ```
 > 
-> * GitHub Job Ordering - Define Workflows in Separate Files
+> * Define Workflows in Separate Files
 > > * Workflow A (workflow-a.yml):
 > >```
 > >name: Workflow A
@@ -364,11 +321,154 @@ gantt
 >       - completed  # Ensure this is set to completed
 > ```
 > 
+> * **OBS!** Regardless how actions are added, all in a file or in several files, if no order or dependency are defined, all action will be run in their isolated workflow in a parallel way.
+> 
+> ### Define action orders and trigger actions by each other
+> ## Three methods to chain GitHub Actions
+> 
+> 1. **Separate workflows (cross-workflow pipeline)**  
+>    - Create distinct workflows and chain them using `workflow_run` or `repository_dispatch` so one workflow triggers the next.  
+>    - Example: workflow A finishes → workflow B starts via `workflow_run` with `types: [completed]`.  
+>    - **Limitations:** `workflow_run` only triggers when the upstream workflow runs on the default branch (commonly main); passing complex artifacts requires explicit upload/download; cross-repo triggers need extra auth (PAT or repository_dispatch).
+> 
+> 2. **Single workflow — ordered jobs/steps**  
+>    - Define multiple jobs in one workflow and enforce order with `needs` (or use ordered steps within a job).  
+>    - Use `concurrency`, `if` conditions, or matrix strategy to control parallelism and conditional execution.  
+>    - **Limitations:** Very large workflows become harder to maintain; long-running workflows may delay other jobs; limited cross-repo orchestration.
+> 
+> 3. **Orchestrator / reusable pipeline action**  
+>    - Use a reusable workflow (`workflow_call`) or a custom orchestrator action that triggers workflows via the GitHub API/gh to run and coordinate other workflows (including cross-repo).  
+>    - Offers dynamic branching, retries, and centralized control; requires handling auth if using the API.  
+>    - **Limitations:** Custom orchestrator actions need a PAT for API triggers (manage secrets/permissions); more complex to implement; API rate limits and auth scopes apply. Reusable workflows cannot be called across forks without extra configuration.
+> 
+> Summary table
+> 
+> | Method | When to use | Key idea | Example trigger | Key limitations |
+> |---|---:|---|---|---|
+> | 1) Separate workflows | Clear stage separation, independent retries | Chain workflows using `workflow_run` or `repository_dispatch` | workflow A → workflow B via `workflow_run` | `workflow_run` only for default branch; artifact passing harder; cross-repo auth needed |
+> | 2) Single workflow | Simple pipeline, easy artifact sharing | Define jobs/steps in one workflow; use `needs` | jobA → jobB (needs: [jobA]) | Harder to maintain when large; less flexible cross-repo |
+> | 3) Orchestrator / reusable pipeline | Complex runtime orchestration or cross-repo control | Use `workflow_call` or custom action to orchestrate runs via API | Orchestrator triggers workflow_dispatch or calls reusable workflow | Requires PAT/auth for API; possible rate limits; added complexity |
+> 
+> Minimal examples
+> 
+> 1) Single workflow (ordered jobs)
+> ```yaml
+> name: CI
+> on: [push]
+> jobs:
+>   build:
+>     runs-on: ubuntu-latest
+>     steps: [...]
+>   test:
+>     runs-on: ubuntu-latest
+>     needs: [build]
+>     steps: [...]
+>   deploy:
+>     runs-on: ubuntu-latest
+>     needs: [test]
+>     steps: [...]
+> ```
+> 
+> 2) Separate workflows (workflow_run)
+> workflow A (build):
+> ```yaml
+> on: [push]
+> # produces artifacts
+> ```
+> workflow B (test/deploy):
+> ```yaml
+> on:
+>   workflow_run:
+>     workflows: ["workflow A name"]
+>     types: [completed]
+> # Note: triggers only when workflow A ran on the default branch
+> ```
+> 
+> 3) Orchestrator / reusable pipeline
+> - Reusable pipeline (pipeline.yml):
+> ```yaml
+> on:
+>   workflow_call:
+>     inputs:
+>       run-tests: { type: boolean, required: false, default: true }
+> jobs:
+>   build: {...}
+>   test:
+>     needs: [build]
+>     if: ${{ inputs.run-tests }}
+>   deploy:
+>     needs: [test]
+> ```
+> - Caller workflow (calls pipeline):
+> ```yaml
+> on: [workflow_dispatch]
+> jobs:
+>   call-pipeline:
+>     uses: ./.github/workflows/pipeline.yml
+>     with:
+>       run-tests: true
+> ```
+> Or: use a custom orchestrator action/step that calls the GitHub API (`workflow_dispatch`) or `gh` to trigger workflows across repos; remember to store PAT in secrets.
+> 
+> Recommendation
+> - Prefer single workflow for small/simple pipelines and easy artifact sharing.  
+> - Use separate workflows with `workflow_run` when you want stage separation and independent retries, but watch default-branch limitations.  
+> - Use reusable workflows (`workflow_call`) or a custom orchestrator action for reusable pipelines or complex cross-repo orchestration; manage auth and rate limits carefully.
+> 
+> 
 > * **OBS!** **GitHub only fires workflow_run for workflows whose workflow file exists on the repository default branch (usually main)**
+> 
+> 
 > * References
 > > * https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
+> </details>
+
+## 001-0007
+> **Integrate local and remode workflows.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to integrate local workflow scripts with GitHub workflow actions.
 > 
+> # DOD (definition of done):
+> All findings are documented.
+> Both local and remote workflows follow the same patterns.
 > 
+> # TODO:
+> - [] 1.
 > 
-> asdasas
+> # Reports:
+> *
+> </details>
+
+## 001-0008
+> **Plan and create stories for next steps** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to plan for next steps.
+> 
+> # DOD (definition of done):
+> Related cards are added to the board.
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0006
+> **Plan and create stories for next steps.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+> <details open>
+>     <summary>Details</summary>
+> The goal of this card is to plan for next steps.
+> 
+> # DOD (definition of done):
+> Related cards are added to the board.
+> 
+> # TODO:
+> - [ ] 1. List what needs to do on this step
+> - [ ] 2. Create cards
+> 
+> # Reports:
+> *
 > </details>
