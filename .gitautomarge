@@ -1,5 +1,5 @@
 # Auto-push files/folders from develop to main.
-/.pm/          # git-deck files
-/.gitdefault   # git-hooks settings
-/.gitignore
-/README.md
+.pm/          # git-deck files
+.gitdefault   # git-hooks settings
+.gitignore
+README.md
