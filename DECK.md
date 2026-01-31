@@ -271,8 +271,8 @@ gantt
 > 
 > ```mermaid
 > graph TD
->     A[develop] -->|Push| B[main]
->     A -->|Push default| B
+>     A[develop] -->|Push auto-generated-files| B[main]
+>     A -->|Push default-files| B
 >     A -->|Run Tests| D{Tests Passed?}
 >     D -->|Yes| B
 >     D -->|No| A
