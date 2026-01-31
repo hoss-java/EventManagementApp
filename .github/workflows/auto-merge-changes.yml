@@ -45,11 +45,11 @@ jobs:
         run: |
           set -x
           # Fetch the latest state of both branches
-          git fetch origin main
-          git fetch origin develop
+          git fetch origin ${TARGET_BRANCH}
+          git fetch origin ${SOURCE_BRANCH}
 
           # Get the list of changed files between the develop branch and the main branch
-          CHANGED_FILES=$(git diff --name-only origin/main..origin/develop)
+          CHANGED_FILES=$(git diff --name-only origin/${TARGET_BRANCH}..origin/${SOURCE_BRANCH})
 
           # Get the list of files to check
           if [[ -f .gitautomarge ]]; then
