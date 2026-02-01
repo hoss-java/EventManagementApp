@@ -51,5 +51,5 @@ public class EventManApp {
 
         scanner.close();
         out.println("Thank you for using. Goodbye!");
-    }        
+    }
 }
