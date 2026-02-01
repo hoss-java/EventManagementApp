@@ -31,6 +31,6 @@ if [ ${#directives[@]} -gt 0 ]; then
         echo "$directive"
     done
 else
-    #echo "No directives found."
-    exit 1  # Return exit status 1 if no directives found
+    echo ""
+    exit 0  # Return exit status 0 if no directives found to avoid action failure status
 fi
