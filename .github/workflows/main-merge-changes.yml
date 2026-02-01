@@ -1,4 +1,4 @@
-name: mainmerge-changes
+name: main-merge-changes
 
 on:
   workflow_call:

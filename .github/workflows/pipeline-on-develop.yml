@@ -30,7 +30,7 @@ jobs:
       commit_sha: ${{ github.sha }}
 
   call_mainmerge:
-    needs: call_autosmerge
-    uses: ./.github/workflows/mainmerge-changes.yml
+    needs: call_automerge
+    uses: ./.github/workflows/main-merge-changes.yml
     with:
       commit_sha: ${{ github.sha }}
