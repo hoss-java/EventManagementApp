@@ -110,9 +110,9 @@ flowchart TB
   Browser("Browser / External Tools")
   SSH_Client("SSH client")
 
-  ((Browser)) -- "HTTP 3281" --> tomcat
-  ((Browser)) -- "HTTP 3280" --> phpmyadmin
-  ((SSH_Client)) -- "SSH 3222" --> sshd
+  Browser -- "HTTP 3281" --> tomcat
+  Browser -- "HTTP 3280" --> phpmyadmin
+  SSH_Client -- "SSH 3222" --> sshd
 ```
 
 ### Findigs summary
