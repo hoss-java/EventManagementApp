@@ -18,10 +18,17 @@ jobs:
         with:
           fetch-depth: 0
 
-  check_directives:
-    needs: call_automerge
-    runs-on: ubuntu-latest
-    steps:
+check_directives:
+  needs: call_automerge
+  runs-on: ubuntu-latest
+  steps:
+    - name: Checkout specific branch
+      uses: actions/checkout@v2
+      with:
+        ref: develop  # Explicitly specify the branch
+
+    - name: List files for debugging
+      run: ls -R .github/scripts
       - name: Check commit directives
         run: |
           # Make scripts executable
