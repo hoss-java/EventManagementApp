@@ -102,3 +102,5 @@ GitHub workflows uses tests results to verify commits.
 >>>>git commit -m "[B001-C0009] Improve git hooks." -m "--notest"
 >>>>```
 >>> * By default if no file named `.commit-check` is found in the root of the repository, running tests is skipped regardless what the default setting is or which directive is used.
+
+## Find out how to run tests on GitHub side

@@ -1,2 +1,3 @@
-# Auto-push files/folders from develop to main.
-README.md
+# Push files/folders from develop to main.
+EventManApp/
+mavenrun
