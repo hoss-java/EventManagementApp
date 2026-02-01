@@ -556,7 +556,7 @@ gantt
 > </details>
 
 ## 001-0007
-> **Start with main class and its test.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+> **Develop a basic main class with its tests.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 > <details open>
 >     <summary>Details</summary>
 > The goal of this card is to develop a basic main class with its tests.
@@ -568,8 +568,43 @@ gantt
 > All findings are documented.
 > 
 > # TODO:
-> - [ ] 1. Create the main class
+> - [x] 1. Create the main class
+> - [x] 2. Recap how work with maven projects
 > 
 > # Reports:
-> *
+> * A basic java app and its basic tests based the calapp was create (https://github.com/hoss-java/calapp-workshop/)
+> * A simple script was added to repo to make it faster to run maven commands
+> >```
+> >#!/bin/sh
+> >docker exec -it maven mvn -f EventManagementApp/EventManApp "$@"
+> >```
+> * Now instead a long commands a shorter command can be used:
+> >```
+> ># To clean temporary files and caches
+> >docker exec -it maven mvn -f EventManagementApp/EventManApp clean
+> ># or
+> >./emrun clean
+> >
+> ># To compile and creating jar file
+> >docker exec -it maven mvn -f EventManagementApp/EventManApp compile
+> >#docker exec -it maven mvn -f EventManagementApp/EventManApp clean compile
+> ># or
+> >./emrun compile
+> >./emrun clean compile
+> >
+> ># To run tests
+> >docker exec -it maven mvn -f EventManagementApp/EventManApp test
+> ># or
+> >./emrun test
+> >
+> ># To Create package
+> >docker exec -it maven mvn -f EventManagementApp/EventManApp package
+> ># or
+> >./emrun package
+> >
+> ># To run main
+> >docker exec -it maven mvn -f EventManagementApp/EventManApp exec:java
+> ># or
+> >./emrun exec:java
+> >```
 > </details>
