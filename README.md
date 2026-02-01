@@ -85,15 +85,17 @@
 
 ```mermaid
 flowchart TB
+  %% Nodes with internal IP and exposed host ports (if any)
   maven["maven\n172.32.0.11"]
-  tomcat["tomcat\n172.32.0.12\nHost port: 3281→8083"]
-  nodejs["nodejs\n172.32.0.13"]
-  sshd["sshd\n172.32.0.15\nHost port: 3222→22"]
-  mysql["mysql\n172.32.0.16"]
-  mongodb["mongodb\n172.32.0.17"]
-  redis["redis\n172.32.0.18"]
-  phpmyadmin["phpmyadmin\n172.32.0.19\nHost port: 3280→80"]
+  tomcat["tomcat\n172.32.0.12\nContainer ports: 8080, 8083\nHost: 3281→8083"]
+  nodejs["nodejs\n172.32.0.13\n(no host ports)"]
+  sshd["sshd\n172.32.0.15\nContainer port: 22\nHost: 3222→22"]
+  mysql["mysql\n172.32.0.16\nContainer port: 3306"]
+  mongodb["mongodb\n172.32.0.17\nContainer ports: 27017, 28017"]
+  redis["redis\n172.32.0.18\nContainer port: 6379"]
+  phpmyadmin["phpmyadmin\n172.32.0.19\nContainer port: 80\nHost: 3280→80"]
 
+  %% Internal network connections (isolation-focused)
   maven --- tomcat
   maven --- nodejs
   maven --- mysql
@@ -108,6 +110,7 @@ flowchart TB
   phpmyadmin --- mysql
   sshd --- maven
 
+  %% External access nodes
   Browser("Browser / External Tools")
   SSH_Client("SSH client")
 
