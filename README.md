@@ -83,6 +83,8 @@
 
 ### Microservices sandbox (Containerized CI environment)
 
+Understood — here's the diagram without color:
+
 ```mermaid
 flowchart TB
   subgraph Network [Isolated Container Network — 172.32.0.0/24]
@@ -122,9 +124,6 @@ flowchart TB
   Browser -- HTTP (3281) --> tomcat
   Browser -- HTTP (3280) --> phpmyadmin
   SSH_Client -- SSH (3222) --> sshd
-
-  classDef ext fill:#f9f,stroke:#333;
-  class Browser,SSH_Client ext;
 ```
 
 ### Findigs summary
