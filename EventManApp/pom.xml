@@ -1,41 +1,42 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  
   <groupId>com.EventManApp</groupId>
   <artifactId>EventManApp</artifactId>
   <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
   <name>EventManApp</name>
   <url>http://maven.apache.org</url>
+  
   <properties>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <junit-jupiter.version>5.1.0</junit-jupiter.version>
-    <!-- optional : if we want to use a junit4 specific version -->
     <junit.version>4.12</junit.version>
   </properties>
+  
   <dependencies>
-    <!--JUnit Jupiter Engine to depend on the JUnit5 engine and JUnit 5 API -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
       <version>${junit-jupiter.version}</version>
       <scope>test</scope>
     </dependency>
-    <!--JUnit Jupiter Engine to depend on the JUnit4 engine and JUnit 4 API  -->
     <dependency>
       <groupId>org.junit.vintage</groupId>
       <artifactId>junit-vintage-engine</artifactId>
       <version>${junit-jupiter.version}</version>
     </dependency>
-    <!-- Optional : override the JUnit 4 API version provided by junit-vintage-engine -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
- </dependencies>
+  </dependencies>
+  
   <build>
     <plugins>
       <plugin>
@@ -51,25 +52,25 @@
           </archive>
         </configuration>
       </plugin>
-    <!-- exec plugin only for running the app (not bound to test) -->
-    <plugin>
-      <groupId>org.codehaus.mojo</groupId>
-      <artifactId>exec-maven-plugin</artifactId>
-      <version>3.1.0</version>
-      <configuration>
-        <mainClass>com.EventManApp.EventManApp</mainClass>
-      </configuration>
-      <!-- optional execution bound to package phase (won't run during mvn test) -->
-      <executions>
-        <execution>
-          <id>run-main</id>
-          <phase>package</phase>
-          <goals>
-            <goal>java</goal>
-          </goals>
-        </execution>
-      </executions>
-    </plugin>
+      
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <mainClass>com.EventManApp.EventManApp</mainClass>
+        </configuration>
+        <executions>
+          <execution>
+            <id>run-main</id>
+            <phase>package</phase>
+            <goals>
+              <goal>java</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      
     </plugins>
   </build>
 </project>

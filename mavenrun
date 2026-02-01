@@ -1,5 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
+#set -x
 # Function to run the Maven command inside the Docker container
 mrun() {
     # Initialize an array to hold directive names
@@ -93,10 +94,9 @@ mavenStatus=$?
 if [ "$0" = "./mavenrun" ] || [ "$0" = "mavenrun" ]; then
     if [ "$mavenStatus" -eq 0 ]; then
         # Run the mrun function with any additional arguments passed to the script
-        shift # Remove script name from arguments
         mrun "$@"
         commandStatus=$?  # Capture the exit status of mrun
-        exit $commandStatus  # Exit with the status of mrun
+        exit "$commandStatus"  # Exit with the status of mrun
     else
         exit 1
     fi
