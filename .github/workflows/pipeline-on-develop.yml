@@ -32,6 +32,8 @@ jobs:
   check_directives:
     needs: call_automerge
     runs-on: ubuntu-latest
+    with:
+      commit_sha: ${{ github.sha }}
     steps:
       - name: Checkout specific branch
         uses: actions/checkout@v2
