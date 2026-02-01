@@ -17,6 +17,30 @@ jobs:
       - name: Do merge
         run: echo "merge work"
 
+  check_directives:
+    needs: call_automerge
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check commit directives
+        run: |
+          # Make scripts executable
+          chmod +x .github/scripts/git-extract-directives.sh
+          
+          # Extract directives from commit message
+          directives=$(.github/scripts/git-extract-directives.sh "${{ github.sha }}")
+          result=$?
+          chmod -x .github/scripts/git-extract-directives.sh
+          
+          # Check if the extraction was successful and check for the specific directive
+          if [ "$result" -eq 0 ] && [[ "$directives" == *"--merge"* ]]; then
+            echo "Directive found: --merge"
+            echo "Proceeding to main merge..."
+            echo "true" > .github/merge_action_triggered  # Create a file to signal to main merge
+          else
+            echo "No valid directives found."
+            echo "false" > .github/merge_action_triggered  # Create a file to indicate no action
+          fi
+
   call_generate:
     needs: do-merge
     uses: ./.github/workflows/generate-deck.yml
@@ -30,7 +54,11 @@ jobs:
       commit_sha: ${{ github.sha }}
 
   call_mainmerge:
-    needs: call_automerge
+    needs: [call_automerge, check_directives]  # Depend on both jobs
+    if: |
+      success() && 
+      steps.check_directives.outputs.merge_action_triggered == 'true'  # Only proceed if the directive was found
     uses: ./.github/workflows/main-merge-changes.yml
     with:
       commit_sha: ${{ github.sha }}
+          

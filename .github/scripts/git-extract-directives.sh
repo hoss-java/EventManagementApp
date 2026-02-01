@@ -3,7 +3,7 @@
 # Get the commit ID from the environment variable
 COMMIT_ID="$1"
 if [ -z "$COMMIT_ID" ]; then
-    echo "ERROR: Commit ID is required."
+    #echo "ERROR: Commit ID is required."
     exit 1
 fi
 
@@ -31,6 +31,6 @@ if [ ${#directives[@]} -gt 0 ]; then
         echo "$directive"
     done
 else
-    echo "No directives found."
+    #echo "No directives found."
     exit 1  # Return exit status 1 if no directives found
 fi
