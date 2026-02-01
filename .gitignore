@@ -7,12 +7,17 @@
 
 # testing
 /coverage
+**/coverage/
 
 # production
 build/
+**/build/
 bin/
+**/bin/
 pack/
+**/pack/
 target/
+#**/target/
 
 # misc
 *.pyc

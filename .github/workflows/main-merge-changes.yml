@@ -103,7 +103,7 @@ jobs:
         if: env.file_changed == 'true'
         run: |
           set -x
-          mvn -f EventManApp test  # Use Maven command directly
+          mvn -f EventManApp clean test  # Use Maven command directly
 
       # Step 8: Copy and Push Changes
       - name: Copy and Push Changes
