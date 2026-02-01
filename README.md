@@ -81,49 +81,39 @@
 * Step 6: Documenting and summarizing findings, developments, and integrations. ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 * Step 7: Touch a service implementation of the project ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 
-### Microservices sandbox (Containerized CI environment)
-
-Understood — here's the diagram without color:
+### Sandbox (Containerized CI environment)
 
 ```mermaid
 flowchart TB
-  subgraph Network [Isolated Container Network — 172.32.0.0/24]
-    direction TB
+  maven["maven\n172.32.0.11"]
+  tomcat["tomcat\n172.32.0.12\nHost port: 3281→8083"]
+  nodejs["nodejs\n172.32.0.13"]
+  sshd["sshd\n172.32.0.15\nHost port: 3222→22"]
+  mysql["mysql\n172.32.0.16"]
+  mongodb["mongodb\n172.32.0.17"]
+  redis["redis\n172.32.0.18"]
+  phpmyadmin["phpmyadmin\n172.32.0.19\nHost port: 3280→80"]
 
-    maven["maven<br/><small>172.32.0.11</small>"]
-    tomcat["tomcat<br/><small>172.32.0.12</small><br/>Host port: 3281→8083"]
-    nodejs["nodejs<br/><small>172.32.0.13</small>"]
-    sshd["sshd<br/><small>172.32.0.15</small><br/>Host port: 3222→22"]
-    mysql["mysql<br/><small>172.32.0.16</small>"]
-    mongodb["mongodb<br/><small>172.32.0.17</small>"]
-    redis["redis<br/><small>172.32.0.18</small>"]
-    phpmyadmin["phpmyadmin<br/><small>172.32.0.19</small><br/>Host port: 3280→80"]
+  maven --- tomcat
+  maven --- nodejs
+  maven --- mysql
+  maven --- mongodb
+  maven --- redis
+  maven --- phpmyadmin
+  maven --- sshd
 
-    maven ---|internal| tomcat
-    maven ---|internal| nodejs
-    maven ---|internal| mysql
-    maven ---|internal| mongodb
-    maven ---|internal| redis
-    maven ---|internal| phpmyadmin
-    maven ---|internal| sshd
+  tomcat --- mysql
+  tomcat --- redis
+  nodejs --- mongodb
+  phpmyadmin --- mysql
+  sshd --- maven
 
-    tomcat ---|internal| mysql
-    tomcat ---|internal| redis
-    nodejs ---|internal| mongodb
-    phpmyadmin ---|internal| mysql
-    sshd ---|internal| maven
+  Browser("Browser / External Tools")
+  SSH_Client("SSH client")
 
-  end
-
-  subgraph Host [Host / External]
-    direction LR
-    Browser("Browser / External Tools")
-    SSH_Client("SSH client")
-  end
-
-  Browser -- HTTP (3281) --> tomcat
-  Browser -- HTTP (3280) --> phpmyadmin
-  SSH_Client -- SSH (3222) --> sshd
+  Browser -- "HTTP 3281" --> tomcat
+  Browser -- "HTTP 3280" --> phpmyadmin
+  SSH_Client -- "SSH 3222" --> sshd
 ```
 
 ### Findigs summary
