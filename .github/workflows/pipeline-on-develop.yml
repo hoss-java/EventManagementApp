@@ -42,24 +42,24 @@ check_directives:
       run: ls -R .github/scripts
 
     - name: Check commit directives
-        run: |
-          # Make scripts executable
-          chmod +x .github/scripts/git-extract-directives.sh
+      run: |
+        # Make scripts executable
+        chmod +x .github/scripts/git-extract-directives.sh
 
-          # Extract directives from commit message
-          directives=$(.github/scripts/git-extract-directives.sh "${{ github.sha }}")
-          result=$?
-          chmod -x .github/scripts/git-extract-directives.sh
+        # Extract directives from commit message
+        directives=$(.github/scripts/git-extract-directives.sh "${{ github.sha }}")
+        result=$?
+        chmod -x .github/scripts/git-extract-directives.sh
 
-          # Check if the extraction was successful and check for the specific directive
-          if [ "$result" -eq 0 ] && [[ "$directives" == *"--merge"* ]]; then
-            echo "Directive found: --merge"
-            echo "Proceeding to main merge..."
-            echo "true" > .github/merge_action_triggered  # Create a file to signal to main merge
-          else
-            echo "No valid directives found."
-            echo "false" > .github/merge_action_triggered  # Create a file to indicate no action
-          fi
+        # Check if the extraction was successful and check for the specific directive
+        if [ "$result" -eq 0 ] && [[ "$directives" == *"--merge"* ]]; then
+          echo "Directive found: --merge"
+          echo "Proceeding to main merge..."
+          echo "true" > .github/merge_action_triggered  # Create a file to signal to main merge
+        else
+          echo "No valid directives found."
+          echo "false" > .github/merge_action_triggered  # Create a file to indicate no action
+        fi
 
   call_mainmerge:
     needs: [call_automerge, check_directives]  # Depend on both jobs
