@@ -502,100 +502,9 @@ gantt
 > >```
 > </details>
 
-## 001-0009
-> **Implement an UI class and it tests** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> The goal of this card is to implement an UI class.
-> 
-> # DOD (definition of done):
-> A UI class with basic requiments are implemented.
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0010
-> **Implement a simple block test.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> The goal of this card is to implement a simple block test system to project.
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0011
-> **Implement an event class.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> The goal of this card is to implement a class for manage events.
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0012
-> **Implement a participants class.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> The goal of this card is to implement a class for participants.
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0013
-> **Implement a report manager class.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> The goal of this card is to implement a report  manager.
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0014
-> **Implement a DB layer.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> The goal of this card is to implement a DB layer
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
 ## 001-0008
-> **Automate local and remote repos to run test automatically.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
-> <details open>
+> **Automate local and remote repos to run test automatically.** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
+> <details >
 >     <summary>Details</summary>
 > The goal of this card is to add needed actions to GIHub workflow to run tests.
 > 
@@ -604,11 +513,11 @@ gantt
 > 
 > # TODO:
 > - [x] 1. Develop a simple local CI
-> - [ ] 2. Find out how to run tests on GitHub side
-> - [ ] 3. Find out how to check commit messages via workflow actions
+> - [x] 2. Find out how to run tests on GitHub side
+> - [x] 3. Find out how to check commit messages via workflow actions
 > - [x] 4. Implement test check to git hooks
-> - [ ] 5. Implement test check to GitHUb Workflow
-> - [ ] 6. Develop an automation to run test and push codes to main branch if test passed
+> - [x] 5. Implement test check to GitHUb Workflow
+> - [x] 6. Develop an automation to run test and push codes to main branch if test passed
 > 
 > # Reports:
 > * What it means with local CI here :
@@ -688,4 +597,127 @@ gantt
 > >>>>git commit -m "[B001-C0009] Improve git hooks." -m "--notest"
 > >>>>```
 > >>> * By default if no file named `.commit-check` is found in the root of the repository, running tests is skipped regardless what the default setting is or which directive is used.
+> 
+> ## Find out how to run tests on GitHub side
+> * It seems packages such as JDK and maven can be not installed in the way that is used to Ubuntu packages.
+> * It can be install through reuse the packages that already available and installed (I don't how!).
+> * However here the way that worked
+> >```
+> >    steps:
+> >      # Step 1: Checkout the repository
+> >      - name: Checkout repo (fetch all)
+> >        uses: actions/checkout@v5
+> >        with:
+> >          fetch-depth: 0
+> >
+> >      # Step 2: Set up Java
+> >      - name: Set up JDK 17
+> >        uses: actions/setup-java@v4
+> >        with:
+> >          java-version: '17'
+> >          distribution: 'temurin'
+> >          cache: maven
+> >```
+> 
+> * Running tests and merge codes from the `develop`  branch to the `main` has been not set up to run after each commit.
+> > * A new section has been added to the pipeline to check for directives included in the commit message. If the message contains `--merge` (not on the first line, but added on the second line or later), then the tests and merge action will be triggered.
+> >>```
+> >># for example 
+> >>git commit -m "[B001-C0008] Automate running tests - github action" -m "--marge"
+> >>```
+> 
+> * Now both local and remote provide running tests to check code integration. In the local case , tests is run before commit changes via `git commit -m ...`  or `git commit --amend`
+> * Running tests in local cases can be skipped by passing the directive `--notest` via git commit message, or by changing default settings via file `.gitdefault` stored on the repository root
+> * On the remote case, the tests are run if a commit message provides the directiv `--marge`. In the remote case it all tests are passed, files listed on the file `.gitmain` stored on the the repository root are merged from `develop` to `main` also.
+> </details>
+
+## 001-0010
+> **Implement a simple block test.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to implement a simple block test system to project.
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0011
+> **Implement an event class.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to implement a class for manage events.
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0012
+> **Implement a participants class.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to implement a class for participants.
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0013
+> **Implement a report manager class.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to implement a report  manager.
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0014
+> **Implement a DB layer.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to implement a DB layer
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0009
+> **Implement an UI class and it tests** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+> <details open>
+>     <summary>Details</summary>
+> The goal of this card is to implement an UI class.
+> 
+> # DOD (definition of done):
+> A UI class with basic requiments are implemented.
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
 > </details>
