@@ -23,9 +23,11 @@
 #    exitcode=1
 #fi
 COMMITCHECK_RUNNER=mavenrun
+echo "$GIT_ROOT/$COMMITCHECK_RUNNER"
 if [ -f "$GIT_ROOT/$COMMITCHECK_RUNNER" ]; then
-    bash -c "source $GIT_ROOT/$COMMITCHECK_RUNNER && mrun --quiet test" \
-    && exitcode=0
+    bash -c "source $GIT_ROOT/$COMMITCHECK_RUNNER \
+        && mrun --noit --quiet clean test" \
+    && exitcode=$?
 else
     exitcode=1
 fi
