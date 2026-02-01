@@ -13,10 +13,21 @@ jobs:
   do-merge:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo (fetch all)
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v4
+      - name: Do merge
+        run: echo "merge work"
+
+  call_generate:
+    needs: do-merge
+    uses: ./.github/workflows/generate-deck.yml
+    with:
+      commit_sha: ${{ github.sha }}
+
+  call_automerge:
+    needs: call_generate
+    uses: ./.github/workflows/auto-merge-changes.yml
+    with:
+      commit_sha: ${{ github.sha }}
 
 check_directives:
   needs: call_automerge
@@ -29,7 +40,8 @@ check_directives:
 
     - name: List files for debugging
       run: ls -R .github/scripts
-      - name: Check commit directives
+
+    - name: Check commit directives
         run: |
           # Make scripts executable
           chmod +x .github/scripts/git-extract-directives.sh
@@ -48,18 +60,6 @@ check_directives:
             echo "No valid directives found."
             echo "false" > .github/merge_action_triggered  # Create a file to indicate no action
           fi
-
-  call_generate:
-    needs: do-merge
-    uses: ./.github/workflows/generate-deck.yml
-    with:
-      commit_sha: ${{ github.sha }}
-
-  call_automerge:
-    needs: call_generate
-    uses: ./.github/workflows/auto-merge-changes.yml
-    with:
-      commit_sha: ${{ github.sha }}
 
   call_mainmerge:
     needs: [call_automerge, check_directives]  # Depend on both jobs
