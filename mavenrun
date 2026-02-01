@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# Function to run the Maven command inside the Docker container
+mrun() {
+    # Check for quiet mode
+    if [ "$1" = "--quiet" ]; then
+        # Shift to remove the first argument (i.e., --quiet)
+        shift
+        # Run the command without output
+        docker exec -it maven mvn -f EventManagementApp/EventManApp "$@" >/dev/null 2>&1
+    else
+        # Run the command normally
+        docker exec -it maven mvn -f EventManagementApp/EventManApp "$@"
+    fi
+    
+    # Set exit status based on the success of the Docker command
+    return $?
+}
+
+mstatus() {
+    # Check if Docker is running and if the container exists
+    if [ "$(docker ps -q -f name=maven)" ]; then
+        echo "Docker container 'maven' is available."
+        # Display container short info
+        docker inspect --format='{{.Name}} - {{.State.Status}}' maven
+        return 0
+    else
+        echo "Docker container 'maven' is not running or does not exist."
+        return 1
+    fi
+}
+
+mstatus
+mavenStatus=$?
+
+# Main code block
+#if [ "$0" = "$BASH_SOURCE" ]; then
+if [ "$0" = "./mavenrun" ] || [ "$0" = "mavenrun" ]; then
+    if [ "$mavenStatus" -eq 0 ]; then
+        # Run the mrun function with any additional arguments passed to the script
+        shift # Remove script name from arguments
+        mrun "$@"
+        commandStatus=$?  # Capture the exit status of mrun
+        exit $commandStatus  # Exit with the status of mrun
+    else
+        exit 1
+    fi
+fi

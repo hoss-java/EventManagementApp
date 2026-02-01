@@ -25,4 +25,80 @@ GitHub workflows uses tests results to verify commits.
 - [ ] 6. Develop an automation to run test and push codes to main branch if test passed
 
 # Reports:
-*
+* What it means with local CI here :
+> * A simple Continuous Integration (CI) system integrates one or more tools to run tests on code, ensuring that all components function correctly.
+> * Considering the above point, a tool can run tests either manually or automatically before pushing code to the repository.
+> * The tool(s) report the results of running tests as logical outputs, such as 0 (true, passed) and 1 (false, failed). This format allows scripts, particularly local ones using Git and its hooks, to make informed decisions based on the test outcomes.
+* So what it needs to do for the local part
+> * Develop a simple tools to run test which is already done (`mavenrun`  script)
+>> * `mavenrun` can be used both directly and via sourcing
+>>> * Use as a script on cli
+>>>> ```
+>>>>#./mavenrun [--quiet] <maven-directives>
+>>>># for example
+>>>>./mavenrun test
+>>>>./mavenrun --quiet test
+>>>>./mavenrun clean test
+>>>>./mavenrun compile
+>>>>./mavenrun clean compile
+>>>>./mavenrun package
+>>>>./mavenrun exec:java
+>>>>
+>>>># exit code can be use of the result
+>>>># 0 - Success
+>>>># 1 - Failed
+>>>> ```
+>>> * Sourcing
+>>>> ```
+>>>> source mavenrun
+>>>> 
+>>>>#mrun [--quiet] <maven-directives>
+>>>>#mstatus
+>>>>
+>>>>mstatus
+>>>>
+>>>>mrun test
+>>>>mrun --quiet test
+>>>>mrun clean test
+>>>>mrun compile
+>>>>mrun clean compile
+>>>>mrun package
+>>>>mrun exec:java
+>>>>
+>>>># exit code can be use of the result
+>>>># 0 - Success
+>>>># 1 - Failed
+>>>> ```
+> * Implement the script to git hooks
+>> * It has also been implemented in Git hooks. The current `.git/hooks/pre-commit` script checks for a file named .commit-check in the root of the Git repository. If it finds the file, it will execute it and return an exit code to git. [pre-commit](https://github.com/hoss-java/git-hooks/blob/main/hooks/pre-commit)
+>> * It means it needs only to call `mrun` in the `.commit-check` and return the exit code of `mrun` to git, a simple `.commit-check`
+>>>```
+>>>#: Pre-commit checker to use within git hook `pre-commit`
+>>>#:
+>>>#: File : .commit-check
+>>>#: Description : The code here run to check committed files
+>>>#:      before committing.
+>>>#:      The code set exitCode=1 if the check result is false
+>>>#:      Otherwise exitCode=0 (or doing nothing).
+>>>#: OBS! : This file should be located in the root of the repo.
+>>>#
+>>>#
+>>># Local variables:
+>>>#  exitcode
+>>>#  GIT_ROOT
+>>>#---------------------------------------
+>>>    bash -c "source $GIT_ROOT/mavenrun && mrun --quiet test" \
+>>>    && exitcode=0
+>>>else
+>>>    exitcode=1
+>>>fi
+>>>```
+>> * It also needs to make it possible to skip checks when it needs.
+>>> * To achieve this, the `git-hooks` have been updated to include improved scripts that are more generic. Most of the scripts added/developed to/for the `git-hooks` are designed to work specifically with `commit-msg`. However, these helper scripts are now more versatile, allowing them to be used with other hooks such as `pre-commit` [git-hooks](https://github.com/hoss-java/git-hooks/tree/main).
+>>> * A new setting (`commitCheckFlag=true`) was added to `.gitdefault` to defain default status to run tests.
+>>> * It's also possible now skip running test by using a directive (`--notest`) via git message
+>>>>```
+>>>># for example 
+>>>>git commit -m "[B001-C0009] Improve git hooks." -m "--notest"
+>>>>```
+>>> * By default if no file named `.commit-check` is found in the root of the repository, running tests is skipped regardless what the default setting is or which directive is used.
