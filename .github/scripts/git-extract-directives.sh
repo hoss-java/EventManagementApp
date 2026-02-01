@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+#set -x
 # Get the commit ID from the environment variable
 COMMIT_ID="$1"
 if [ -z "$COMMIT_ID" ]; then
@@ -11,7 +11,9 @@ fi
 commit_msg_full="$(git log --format=%B -n 1 "$COMMIT_ID")"
 
 # Separate lines in the commit message
-commit_msg_lines=($(echo "$commit_msg_full" | awk 'BEGIN{RS=""; FS="\n"} {for(i=2;i<=NF;i++) print $i}'))
+#commit_msg_lines=($(echo "$commit_msg_full" | awk 'BEGIN{RS=""; FS="\r"} {for(i=2;i<=NF;i++) print $i}'))
+# Separate lines in the commit message starting from the second line
+commit_msg_lines=($(echo "$commit_msg_full" | awk 'NR > 1'))
 
 # Initialize an array to hold directives
 directives=()
@@ -26,7 +28,7 @@ done
 
 # Output results
 if [ ${#directives[@]} -gt 0 ]; then
-    echo "Found directives:"
+    #echo "Found directives:"
     for directive in "${directives[@]}"; do
         echo "$directive"
     done
