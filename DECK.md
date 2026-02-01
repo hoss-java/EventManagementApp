@@ -205,7 +205,7 @@ gantt
 > * The current action, `generate-deck.yml` was updated to work only if the branch is `main`. So even the action file is added to other branches such as develop, it does nothing.
 > > * However I thing removing a file ( in this case an YAML action file) that is not used or ignored makes a repo more clear.
 > > * For now it will be kept for a while but it will be removed from `develop` when designing actions are completely done.
-> * A new action name `auto-merge-changes.yml` was added to the `develop`  branch to read a list of files and folders from a file named `.gitautomarge` from the root of the `develop` branch and push them to main automatically after pushing to the `develop`
+> * A new action name `auto-merge-changes.yml` was added to the `develop`  branch to read a list of files and folders from a file named `.gitmainauto` from the root of the `develop` branch and push them to main automatically after pushing to the `develop`
 > 
 > ## Updating rge design for git branches and their connections
 >  
@@ -623,12 +623,12 @@ gantt
 > > * A new section has been added to the pipeline to check for directives included in the commit message. If the message contains `--merge` (not on the first line, but added on the second line or later), then the tests and merge action will be triggered.
 > >>```
 > >># for example 
-> >>git commit -m "[B001-C0008] Automate running tests - github action" -m "--marge"
+> >>git commit -m "[B001-C0008] Automate running tests - github action" -m "--merge"
 > >>```
 > 
 > * Now both local and remote provide running tests to check code integration. In the local case , tests is run before commit changes via `git commit -m ...`  or `git commit --amend`
 > * Running tests in local cases can be skipped by passing the directive `--notest` via git commit message, or by changing default settings via file `.gitdefault` stored on the repository root
-> * On the remote case, the tests are run if a commit message provides the directiv `--marge`. In the remote case it all tests are passed, files listed on the file `.gitmain` stored on the the repository root are merged from `develop` to `main` also.
+> * On the remote case, the tests are run if a commit message provides the directiv `--merge`. In the remote case it all tests are passed, files listed on the file `.gitmain` stored on the the repository root are merged from `develop` to `main` also.
 > </details>
 
 ## 001-0010
