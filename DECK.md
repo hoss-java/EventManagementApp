@@ -603,10 +603,10 @@ gantt
 > GitHub workflows uses tests results to verify commits.
 > 
 > # TODO:
-> - [ ] 1. Develop a simple local CI
+> - [x] 1. Develop a simple local CI
 > - [ ] 2. Find out how to run tests on GitHub side
 > - [ ] 3. Find out how to check commit messages via workflow actions
-> - [ ] 4. Implement test check to git hooks
+> - [x] 4. Implement test check to git hooks
 > - [ ] 5. Implement test check to GitHUb Workflow
 > - [ ] 6. Develop an automation to run test and push codes to main branch if test passed
 > 
