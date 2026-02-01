@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -x
 # Get the commit ID from the environment variable
 COMMIT_ID="$1"
 if [ -z "$COMMIT_ID" ]; then
