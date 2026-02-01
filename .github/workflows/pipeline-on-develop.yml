@@ -56,9 +56,9 @@ jobs:
   call_mainmerge:
     needs: [call_automerge, check_directives]  # Depend on both jobs
     if: |
-      success() && 
-      steps.check_directives.outputs.merge_action_triggered == 'true'  # Only proceed if the directive was found
+      success() &&
+      steps.check_directives.outputs.merge_action_triggered == 'true'
     uses: ./.github/workflows/main-merge-changes.yml
     with:
       commit_sha: ${{ github.sha }}
-          
+
