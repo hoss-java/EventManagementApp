@@ -13,7 +13,7 @@ import java.util.Scanner;
  * This class provides the program entry point for the event managment application.
  *
  * Features:
- * - 
+ * -
  */
 public class EventManApp {
 
