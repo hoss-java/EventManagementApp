@@ -97,16 +97,12 @@ flowchart TB
 
   %% Internal network connections (isolation-focused)
   maven --- tomcat
-  maven --- nodejs
   maven --- mysql
   maven --- mongodb
   maven --- redis
-  maven --- phpmyadmin
-  maven --- sshd
 
-  tomcat --- mysql
-  tomcat --- redis
   nodejs --- mongodb
+  nodejs --- mysql
   phpmyadmin --- mysql
   sshd --- maven
 
@@ -114,9 +110,9 @@ flowchart TB
   Browser("Browser / External Tools")
   SSH_Client("SSH client")
 
-  Browser -- "HTTP 3281" --> tomcat
-  Browser -- "HTTP 3280" --> phpmyadmin
-  SSH_Client -- "SSH 3222" --> sshd
+  ((Browser)) -- "HTTP 3281" --> tomcat
+  ((Browser)) -- "HTTP 3280" --> phpmyadmin
+  ((SSH_Client)) -- "SSH 3222" --> sshd
 ```
 
 ### Findigs summary
