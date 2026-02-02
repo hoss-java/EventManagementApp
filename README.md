@@ -254,6 +254,9 @@ Recommendation
 
 * **OBS!** **GitHub only fires workflow_run for workflows whose workflow file exists on the repository default branch (usually main)**
 
+
+#### The Current design
+
 ```mermaid
 classDiagram
     class EventManApp {
@@ -299,6 +302,21 @@ classDiagram
         +getCapacity()
     }
 
+   class ParticipantObjectMan {
+        -List<ParticipantObject> events
+        +isValidCommand(String commandId)
+        +parseCommands(String jsonCommands)
+
+        +addParticipant(ParticipantObject event)
+    }
+
+    class ParticipantObject {
+        -int uniqueId
+        -String title
+        +getUniqueId()
+        +getTitle()
+    }
+
     class MenuCallback {
         +onMenuItemSelected(String callerID, String menuItem): String
     }
@@ -309,12 +327,19 @@ classDiagram
     }
 
     EventManApp --> ConsoleInterface : uses
+    EventManApp --> RestInterface : uses
     EventManApp --> EventObjectMan : manages
+    ParticipantObjectMan --> ParticipantObject : contains
+    EventManApp --> ParticipantObjectMan : manages
     EventObjectMan --> EventObject : contains
     ConsoleInterface --> MenuCallback : interacts with
+    RestInterface --> MenuCallback : interacts with
     ObjectHandler <|.. EventObjectMan : implements
+    ObjectHandler <|.. ParticipantObjectMan : implements
 
 ```
+
+#### Supported commands structures
 
 ```json
 {
@@ -392,5 +417,6 @@ classDiagram
 }
 
 ```
+
 * References
 > * https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
