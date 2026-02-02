@@ -78,8 +78,8 @@
 * Step 3: Implement tests for both unit and block levels. ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 * Step 4: Automate testing and integrating it to GitHub workflows ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 * Step 5: Add advanced/required futures according the project scenario ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-* Step 6: Documenting and summarizing findings, developments, and integrations. ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-* Step 7: Touch a service implementation of the project ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+* Step 6: Documenting and summarizing findings, developments, and integrations. ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+* Step 7: Touch a service implementation of the project ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 
 ### Sandbox (Containerized CI environment)
 
@@ -254,5 +254,145 @@ Recommendation
 
 * **OBS!** **GitHub only fires workflow_run for workflows whose workflow file exists on the repository default branch (usually main)**
 
+```mermaid
+classDiagram
+    class EventManApp {
+        +static StringBuilder logBuffer
+        +static boolean running
+        +static main(String[] args)
+        +eventManager(InputStream in, PrintStream out, String[] args, MenuCallback callback)
+        +createInvalidCommandResponse(String commandId)
+        +displayLogs()
+    }
+
+    class ConsoleInterface {
+        -Scanner scanner
+        -MenuCallback callback
+        +executeCommands(JSONObject commands)
+        +displayCommandsAndGetChoice(JSONArray commandsArray, String backCommand)
+        +close()
+        +showMessage(String message)
+    }
+
+    class EventObjectMan {
+        -List<EventObject> events
+        -int nextId
+        -Map<String, Method> commandMap
+        +isValidCommand(String commandId)
+        +addEvent(EventObject event)
+        +removeEvent(String title)
+        +listEvents(JSONObject args)
+        +parseCommands(String jsonCommands)
+    }
+
+    class EventObject {
+        -int uniqueId
+        -String title
+        -LocalDate date
+        -LocalTime startTime
+        -Duration duration
+        -String location
+        -int capacity
+        +getUniqueId()
+        +getTitle()
+        +getDate()
+        +getStartTime()
+        +getDuration()
+        +getLocation()
+        +getCapacity()
+    }
+
+    interface MenuCallback {
+        +onMenuItemSelected(String callerID, String menuItem): String
+    }
+
+    interface ObjectHandler {
+        +parseCommands(String jsonCommands): JSONObject
+        +isValidCommand(String commandId): boolean
+    }
+
+    EventManApp --> ConsoleInterface : uses
+    EventManApp --> EventObjectMan : manages
+    EventObjectMan --> EventObject : contains
+    ConsoleInterface --> MenuCallback : callback to
+    ObjectHandler <|.. EventObjectMan : implements
+```
+
+```json
+{
+    "commands": [
+        {
+            "id" : "event",
+            "description": "Event",
+            "commands": [
+                {
+                    "id" :"addevent",
+                    "description": "Add an event",
+                    "args": {
+                        "title": "str",
+                        "location": "str",
+                        "capacity": "positiveInt",
+                        "date" : "date",
+                        "time" : "time",
+                        "duration" : "duration",
+                    },
+                },
+                {
+                    "id" : "listallupcomingevents",
+                    "description": "View all upcoming events.",
+                    "args": {
+                        "date" : "date:default",
+                    }
+                },
+                {
+                    "id" : "listallevents",
+                    "description": "View all events.",
+                    "args": {
+                    }
+                },
+                {
+                    "id" :"addparticipant",
+                    "description": "Add a participant to an event",
+                    "args": {
+                        "name" : "str",
+                        "id": "positiveInt",
+                    }
+                },
+                {
+                    "id": "listinvitations",
+                    "description": "View invitations/participants for a specific event.",
+                    "args": {
+                        "id": "positiveInt",
+                    }
+                },
+            ]
+        },
+        {
+            "id" : "participant",
+            "description": "Participant",
+            "commands": [
+                {
+                "id" :"registerparticipant",
+                "description": "Register a participant",
+                "args": {
+                    "type" : "int",
+                    "name" : "str",
+                    "status": "int",
+                    "id": "positiveInt",
+                    },
+                },
+                {
+                    "id": "listparticipantevents",
+                    "description": "View events for a specific participant.",
+                    "args": {
+                        "name" : "str",
+                    }
+                },
+            ]
+        },
+    ]
+}
+
+```
 * References
 > * https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
