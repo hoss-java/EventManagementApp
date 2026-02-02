@@ -43,6 +43,7 @@ jobs:
 
       - name: Check commit directives
         run: |
+          set -x
           # Make scripts executable
           chmod +x .github/scripts/git-extract-directives.sh
 
@@ -63,15 +64,25 @@ jobs:
           # Check if the extraction was successful and check for the specific directive
           if [ "$result" -eq 0 ] && [[ "$directives" == *"--merge"* ]]; then
             echo "Directive found: --merge"
-            echo "merge_action_triggered=true" >> $GITHUB_ENV  # Correctly set the environment variable
+            echo "result=true" >> $GITHUB_ENV  # Set environment variable
+            echo "::set-output name=result::true"  # Output for next job
           else
             echo "No valid directives found."
-            echo "merge_action_triggered=false" >> $GITHUB_ENV  # Set to false
+            echo "result=false" >> $GITHUB_ENV  # Set to false
+            echo "::set-output name=result::false"  # Output for next job
           fi
   call_mainmerge:
     needs: check_directives  # Depend on both jobs
-    if: ${{ needs.check_directives.outputs.merge_action_triggered == 'true' }}  # Access the output correctly
-    uses: ./.github/workflows/main-merge-changes.yml
-    with:
-      commit_sha: ${{ github.sha }}
+    runs-on: ubuntu-latest  # Ensure a consistent environment
+    steps:
+      - name: Debug output of merge_action_triggered
+        run: |
+          echo "merge_action_triggered: ${{ needs.check_directives.outputs.merge_action_triggered }}"
+      
+      - name: Conditional Merge
+        if: ${{ needs.check_directives.outputs.merge_action_triggered == 'true' }}
+        run: echo "Proceeding to main merge..."
+        uses: ./.github/workflows/main-merge-changes.yml
+        with:
+          commit_sha: ${{ github.sha }}
 
