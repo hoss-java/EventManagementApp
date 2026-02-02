@@ -299,11 +299,11 @@ classDiagram
         +getCapacity()
     }
 
-    interface MenuCallback {
+    class MenuCallback {
         +onMenuItemSelected(String callerID, String menuItem): String
     }
 
-    interface ObjectHandler {
+    class ObjectHandler {
         +parseCommands(String jsonCommands): JSONObject
         +isValidCommand(String commandId): boolean
     }
@@ -313,6 +313,7 @@ classDiagram
     EventObjectMan --> EventObject : contains
     ConsoleInterface --> MenuCallback : interacts with
     ObjectHandler <|.. EventObjectMan : implements
+
 ```
 
 ```json
