@@ -60,9 +60,5 @@
                 },
             ]
         },
-        {
-            "id":"exit",
-            "description": "Exit",
-        }
     ]
 }
