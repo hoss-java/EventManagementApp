@@ -21,14 +21,17 @@ mrun() {
     # Shift the processed arguments
     set -- "${@:$#}"  # Shift out the directives for further processing
 
+    output=""
+    exit_code=1
     # Check for the --noit directive
     if [[ " ${directives[@]} " =~ " --noit " ]]; then
-        interactive_flag=""  # Run without -it
+        # Capture the output of the Docker command
+        output=$(docker exec  maven mvn -f EventManagementApp/EventManApp "$@" $exec_cmd)
+        exit_code=$?
+    else
+        docker exec -it maven mvn -f EventManagementApp/EventManApp "$@" $exec_cmd
+        exit_code=$?
     fi
-
-    # Capture the output of the Docker command
-    output=$(docker exec $interactive_flag maven mvn -f EventManagementApp/EventManApp "$@" $exec_cmd)
-    exit_code=$?
 
     # Print the output if the exit code is not 0
     if [ $exit_code -ne 0 ]; then
@@ -41,6 +44,11 @@ mrun() {
 
     # Return the exit status
     return $exit_code
+}
+
+mvn(){
+    mrun "$@"
+    return $?
 }
 
 mstatus() {
