@@ -13,7 +13,8 @@ import java.io.OutputStream;
 
 import java.util.Scanner;
 
-import com.EventManApp.lib.ConsoleCommand;
+import com.EventManApp.lib.ConsoleInterface;
+import com.EventManApp.MenuCallback;
 /**
  * @file EventManApp.java
  * @brief Interactive console event managment application.
@@ -24,6 +25,8 @@ import com.EventManApp.lib.ConsoleCommand;
  * -
  */
 public class EventManApp {
+    private static final StringBuilder logBuffer = new StringBuilder();
+    private static boolean running = true;
 
     /**
      * @brief Program entry point.
@@ -31,7 +34,52 @@ public class EventManApp {
      * @param args Command-line arguments (ignored by this application).
      */
     public static void main(String[] args) {
-        eventManager(System.in, System.out,args);
+        Scanner scanner = new Scanner(System.in);
+        MenuCallback callback = (callerID, menuItem) -> {
+            logBuffer.append(callerID).append(": ").append(menuItem).append("\n");
+            // Create a JSON object
+            JSONObject jsonResponse = new JSONObject();
+            jsonResponse.put("menuItem", new JSONObject(menuItem));
+            jsonResponse.put("status", "success");
+            jsonResponse.put("message", "Menu item processed successfully");
+            // Return the JSON string
+            return jsonResponse.toString();
+        };
+
+        // Start the log display thread
+        Thread logThread = new Thread(EventManApp::displayLogs);
+        logThread.start();
+
+
+        eventManager(System.in, System.out,args,callback);
+
+        // Stop the log thread when done
+        running = false;
+        try {
+            logThread.join(); // Wait for the log thread to finish
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        scanner.close(); // Close the scanner at the end to free resources
+    }
+
+    private static void displayLogs() {
+        while (running) {
+            // Print logs if any
+            synchronized (logBuffer) {
+                if (logBuffer.length() > 0) {
+                    System.out.println("\n\n----------\nLogs:");
+                    System.out.println(logBuffer.toString());
+                    logBuffer.setLength(0); // Clear the log buffer after printing
+                }
+            }
+            try {
+                Thread.sleep(1000); // Update log display every second
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     // This method must be defined within the Main class
@@ -67,27 +115,18 @@ public class EventManApp {
             }
         }
     }
+
     /**
      * Launches an interactive event managment that reads commands from
      * standard input, evaluates and run them,and prints results.
      *
      * @param args Command-line arguments (ignored).
      */
-    public static void eventManager(InputStream in, PrintStream out, String[] args) {
+    public static void eventManager(InputStream in, PrintStream out, String[] args, MenuCallback callback) {
         JSONObject commands= loadJsonFromFile("commands.json");
-        //System.out.println(commandJson);
-        //JSONObject commands = new JSONObject(commandJson);
-        //traverseAndPrint(commands,"");
 
-        ConsoleCommand myConsoleCommand = new ConsoleCommand();
-
-
-        while (true) {
-            JSONObject result = myConsoleCommand.executeCommands(commands);
-            System.out.println("Final Command JSON: " + result.toString());
-            break;
-        }
-
-        myConsoleCommand.close();
+        ConsoleInterface myConsoleInterface = new ConsoleInterface(callback);
+        JSONObject result = myConsoleInterface.executeCommands(commands);
+        myConsoleInterface.close();
     }
 }

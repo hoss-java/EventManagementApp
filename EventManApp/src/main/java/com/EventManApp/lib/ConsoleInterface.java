@@ -6,16 +6,20 @@ import org.json.JSONObject;
 import java.time.LocalDate;
 import java.util.Scanner;
 
-public class ConsoleCommand {
-    private final Scanner scanner;
+import com.EventManApp.MenuCallback;
 
-    public ConsoleCommand() {
+public class ConsoleInterface {
+    private final Scanner scanner;
+    private final MenuCallback callback;
+
+    public ConsoleInterface(MenuCallback callback) {
         this.scanner = new Scanner(System.in);
+        this.callback = callback;
     }
 
     public JSONObject executeCommands(JSONObject commands) {
         JSONObject selectedCommand = new JSONObject();
-        navigateCommands(commands.getJSONArray("commands"), selectedCommand, null);
+        navigateCommands(commands.getJSONArray("commands"), selectedCommand, "Exit");
         return selectedCommand;
     }
 
@@ -50,7 +54,11 @@ public class ConsoleCommand {
             if (command.has("commands")) {
                 navigateCommands(command.getJSONArray("commands"), selectedCommand, "Back");
                 if (!commandName.equals(selectedCommand.getString("id"))){
-                    break;
+                    String response = callback.onMenuItemSelected("ConsoleInterface",selectedCommand.toString());
+                    System.out.println("Response: " + response); // Print the JSON response
+                    // Wait for the user to press Enter before proceeding
+                    System.out.println("Press Enter to continue...");
+                    scanner.nextLine(); // Wait for a key press
                 }
             } else {
                 break; // Exit the while loop if a valid command is processed
@@ -162,6 +170,13 @@ public class ConsoleCommand {
         } catch (Exception e) {
             // Handle exceptions accordingly
         }
+    }
+
+    private static void printJson(String jsonString) {
+        JSONObject jsonObject = new JSONObject(jsonString);
+        // Print the JSON with indentation for readability
+        String formattedJson = jsonObject.toString(4); // Indent with 4 spaces
+        System.out.println("JSON Response:\n" + formattedJson);
     }
 
     public void close() {
