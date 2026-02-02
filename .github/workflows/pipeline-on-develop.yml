@@ -61,12 +61,15 @@ jobs:
 #            echo "false" > .github/merge_action_triggered  # Create a file to indicate no action
 #          fi
           # Check if the extraction was successful and check for the specific directive
+          # Check if the extraction was successful and check for the specific directive
           if [ "$result" -eq 0 ] && [[ "$directives" == *"--merge"* ]]; then
             echo "Directive found: --merge"
-            echo "::set-output name=merge_action_triggered::true"  # Set the output to true
+            echo "true" >> $GITHUB_ENV  # Set the output using GITHUB_ENV for environment variables
+            echo "merge_action_triggered=true" >> $GITHUB_ENV
           else
             echo "No valid directives found."
-            echo "::set-output name=merge_action_triggered::false"  # Set the output to false
+            echo "false" >> $GITHUB_ENV  # Set to false
+            echo "merge_action_triggered=false" >> $GITHUB_ENV
           fi
   call_mainmerge:
     needs: check_directives  # Depend on both jobs
