@@ -36,44 +36,37 @@ jobs:
       - name: Checkout specific branch
         uses: actions/checkout@v2
         with:
-          ref: develop
+          ref: develop  # Explicitly specify the branch
 
       - name: List files for debugging
         run: ls -R .github/scripts
 
       - name: Check commit directives
-        id: check
+        id: check_commit_directives
         run: |
+          # Make scripts executable
           chmod +x .github/scripts/git-extract-directives.sh
+
+          # Extract directives from commit message
           directives=$(.github/scripts/git-extract-directives.sh "${{ github.sha }}")
           result=$?
           chmod -x .github/scripts/git-extract-directives.sh
 
-          echo "Extracted directives: $directives"
-          echo "Result code: $result"
-
+          # Check if the extraction was successful and check for the specific directive
           if [ "$result" -eq 0 ] && [[ "$directives" == *"--merge"* ]]; then
             echo "Directive found: --merge"
-            echo "merge_action_triggered=true" >> $GITHUB_ENV
+            echo "Proceeding to main merge..."
+            echo "merge_action_triggered=true" >> "$GITHUB_OUTPUT"
           else
             echo "No valid directives found."
-            echo "merge_action_triggered=false" >> $GITHUB_ENV
+            echo "merge_action_triggered=false" >> "$GITHUB_OUTPUT"
           fi
+    outputs:
+      should_deploy: ${{ steps.check_commit_directives.outputs.merge_action_triggered }}
   call_mainmerge:
-    needs: check_directives  
-    runs-on: ubuntu-latest
-    steps:
-      - name: Debug output of merge_action_triggered
-        run: |
-          echo "merge_action_triggered: ${{ env.merge_action_triggered }}"
-        
-      - name: Proceed to main merge if directive is found
-        if: ${{ env.merge_action_triggered == 'true' }}
-        run: echo "Proceeding to main merge..."
-
-      - name: Execute main merge workflow
-        if: ${{ env.merge_action_triggered == 'true' }}
-        uses: ./.github/workflows/main-merge-changes.yml
-        with:
-          commit_sha: ${{ github.sha }}
+    needs: check_directives  # Depend on both jobs
+    if: needs.check_directives.outputs.merge_action_triggered == 'true'
+    uses: ./.github/workflows/main-merge-changes.yml
+    with:
+      commit_sha: ${{ github.sha }}
 
