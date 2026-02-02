@@ -1,0 +1,68 @@
+{
+    "commands": [
+        {
+            "id" : "event",
+            "description": "Event",
+            "commands": [
+                {
+                    "id" :"addevent",
+                    "description": "Add an event",
+                    "args": {
+                        "title": "str",
+                        "location": "str",
+                        "capacity": "int",
+                        "date" : "date",
+                        "time" : "int",
+                        "duration" : "int",
+                    },
+                },
+                {
+                    "id" : "listupcomingevents",
+                    "description": "View all upcoming events.",
+                },
+                {
+                    "id" :"addparticipant",
+                    "description": "Add a participant to an event",
+                    "args": {
+                        "name" : "str",
+                        "event": "int",
+                    }
+                },
+                {
+                    "id": "listinvitations",
+                    "description": "View invitations/participants for a specific event.",
+                    "args": {
+                        "event": "int",
+                    }
+                },
+            ]
+        },
+        {
+            "id" : "participant",
+            "description": "Participant",
+            "commands": [
+                {
+                "id" :"registerparticipant",
+                "description": "Register a participant",
+                "args": {
+                    "type" : "int",
+                    "name" : "str",
+                    "status": "int",
+                    "event": "int",
+                    },
+                },
+                {
+                    "id": "listparticipantevents",
+                    "description": "View events for a specific participant.",
+                    "args": {
+                        "name" : "str",
+                    }
+                },
+            ]
+        },
+        {
+            "id":"exit",
+            "description": "Exit",
+        }
+    ]
+}
