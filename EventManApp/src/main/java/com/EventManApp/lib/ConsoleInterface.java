@@ -4,6 +4,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.time.Duration;
+import java.util.regex.Pattern;
+
 import java.util.Scanner;
 
 import com.EventManApp.MenuCallback;
@@ -120,38 +124,129 @@ public class ConsoleInterface {
     }
 
     private String getUserInput(String argName, String argType) {
+        // Check if the type contains an extra word
+        String[] typeParts = argType.split(":");
+        String baseType = typeParts[0];
+        String extraWord = typeParts.length > 1 ? typeParts[1] : null;
+
+        // If an extra word is present, call the corresponding function
+        if (extraWord != null) {
+            String defaultValue = getDefaultValue(baseType, extraWord);
+            if (defaultValue != null) {
+                return defaultValue; // use the returned value without asking user
+            }
+        }
+
+        // Default behavior
         while (true) {
             System.out.print("Enter " + argName + " (" + argType + "): ");
             String input = scanner.nextLine().trim();
 
-            if (isValid(input, argType)) {
+            if (isValid(input, baseType)) {
                 return input;
             } else {
-                showMessage("Invalid " + argType + ". Please try again.");
+                showMessage("Invalid " + baseType + ". Please try again.");
             }
         }
+    }
+
+    // Auxiliary function to retrieve default values based on type and extra word
+    private String getDefaultValue(String baseType, String extraWord) {
+        switch (baseType) {
+            case "date":
+                if ("default".equals(extraWord)) {
+                    return getCurrentDate(); // Implement this function to return the current date
+                }
+                break;
+            case "time":
+                if ("default".equals(extraWord)) {
+                    return getCurrentTime(); // New function for current time
+                }
+                break;
+            // Add more cases as needed for other base types
+            // Handle other base types if necessary
+        }
+        return null; // Return null if no valid default value is found
+    }
+
+    private String getCurrentDate() {
+        java.util.Date date = new java.util.Date();
+        java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("yyyy-MM-dd");
+        return formatter.format(date);
+    }
+
+    private String getCurrentTime() {
+        java.util.Date date = new java.util.Date();
+        java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("HH:mm:ss");
+        return formatter.format(date);
     }
 
     private boolean isValid(String input, String argType) {
         switch (argType) {
             case "str":
-                return !input.isEmpty(); // Any non-empty string is valid.
+                if (input.isEmpty()) {
+                    System.out.println("Hint: Input should be a non-empty string.");
+                    return false;
+                }
+                return true;
+
             case "int":
-                return input.matches("-?\\d+"); // Matches positive and negative integers.
+                if (!input.matches("-?\\d+")) {
+                    System.out.println("Hint: Input should be a valid integer, which can be positive, negative, or zero. Example: 123, -45, or 0.");
+                    return false;
+                }
+                return true;
+
+            case "positiveInt":
+                if (!input.matches("\\d+")) {
+                    System.out.println("Hint: Input should be a positive integer greater than zero. Example: 1, 100, or 456.");
+                    return false; // Matches only positive integers.
+                }
+                return true;
+
             case "date":
-                return isValidDate(input); // Check if the date is in the right format.
+                if (!isValidDate(input)) {
+                    System.out.println("Hint: Input should be a valid date in the format YYYY-MM-DD. Example: 2026-02-15.");
+                    return false;
+                }
+                return true;
+
+            case "time":
+                if (!isValidTime(input)) {
+                    System.out.println("Hint: Input should be a valid time in the format HH:mm (24-hour format). Example: 14:30.");
+                    return false;
+                }
+                return true;
+
+            case "duration":
+                if (!isValidDuration(input)) {
+                    System.out.println("Hint: Input should be a valid duration format. Example: 1h 30m (for 1 hour and 30 minutes).");
+                    return false;
+                }
+                return true;
+
             default:
+                System.out.println("Hint: Unknown argument type: " + argType);
                 return false;
         }
     }
 
+    // Example methods for additional validations
     private boolean isValidDate(String date) {
         try {
-            LocalDate.parse(date); // Assuming the date is in ISO format (YYYY-MM-DD).
-            return true;
-        } catch (Exception e) {
-            return false;
+            LocalDate.parse(date);
+            return true; // Successful parsing means the date is valid.
+        } catch (DateTimeParseException e) {
+            return false; // Exception thrown means invalid date format.
         }
+    }
+
+    private boolean isValidTime(String time) {
+        return time.matches("([01]\\d|2[0-3]):[0-5]\\d"); // Matches HH:mm (24-hour format)
+    }
+
+    private boolean isValidDuration(String duration) {
+        return Pattern.matches("\\d+h \\d+m", duration); // Matches "Xh Ym" format
     }
 
     private void showMessage(String message) {

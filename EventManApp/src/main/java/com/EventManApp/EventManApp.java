@@ -3,6 +3,9 @@ package com.EventManApp;
 import org.json.JSONObject;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.List;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -15,6 +18,10 @@ import java.util.Scanner;
 
 import com.EventManApp.lib.ConsoleInterface;
 import com.EventManApp.MenuCallback;
+
+import com.EventManApp.ObjectHandler;
+import com.EventManApp.EventObjectMan;
+
 /**
  * @file EventManApp.java
  * @brief Interactive console event managment application.
@@ -35,14 +42,32 @@ public class EventManApp {
      */
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+        EventObjectMan eventObjectManager = new EventObjectMan();
+
+        // Add them to a list
+        List<ObjectHandler> objectHandlers = new ArrayList<>();
+        objectHandlers.add(eventObjectManager);
+
         MenuCallback callback = (callerID, menuItem) -> {
             logBuffer.append(callerID).append(": ").append(menuItem).append("\n");
-            // Create a JSON object
-            JSONObject jsonResponse = new JSONObject();
-            jsonResponse.put("menuItem", new JSONObject(menuItem));
-            jsonResponse.put("status", "success");
-            jsonResponse.put("message", "Menu item processed successfully");
-            // Return the JSON string
+
+            JSONObject selectedCommand = new JSONObject(menuItem);
+            String commandId = selectedCommand.getString("id");
+            JSONObject jsonResponse = null;
+
+            // Iterate through each CommandHandler instance
+            for (ObjectHandler handler : objectHandlers) {
+                if (handler.isValidCommand(commandId)) {
+                    jsonResponse = handler.parseCommands("[" + menuItem + "]"); // Add array brackets
+                    break; // Exit loop if command is found
+                }
+            }
+
+            // Handle invalid command
+            if (jsonResponse == null) {
+                jsonResponse = createInvalidCommandResponse(commandId);
+            }
+
             return jsonResponse.toString();
         };
 
@@ -62,6 +87,10 @@ public class EventManApp {
         }
 
         scanner.close(); // Close the scanner at the end to free resources
+    }
+
+    private static JSONObject createInvalidCommandResponse(String commandId) {
+        return new JSONObject().put("message", "Invalid command: " + commandId);
     }
 
     private static void displayLogs() {

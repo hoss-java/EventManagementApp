@@ -10,29 +10,38 @@
                     "args": {
                         "title": "str",
                         "location": "str",
-                        "capacity": "int",
+                        "capacity": "positiveInt",
                         "date" : "date",
-                        "time" : "int",
-                        "duration" : "int",
+                        "time" : "time",
+                        "duration" : "duration",
                     },
                 },
                 {
-                    "id" : "listupcomingevents",
+                    "id" : "listallupcomingevents",
                     "description": "View all upcoming events.",
+                    "args": {
+                        "date" : "date:default",
+                    }
+                },
+                {
+                    "id" : "listallevents",
+                    "description": "View all events.",
+                    "args": {
+                    }
                 },
                 {
                     "id" :"addparticipant",
                     "description": "Add a participant to an event",
                     "args": {
                         "name" : "str",
-                        "event": "int",
+                        "id": "positiveInt",
                     }
                 },
                 {
                     "id": "listinvitations",
                     "description": "View invitations/participants for a specific event.",
                     "args": {
-                        "event": "int",
+                        "id": "positiveInt",
                     }
                 },
             ]
@@ -48,7 +57,7 @@
                     "type" : "int",
                     "name" : "str",
                     "status": "int",
-                    "event": "int",
+                    "id": "positiveInt",
                     },
                 },
                 {
