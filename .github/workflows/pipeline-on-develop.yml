@@ -70,8 +70,7 @@ jobs:
           fi
   call_mainmerge:
     needs: check_directives  # Depend on both jobs
-    #if: needs.check_directives.outputs.merge_action_triggered == 'true'  # Only proceed if directive found
-    if: ${{ env.merge_action_triggered == 'true' }}  # Access using environment variable
+    if: ${{ needs.check_directives.outputs.merge_action_triggered == 'true' }}  # Access the output correctly
     uses: ./.github/workflows/main-merge-changes.yml
     with:
       commit_sha: ${{ github.sha }}
