@@ -29,22 +29,15 @@ jobs:
     with:
       commit_sha: ${{ github.sha }}
 
-  check_directives:
+check_directives:
     needs: call_automerge
     runs-on: ubuntu-latest
     outputs:
       merge_action_triggered: ${{ steps.check.outputs.result }}  # Define output
     steps:
-      - name: Checkout specific branch
-        uses: actions/checkout@v2
-        with:
-          ref: develop  # Explicitly specify the branch
-
-      - name: List files for debugging
-        run: ls -R .github/scripts
-
+      ...
       - name: Check commit directives
-        id: check  # Set an ID for this step
+        id: check
         run: |
           chmod +x .github/scripts/git-extract-directives.sh
           directives=$(.github/scripts/git-extract-directives.sh "${{ github.sha }}")
@@ -56,31 +49,27 @@ jobs:
 
           if [ "$result" -eq 0 ] && [[ "$directives" == *"--merge"* ]]; then
             echo "Directive found: --merge"
-            echo "result=true" >> $GITHUB_ENV  # Set the environment variable
-            echo "::set-output name=result::true"  # Output for next job
+            echo "merge_action_triggered=true" >> $GITHUB_ENV  # Set the environment variable
+            echo "result=true" >> $GITHUB_ENV  # Set the output variable for job
           else
             echo "No valid directives found."
-            echo "result=false" >> $GITHUB_ENV  # Set to false
-            echo "::set-output name=result::false"  # Output for next job
+            echo "merge_action_triggered=false" >> $GITHUB_ENV  # Set to false
+            echo "result=false" >> $GITHUB_ENV  # Set the output variable for job
           fi
-
-      - name: Debug output for merge_action_triggered
-        run: |
-          echo "Setting merge_action_triggered to: ${{ steps.check.outputs.result }}"
   call_mainmerge:
     needs: check_directives  
-    runs-on: ubuntu-latest  # Ensure a consistent environment
+    runs-on: ubuntu-latest
     steps:
       - name: Debug output of merge_action_triggered
         run: |
-          echo "merge_action_triggered: ${{ needs.check_directives.outputs.merge_action_triggered }}"
+          echo "merge_action_triggered: ${{ env.merge_action_triggered }}"
         
       - name: Proceed to main merge if directive is found
-        if: ${{ needs.check_directives.outputs.merge_action_triggered == 'true' }}
+        if: ${{ env.merge_action_triggered == 'true' }}
         run: echo "Proceeding to main merge..."
-      
+
       - name: Execute main merge workflow
-        if: ${{ needs.check_directives.outputs.merge_action_triggered == 'true' }}
+        if: ${{ env.merge_action_triggered == 'true' }}
         uses: ./.github/workflows/main-merge-changes.yml
         with:
           commit_sha: ${{ github.sha }}
