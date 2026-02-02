@@ -665,7 +665,6 @@ gantt
 > The goal of this card is to implement a class for manage events.
 > 
 > # DOD (definition of done):
-> # DOD (definition of done):
 > An event class according the scenario is implemented.
 > 
 > # TODO:
