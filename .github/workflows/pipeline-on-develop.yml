@@ -72,16 +72,19 @@ jobs:
             echo "::set-output name=result::false"  # Output for next job
           fi
   call_mainmerge:
-    needs: check_directives  # Depend on both jobs
+    needs: check_directives  
     runs-on: ubuntu-latest  # Ensure a consistent environment
     steps:
       - name: Debug output of merge_action_triggered
         run: |
           echo "merge_action_triggered: ${{ needs.check_directives.outputs.merge_action_triggered }}"
-      
-      - name: Conditional Merge
+        
+      - name: Proceed to main merge if directive is found
         if: ${{ needs.check_directives.outputs.merge_action_triggered == 'true' }}
         run: echo "Proceeding to main merge..."
+      
+      - name: Execute main merge workflow
+        if: ${{ needs.check_directives.outputs.merge_action_triggered == 'true' }}
         uses: ./.github/workflows/main-merge-changes.yml
         with:
           commit_sha: ${{ github.sha }}

@@ -14,7 +14,7 @@ import java.io.OutputStream;
 import java.util.Scanner;
 
 import com.EventManApp.lib.ConsoleCommand;
-//TEST6
+//TEST7
 /**
  * @file EventManApp.java
  * @brief Interactive console event managment application.
