@@ -665,50 +665,6 @@ gantt
 > The goal of this card is to implement a class for manage events.
 > 
 > # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0013
-> **Implement a report manager class.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> The goal of this card is to implement a report  manager.
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0014
-> **Implement a DB layer.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> The goal of this card is to implement a DB layer
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0010
-> **Implement a simple block test.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
-> <details open>
->     <summary>Details</summary>
-> The goal of this card is to implement a simple block test system to project.
-> 
 > # DOD (definition of done):
 > An event class according the scenario is implemented.
 > 
@@ -752,6 +708,51 @@ gantt
 > 7. The callback function sends the response to a logging thread and also to the original caller, such as `ConsoleInterface`, which has its own unique identifier.
 > 
 > The above design is generic and will also be utilized for the participant class.
+> </details>
+
+## 001-0013
+> **Implement a report manager class.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to implement a report  manager.
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0014
+> **Implement a DB layer.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to implement a DB layer
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0010
+> **Implement a simple block test.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+> <details open>
+>     <summary>Details</summary>
+> The goal of this card is to implement a simple block test system to project.
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
 > </details>
 
 ## 001-0012
