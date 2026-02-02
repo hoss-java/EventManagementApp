@@ -51,29 +51,27 @@ jobs:
           result=$?
           chmod -x .github/scripts/git-extract-directives.sh
 
-#          # Check if the extraction was successful and check for the specific directive
-#          if [ "$result" -eq 0 ] && [[ "$directives" == *"--merge"* ]]; then
-#            echo "Directive found: --merge"
-#            echo "Proceeding to main merge..."
-#            echo "true" > .github/merge_action_triggered  # Create a file to signal to main merge
-#          else
-#            echo "No valid directives found."
-#            echo "false" > .github/merge_action_triggered  # Create a file to indicate no action
-#          fi
-          # Check if the extraction was successful and check for the specific directive
+          ## Check if the extraction was successful and check for the specific directive
+          #if [ "$result" -eq 0 ] && [[ "$directives" == *"--merge"* ]]; then
+          #  echo "Directive found: --merge"
+          #  echo "Proceeding to main merge..."
+          #  echo "true" > .github/merge_action_triggered  # Create a file to signal to main merge
+          #else
+          #  echo "No valid directives found."
+          #  echo "false" > .github/merge_action_triggered  # Create a file to indicate no action
+          #fi
           # Check if the extraction was successful and check for the specific directive
           if [ "$result" -eq 0 ] && [[ "$directives" == *"--merge"* ]]; then
             echo "Directive found: --merge"
-            echo "true" >> $GITHUB_ENV  # Set the output using GITHUB_ENV for environment variables
-            echo "merge_action_triggered=true" >> $GITHUB_ENV
+            echo "merge_action_triggered=true" >> $GITHUB_ENV  # Correctly set the environment variable
           else
             echo "No valid directives found."
-            echo "false" >> $GITHUB_ENV  # Set to false
-            echo "merge_action_triggered=false" >> $GITHUB_ENV
+            echo "merge_action_triggered=false" >> $GITHUB_ENV  # Set to false
           fi
   call_mainmerge:
     needs: check_directives  # Depend on both jobs
-    if: needs.check_directives.outputs.merge_action_triggered == 'true'  # Only proceed if directive found
+    #if: needs.check_directives.outputs.merge_action_triggered == 'true'  # Only proceed if directive found
+    if: ${{ env.merge_action_triggered == 'true' }}  # Access using environment variable
     uses: ./.github/workflows/main-merge-changes.yml
     with:
       commit_sha: ${{ github.sha }}
