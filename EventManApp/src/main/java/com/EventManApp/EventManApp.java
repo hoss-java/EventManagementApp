@@ -43,7 +43,7 @@ public class EventManApp {
             }
             // Read the input stream into a string
             String jsonString = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-            
+
             // Create JSONObject using LinkedHashMap to preserve order
             LinkedHashMap<String, Object> map = new LinkedHashMap<>();
             JSONObject jsonObject = new JSONObject(map);
@@ -78,7 +78,7 @@ public class EventManApp {
         JSONObject commands= loadJsonFromFile("commands.json");
         //System.out.println(commandJson);
         //JSONObject commands = new JSONObject(commandJson);
-        //traverseAndPrint(commands,""); 
+        //traverseAndPrint(commands,"");
 
         ConsoleCommand myConsoleCommand = new ConsoleCommand();
 

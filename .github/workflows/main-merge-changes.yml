@@ -105,7 +105,7 @@ jobs:
           output=$(mvn -f EventManApp test)  # Run tests
           TEST_RESULT=$?  # Capture test result
           output+=$(mvn -f EventManApp clean)  # Clean up after tests
-        
+
           if [ $TEST_RESULT -ne 0 ]; then
             echo "$output"
             exit 1  # Fail the step if tests did not pass
