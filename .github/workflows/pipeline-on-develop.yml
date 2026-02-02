@@ -62,10 +62,10 @@ jobs:
             echo "merge_action_triggered=false" >> "$GITHUB_OUTPUT"
           fi
     outputs:
-      should_deploy: ${{ steps.check_commit_directives.outputs.merge_action_triggered }}
+      should_merge: ${{ steps.check_commit_directives.outputs.merge_action_triggered }}
   call_mainmerge:
     needs: check_directives  # Depend on both jobs
-    if: needs.check_directives.outputs.merge_action_triggered == 'true'
+    if: needs.check_directives.outputs.should_merge == 'true'
     uses: ./.github/workflows/main-merge-changes.yml
     with:
       commit_sha: ${{ github.sha }}
