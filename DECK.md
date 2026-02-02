@@ -716,7 +716,7 @@ gantt
 > A UI class with basic requiments are implemented.
 > 
 > # TODO:
-> - [] 1.
+> - [ ] 1. Create an empty class as a library
 > 
 > # Reports:
 > *
