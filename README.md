@@ -76,7 +76,7 @@
 * Step 1: Implementing a git branch base workflow ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 * Step 2: Develop a basic code according the project scenario ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 * Step 3: Implement tests for both unit and block levels. ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-* Step 4: Automate testing and integrating it to GitHub workflows ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+* Step 4: Automate testing and integrating it to GitHub workflows ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 * Step 5: Add advanced/required futures according the project scenario ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 * Step 6: Documenting and summarizing findings, developments, and integrations. ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 * Step 7: Touch a service implementation of the project ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
