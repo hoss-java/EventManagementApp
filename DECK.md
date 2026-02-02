@@ -631,19 +631,31 @@ gantt
 > * On the remote case, the tests are run if a commit message provides the directiv `--merge`. In the remote case it all tests are passed, files listed on the file `.gitmain` stored on the the repository root are merged from `develop` to `main` also.
 > </details>
 
-## 001-0010
-> **Implement a simple block test.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+## 001-0009
+> **Implement an UI class and it tests** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 > <details >
 >     <summary>Details</summary>
-> The goal of this card is to implement a simple block test system to project.
+> The goal of this card is to implement an UI class.
 > 
 > # DOD (definition of done):
+> A UI class with basic requiments are implemented.
 > 
 > # TODO:
-> - [] 1.
+> - [x] 1. Create an empty class as a library
 > 
 > # Reports:
-> *
+> * The idea is develop the app in a way that supports multi-interfaces, as As the primary and default user interface a cl-interface is designed
+> * The interface receives a list of supported commands in JSON format along with a callback function. It can call this callback to execute commands defined within the JSON data. For instance, a CLI interface can create an interactive menu. When a user selects an item from this menu, the corresponding command is executed by invoking the callback function.
+> > * Similarly, a REST interface can start a REST service and listen for incoming requests. When a supported command is received, the REST interface calls the callback function to execute that command.
+> > * It is also possible to send a list of commands and their parameters (in JSON format) to clients, such as JavaScript-based applications like React, Angular, or Node.js. The REST interface facilitates this communication, allowing clients to interact with users in the same way as the CLI interface does. Clients can send commands back to the REST interface, which then forwards them to the callback function.
+> > * The plan for implementing a second interface includes developing the REST interface first, followed by a CLI-based interface, such as cURL, to connect to the REST interface.
+> * I also found how to work with Threads on Java, and added a simple log manager to test it. It can be used later to manage multi-iterfaces. For now cl-interface is an interactive interface and can not be run on background but interfaces such rest-interface can.
+> * To make it simple , a callback function method was used to run commands, it means an interface gets the list of commands in a json format and a callback function, then interact between user/service and the callback function.
+> * Call back function runs commands and report the result, and also log requests.
+> 
+> 
+> ## Not related to this card
+> * **OBS!** The action to merge the `develop` branch to the `main` had an issue to use env flags between jobs, it was solved by the guide here https://cicube.io/blog/github-actions-if-condition/
 > </details>
 
 ## 001-0011
@@ -706,17 +718,16 @@ gantt
 > *
 > </details>
 
-## 001-0009
-> **Implement an UI class and it tests** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+## 001-0010
+> **Implement a simple block test.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 > <details open>
 >     <summary>Details</summary>
-> The goal of this card is to implement an UI class.
+> The goal of this card is to implement a simple block test system to project.
 > 
 > # DOD (definition of done):
-> A UI class with basic requiments are implemented.
 > 
 > # TODO:
-> - [ ] 1. Create an empty class as a library
+> - [] 1.
 > 
 > # Reports:
 > *
