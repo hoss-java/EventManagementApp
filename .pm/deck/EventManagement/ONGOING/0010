@@ -14,46 +14,9 @@ EndAt:
 The goal of this card is to implement a simple block test system to project.
 
 # DOD (definition of done):
-An event class according the scenario is implemented.
 
 # TODO:
-- [x] 1. Add a class skeleton for event
-- [x] 2. Impalement a command parser to the class
+- [] 1.
 
 # Reports:
-The goal is to create a class that stores items in a database. Initially, before establishing a database connection layer, the class will retain data in memory as event objects. 
-
-To facilitate migration from memory objects to database records, an `EventObject` class has been defined, which manages the attributes of event objects. The `EventObjectMan` class, built on the `ObjectHandler`, operates in conjunction with `EventObject`. 
-
-The `EventObjectMan` class includes two crucial methods for managing connections between interfaces and event objects: **`parseCommands`** and **`isValidCommand`**.
-
----
-
-## How It Works
-
-When the interface generates a JSON command, it follows this structure:
-
-```json
-{
-    "id": "addevent",
-    "description": "Add an event",
-    "args": {
-        "title": "<title>",
-        "location": "<location>",
-        "capacity": "<capacity>",
-        "date": "<date>",
-        "time": "<time>",
-        "duration": "<duration>"
-    }
-}
-```
-
-1. The interface calls a callback function with the aforementioned JSON.
-2. This callback function verifies the command's validity with all registered classes (e.g., `EventObjectMan`) by invoking the **`isValidCommand`** method.
-3. If a registered class accepts the command, the command and its arguments (in JSON format) are forwarded to **`parseCommands`**.
-4. **`parseCommands`** acts as a multi-command parser, although in this instance, only one command is processed.
-5. **`parseCommands`** executes the command; for our example, it adds a new event based on the specified arguments.
-6. It then generates a response and returns it to the caller, which is the callback function in this case.
-7. The callback function sends the response to a logging thread and also to the original caller, such as `ConsoleInterface`, which has its own unique identifier.
-
-The above design is generic and will also be utilized for the participant class.
+*
