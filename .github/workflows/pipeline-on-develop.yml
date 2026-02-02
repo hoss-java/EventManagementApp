@@ -29,13 +29,18 @@ jobs:
     with:
       commit_sha: ${{ github.sha }}
 
-check_directives:
+  check_directives:
     needs: call_automerge
     runs-on: ubuntu-latest
-    outputs:
-      merge_action_triggered: ${{ steps.check.outputs.result }}  # Define output
     steps:
-      ...
+      - name: Checkout specific branch
+        uses: actions/checkout@v2
+        with:
+          ref: develop
+
+      - name: List files for debugging
+        run: ls -R .github/scripts
+
       - name: Check commit directives
         id: check
         run: |
@@ -49,12 +54,10 @@ check_directives:
 
           if [ "$result" -eq 0 ] && [[ "$directives" == *"--merge"* ]]; then
             echo "Directive found: --merge"
-            echo "merge_action_triggered=true" >> $GITHUB_ENV  # Set the environment variable
-            echo "result=true" >> $GITHUB_ENV  # Set the output variable for job
+            echo "merge_action_triggered=true" >> $GITHUB_ENV
           else
             echo "No valid directives found."
-            echo "merge_action_triggered=false" >> $GITHUB_ENV  # Set to false
-            echo "result=false" >> $GITHUB_ENV  # Set the output variable for job
+            echo "merge_action_triggered=false" >> $GITHUB_ENV
           fi
   call_mainmerge:
     needs: check_directives  
