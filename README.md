@@ -257,12 +257,9 @@ Recommendation
 ```mermaid
 classDiagram
     class EventManApp {
-        +static StringBuilder logBuffer
-        +static boolean running
-        +static main(String[] args)
-        +eventManager(InputStream in, PrintStream out, String[] args, MenuCallback callback)
-        +createInvalidCommandResponse(String commandId)
-        +displayLogs()
+        +static void main(String[] args)
+        +static JSONObject createInvalidCommandResponse(String commandId)
+        +static void displayLogs()
     }
 
     class ConsoleInterface {
@@ -314,7 +311,7 @@ classDiagram
     EventManApp --> ConsoleInterface : uses
     EventManApp --> EventObjectMan : manages
     EventObjectMan --> EventObject : contains
-    ConsoleInterface --> MenuCallback : callback to
+    ConsoleInterface --> MenuCallback : interacts with
     ObjectHandler <|.. EventObjectMan : implements
 ```
 
