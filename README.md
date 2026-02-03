@@ -74,10 +74,10 @@
 ### An overview of the plan
 
 * Step 1: Implementing a git branch base workflow ![status](https://img.shields.io/badge/status-DONE-brightgreen)
-* Step 2: Develop a basic code according the project scenario ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+* Step 2: Develop a basic code according the project scenario ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 * Step 3: Implement tests for both unit and block levels. ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 * Step 4: Automate testing and integrating it to GitHub workflows ![status](https://img.shields.io/badge/status-DONE-brightgreen)
-* Step 5: Add advanced/required futures according the project scenario ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+* Step 5: Add advanced/required futures according the project scenario ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 * Step 6: Documenting and summarizing findings, developments, and integrations. ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 * Step 7: Touch a service implementation of the project ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 
@@ -353,6 +353,10 @@ classDiagram
     +JSONObject listParticipants(JSONObject args)
   }
 
+  class OrganizeObjectMan {
+    +JSONObject addOrganizeFromArgs(JSONObject args)
+    +JSONObject listOrganizes(JSONObject args)
+  }
 
   class MenuCallback {
     +onMenuItemSelected(String callerID, String menuItem): String
@@ -365,6 +369,7 @@ classDiagram
   EventManApp --> ObjectHandler : uses
   EventManApp --> EventObjectHandler : uses
   EventManApp --> ParticipantObjectHandler : uses
+  EventManApp --> OrganizeObjectHandler : uses
   EventManApp <|.. MenuCallback : implementa
 
   DurationValidator <|.. ValidatorInterface : implements
@@ -394,6 +399,11 @@ classDiagram
   ParticipantObjectHandler --> EMObject : uses
   ParticipantObjectHandler --> EMObjectField : uses
   ParticipantObjectHandler --> ResponseHelper : uses
+
+  OrganizeObjectHandler <|.. ObjectHandler : extends
+  OrganizeObjectHandler --> EMObject : uses
+  OrganizeObjectHandler --> EMObjectField : uses
+  OrganizeObjectHandler --> ResponseHelper : uses
 
 ```
 

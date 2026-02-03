@@ -95,5 +95,42 @@
                 },
             ]
         },
+        {
+            "id" : "organize",
+            "description": "Organize",
+            "commands": [
+                {
+                "id" :"addorganize",
+                "description": "Add an organize",
+                "args": {
+                        "id": {
+                            "type": "int",
+                            "mandatory" : false,
+                            "modifier": "auto",
+                            "default": "1",
+                            },
+                        "eventid": {
+                            "type": "int",
+                            "mandatory" : true,
+                            },
+                        "participantid": {
+                            "type": "int",
+                            "mandatory" : false,
+                            "default": "",
+                            },
+                    },
+                },
+                {
+                    "id": "listallorganizes",
+                    "description": "View all participant.",
+                    "args": {
+                        "eventid" : {
+                            "type": "int",
+                            "mandatory" : false,
+                            },
+                    }
+                },
+            ]
+        },
     ]
 }

@@ -22,16 +22,16 @@ import com.EventManApp.EMObjectField;
 import com.EventManApp.EMObject;
 import com.EventManApp.ObjectHandler;
 
-public class ParticipantObjectHandler extends ObjectHandler {
-    private static String emObjectId = "ParticipantObject";
-    private List<EMObject> participants;
+public class OrganizeObjectHandler extends ObjectHandler {
+    private static String emObjectId = "OrganizeObject";
+    private List<EMObject> organizes;
 
     private int nextId; // Counter for generating unique IDs
     private static Map<String, EMObjectField> fieldTypeMap = new HashMap<>();
 
-    public ParticipantObjectHandler() {
+    public OrganizeObjectHandler() {
         super();
-        this.participants = new ArrayList<>();
+        this.organizes = new ArrayList<>();
         this.nextId = 1; // Start ID from 1
 
         initializeFieldTypeMap();
@@ -42,43 +42,43 @@ public class ParticipantObjectHandler extends ObjectHandler {
         // Populate the field type mappings
         //type, mandatory, modifier, default
         fieldTypeMap.put("id", new EMObjectField("int", true, "auto", "1"));
-        fieldTypeMap.put("name", new EMObjectField("str", true, "user",""));
-        fieldTypeMap.put("email", new EMObjectField("str", false,"user", ""));
+        fieldTypeMap.put("eventid", new EMObjectField("int", true, "user",""));
+        fieldTypeMap.put("participantid", new EMObjectField("int", false,"user", ""));
     }
 
     // Method to initialize commands and their associated methods
     private void initializeCommands() {
         try {
-            commandMap.put("addparticipant", this.getClass().getDeclaredMethod("addParticipantFromArgs",JSONObject.class));
-            commandMap.put("listallparticipants", this.getClass().getDeclaredMethod("listParticipants",JSONObject.class)); 
+            commandMap.put("addorganize", this.getClass().getDeclaredMethod("addOrganizeFromArgs",JSONObject.class));
+            commandMap.put("listallorganizes", this.getClass().getDeclaredMethod("listOrganizes",JSONObject.class)); 
             // Add more commands here
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         }
     }
 
-    // Add a participant
-    public JSONObject addParticipant(EMObject participant) {
-        participants.add(participant);
-        return ResponseHelper.createResponse("Participant added successfully", null);
+    // Register a participant via Organize
+    public JSONObject addOrganize(EMObject organize) {
+        organizes.add(organize);
+        return ResponseHelper.createResponse("Organize added successfully", null);
     }
 
-    // Remove a participant by name
-    public JSONObject removeParticipant(String name) {
-        if (participants.removeIf(participant -> ((String)  participant.getFieldValue("name")).equals(name))) {
-            return ResponseHelper.createResponse("Participant removed successfully", null);
+    // Remove a registration by participant name
+    public JSONObject addOrganizeFromArgs(String name) {
+        if (organizes.removeIf(organize -> ((String)  organize.getFieldValue("name")).equals(name))) {
+            return ResponseHelper.createResponse("Organize removed successfully", null);
         } else {
-            return ResponseHelper.createResponse("Participant not found", null);
+            return ResponseHelper.createResponse("Organize not found", null);
         }
     }
 
-    // Helper method to create a participant from args
-    public JSONObject addParticipantFromArgs(JSONObject args) {
+    // Helper method to register a participant to an event via organize from args
+    public JSONObject registerParticipantFromArgs(JSONObject args) {
         try {
             // Initialize a map to store participant fields
-            Map<String, String> participantFields = new HashMap<>();
+            Map<String, String> organizeFields = new HashMap<>();
 
-            // Loop through fieldTypeMap to validate and populate participantFields
+            // Loop through fieldTypeMap to validate and populate organizeFields
             for (Map.Entry<String, EMObjectField> entry : fieldTypeMap.entrySet()) {
                 String fieldName = entry.getKey();
                 EMObjectField definition = entry.getValue();
@@ -101,47 +101,47 @@ public class ParticipantObjectHandler extends ObjectHandler {
                     value = definition.getDefaultValue();
                 }
 
-                // Add value to participantFields
-                participantFields.put(fieldName, value);
+                // Add value to organizeFields
+                organizeFields.put(fieldName, value);
             }
 
             // Create the EMObject
-            EMObject participant = new EMObject(emObjectId, fieldTypeMap, participantFields);
-            addParticipant(participant); // Add the participant to the list
+            EMObject organize = new EMObject(emObjectId, fieldTypeMap, organizeFields);
+            addOrganize(organize); // Add the organize to the list
 
-            return ResponseHelper.createResponse("Participant added successfully", new JSONObject().put("uniqueId", (int) participant.getFieldValue("id")));
+            return ResponseHelper.createResponse("Participant registered successfully", new JSONObject().put("uniqueId", (int) organize.getFieldValue("id")));
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            return ResponseHelper.createResponse("Participant processing arguments: " + e.getMessage(), null);
+            return ResponseHelper.createResponse("Organize processing arguments: " + e.getMessage(), null);
         }
     }
 
-   public JSONObject listParticipants(JSONObject args) {
-        JSONArray participantsArray = new JSONArray();
+   public JSONObject listOrganizes(JSONObject args) {
+        JSONArray organizesArray = new JSONArray();
 
-        if (participants.isEmpty()) {
-            return ResponseHelper.createResponse("No participants found.", null); // Response for an empty list
+        if (organizes.isEmpty()) {
+            return ResponseHelper.createResponse("No registered participant or event found.", null); // Response for an empty list
         }
 
         try {
-            for (EMObject participant : participants) {
-                JSONObject participantJson = new JSONObject();
+            for (EMObject organize : organizes) {
+                JSONObject organizeJson = new JSONObject();
                 for (Map.Entry<String, EMObjectField> entry : fieldTypeMap.entrySet()) {
                     String fieldName = entry.getKey();
-                    String valueStr = participant.getFieldValue(fieldName).toString();
-                    participantJson.put(fieldName, valueStr);
+                    String valueStr = organize.getFieldValue(fieldName).toString();
+                    organizeJson.put(fieldName, valueStr);
                 }
-                participantsArray.put(participantJson);
+                organizesArray.put(organizeJson);
             }
             JSONObject response = new JSONObject();
-            response.put("participants", participantsArray);
+            response.put("organizes", organizesArray);
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return ResponseHelper.createResponse("Error processing arguments: " + e.getMessage(), null);
         }
         JSONObject response = new JSONObject();
-        response.put("participants", participantsArray);
-        return ResponseHelper.createResponse("Participants listed successfully", response);
+        response.put("organizes", organizesArray);
+        return ResponseHelper.createResponse("Organizes listed successfully", response);
     }
 }

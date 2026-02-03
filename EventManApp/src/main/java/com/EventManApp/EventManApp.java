@@ -22,6 +22,7 @@ import com.EventManApp.MenuCallback;
 import com.EventManApp.ObjectHandler;
 import com.EventManApp.EventObjectHandler;
 import com.EventManApp.ParticipantObjectHandler;
+import com.EventManApp.OrganizeObjectHandler;
 
 /**
  * @file EventManApp.java
@@ -45,11 +46,13 @@ public class EventManApp {
         Scanner scanner = new Scanner(System.in);
         EventObjectHandler eventObjectHandler = new EventObjectHandler();
         ParticipantObjectHandler participantObjectHandler = new ParticipantObjectHandler();
+        OrganizeObjectHandler organizeObjectHandler = new OrganizeObjectHandler();
 
         // Add them to a list
         List<ObjectHandler> objectHandlers = new ArrayList<>();
         objectHandlers.add(eventObjectHandler);
         objectHandlers.add(participantObjectHandler);
+        objectHandlers.add(organizeObjectHandler);
 
         MenuCallback callback = (callerID, menuItem) -> {
             logBuffer.append(callerID).append(": ").append(menuItem).append("\n");
