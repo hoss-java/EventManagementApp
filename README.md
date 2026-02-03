@@ -266,12 +266,12 @@ classDiagram
     +void validateRequiredFields(Map<String, String> eventFields)
   }
 
-  class ResponseHelper{
+  class ResponseHelper {
     +JSONObject createInvalidCommandResponse(String commandId)
     +JSONObject createResponse(String message, JSONObject data)
   }
 
-  class StringParserHelper{
+  class StringParserHelper {
     +void addReplacement(String placeholder, String value)
     +String parseString(String input)
   }
@@ -281,17 +281,17 @@ classDiagram
     +String getErrorMessage()
   }
 
-  class DateValidator{}
+  class DateValidator {
     +boolean isValid(LocalDate value)
     +String getErrorMessage()
   }
   
-  class DurationValidator{}
+  class DurationValidator {
     +boolean isValid(Duration value)
     +String getErrorMessage()
   }
   
-  class TimeValidator{}
+  class TimeValidator {
     +boolean isValid(LocalTime value)
     +String getErrorMessage()
   }
@@ -313,12 +313,12 @@ classDiagram
     +String getDefaultValue() 
   }
 
-  class ObjectHandlerInterface{
+  class ObjectHandlerInterface {
     +JSONObject parseCommands(String jsonCommands)
     +boolean isValidCommand(String commandId)
   }
   
-  class BaseObject{
+  class BaseObject {
     -List<Field<T>> fields
     -Map<String, String> FIELD_TYPE_MAP = new HashMap<>()
     +addField(String name, T value)
@@ -332,7 +332,7 @@ classDiagram
     }
   }
 
-  class ObjectHandler{
+  class ObjectHandler {
     +boolean isValidCommand(String commandId)
     +JSONObject parseCommands(String jsonCommands)
   }
