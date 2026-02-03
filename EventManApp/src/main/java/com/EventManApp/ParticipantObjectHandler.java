@@ -22,16 +22,16 @@ import com.EventManApp.EMObjectField;
 import com.EventManApp.EMObject;
 import com.EventManApp.ObjectHandler;
 
-public class EventObjectHandler extends ObjectHandler {
-    private static String emObjectId = "EventObject";
-    private List<EMObject> events;
+public class ParticipantObjectHandler extends ObjectHandler {
+    private static String emObjectId = "ParticipantObject";
+    private List<EMObject> participants;
 
     private int nextId; // Counter for generating unique IDs
     private static Map<String, EMObjectField> fieldTypeMap = new HashMap<>();
 
-    public EventObjectHandler() {
+    public ParticipantObjectHandler() {
         super();
-        this.events = new ArrayList<>();
+        this.participants = new ArrayList<>();
         this.nextId = 1; // Start ID from 1
 
         initializeFieldTypeMap();
@@ -42,47 +42,43 @@ public class EventObjectHandler extends ObjectHandler {
         // Populate the field type mappings
         //type, mandatory, modifier, default
         fieldTypeMap.put("id", new EMObjectField("int", true, "auto", "1"));
-        fieldTypeMap.put("title", new EMObjectField("str", true, "user","workshop"));
-        fieldTypeMap.put("location", new EMObjectField("str", false,"user", "here"));
-        fieldTypeMap.put("capacity", new EMObjectField("positiveInt", false,"user", "1")); // Default value for capacity
-        fieldTypeMap.put("date", new EMObjectField("date", false,"user", LocalDate.now().toString())); // Default date
-        fieldTypeMap.put("starttime", new EMObjectField("time", false,"user", "00:00:00")); // Default time
-        fieldTypeMap.put("duration", new EMObjectField("duration", false,"user", "PT0H")); // Default duration
+        fieldTypeMap.put("name", new EMObjectField("str", true, "user",""));
+        fieldTypeMap.put("email", new EMObjectField("str", false,"user", ""));
     }
 
     // Method to initialize commands and their associated methods
     private void initializeCommands() {
         try {
-            commandMap.put("addevent", this.getClass().getDeclaredMethod("addEventFromArgs",JSONObject.class));
-            commandMap.put("listallevents", this.getClass().getDeclaredMethod("listEvents",JSONObject.class)); 
+            commandMap.put("addparticipant", this.getClass().getDeclaredMethod("addParticipantFromArgs",JSONObject.class));
+            commandMap.put("listallparticipants", this.getClass().getDeclaredMethod("listParticipants",JSONObject.class)); 
             // Add more commands here
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         }
     }
 
-    // Add an event
-    public JSONObject addEvent(EMObject event) {
-        events.add(event);
-        return ResponseHelper.createResponse("Event added successfully", null);
+    // Add a participant
+    public JSONObject addParticipant(EMObject participant) {
+        participants.add(participant);
+        return ResponseHelper.createResponse("Participant added successfully", null);
     }
 
-    // Remove an event by title
-    public JSONObject removeEvent(String title) {
-        if (events.removeIf(event -> ((String)  event.getFieldValue("title")).equals(title))) {
-            return ResponseHelper.createResponse("Event removed successfully", null);
+    // Remove a participant by name
+    public JSONObject removeEvent(String name) {
+        if (participants.removeIf(participant -> ((String)  participant.getFieldValue("name")).equals(name))) {
+            return ResponseHelper.createResponse("Participant removed successfully", null);
         } else {
-            return ResponseHelper.createResponse("Event not found", null);
+            return ResponseHelper.createResponse("Participant not found", null);
         }
     }
 
-    // Helper method to create an event from args
-    public JSONObject addEventFromArgs(JSONObject args) {
+    // Helper method to create a participant from args
+    public JSONObject addParticipantFromArgs(JSONObject args) {
         try {
-            // Initialize a map to store event fields
-            Map<String, String> eventFields = new HashMap<>();
+            // Initialize a map to store participant fields
+            Map<String, String> participantFields = new HashMap<>();
 
-            // Loop through fieldTypeMap to validate and populate eventFields
+            // Loop through fieldTypeMap to validate and populate participantFields
             for (Map.Entry<String, EMObjectField> entry : fieldTypeMap.entrySet()) {
                 String fieldName = entry.getKey();
                 EMObjectField definition = entry.getValue();
@@ -105,47 +101,47 @@ public class EventObjectHandler extends ObjectHandler {
                     value = definition.getDefaultValue();
                 }
 
-                // Add value to eventFields
-                eventFields.put(fieldName, value);
+                // Add value to participantFields
+                participantFields.put(fieldName, value);
             }
 
             // Create the EMObject
-            EMObject event = new EMObject(emObjectId, fieldTypeMap, eventFields);
-            addEvent(event); // Add the event to the list
+            EMObject participant = new EMObject(emObjectId, fieldTypeMap, participantFields);
+            addParticipant(participant); // Add the event to the list
 
-            return ResponseHelper.createResponse("Event added successfully", new JSONObject().put("uniqueId", (int) event.getFieldValue("id")));
+            return ResponseHelper.createResponse("Participant added successfully", new JSONObject().put("uniqueId", (int) participant.getFieldValue("id")));
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            return ResponseHelper.createResponse("Error processing arguments: " + e.getMessage(), null);
+            return ResponseHelper.createResponse("Participant processing arguments: " + e.getMessage(), null);
         }
     }
 
-    public JSONObject listEvents(JSONObject args) {
-        JSONArray eventsArray = new JSONArray();
+   public JSONObject listParticipants(JSONObject args) {
+        JSONArray participantsArray = new JSONArray();
 
-        if (events.isEmpty()) {
-            return ResponseHelper.createResponse("No events found.", null); // Response for an empty list
+        if (participants.isEmpty()) {
+            return ResponseHelper.createResponse("No participants found.", null); // Response for an empty list
         }
 
         try {
-            for (EMObject event : events) {
-                JSONObject eventJson = new JSONObject();
+            for (EMObject participant : participants) {
+                JSONObject participantJson = new JSONObject();
                 for (Map.Entry<String, EMObjectField> entry : fieldTypeMap.entrySet()) {
                     String fieldName = entry.getKey();
-                    String valueStr = event.getFieldValue(fieldName).toString();
-                    eventJson.put(fieldName, valueStr);
+                    String valueStr = participant.getFieldValue(fieldName).toString();
+                    participantJson.put(fieldName, valueStr);
                 }
-                eventsArray.put(eventJson);
+                participantsArray.put(participantJson);
             }
             JSONObject response = new JSONObject();
-            response.put("events", eventsArray);
+            response.put("events", participantsArray);
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return ResponseHelper.createResponse("Error processing arguments: " + e.getMessage(), null);
         }
         JSONObject response = new JSONObject();
-        response.put("events", eventsArray);
+        response.put("events", participantsArray);
         return ResponseHelper.createResponse("Events listed successfully", response);
     }
 }

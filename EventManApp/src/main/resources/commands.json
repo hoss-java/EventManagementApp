@@ -46,43 +46,15 @@
                     },
                 },
                 {
-                    "id" : "listallupcomingevents",
-                    "description": "View all upcoming events.",
+                    "id" : "listallevents",
+                    "description": "View all events.",
                     "args": {
                         "date" : {
                             "type": "date",
                             "mandatory" : false,
                             "default": "%DATE%",
-                        },
-                    }
-                },
-                {
-                    "id" : "listallevents",
-                    "description": "View all events.",
-                    "args": {
-                            "default": "%DATE%",
+                            },
                         }
-                },
-                {
-                    "id" :"addparticipant",
-                    "description": "Add a participant to an event",
-                    "args": {
-                        "name" : {
-                            "type": "str"
-                            },
-                        "id": {
-                            "type": "positiveInt"
-                            },
-                    }
-                },
-                {
-                    "id": "listinvitations",
-                    "description": "View invitations/participants for a specific event.",
-                    "args": {
-                        "id": {
-                            "type": "positiveInt"
-                            },
-                    }
                 },
             ]
         },
@@ -91,29 +63,33 @@
             "description": "Participant",
             "commands": [
                 {
-                "id" :"registerparticipant",
-                "description": "Register a participant",
+                "id" :"addparticipant",
+                "description": "Add a participant",
                 "args": {
-                    "type" : {
-                            "type": "int"
+                        "id": {
+                            "type": "int",
+                            "mandatory" : false,
+                            "modifier": "auto",
+                            "default": "1",
                             },
-                    "name" : {
-                            "type": "str"
+                        "name": {
+                            "type": "str",
+                            "mandatory" : true,
                             },
-                    "status": {
-                            "type": "int"
-                            },
-                    "id": {
-                            "type": "positiveInt"
+                        "email": {
+                            "type": "str",
+                            "mandatory" : false,
+                            "default": "",
                             },
                     },
                 },
                 {
-                    "id": "listparticipantevents",
-                    "description": "View events for a specific participant.",
+                    "id": "listallparticipants",
+                    "description": "View all participant.",
                     "args": {
                         "name" : {
-                            "type": "str"
+                            "type": "str",
+                            "mandatory" : false,
                             },
                     }
                 },

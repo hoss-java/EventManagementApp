@@ -259,84 +259,140 @@ Recommendation
 
 ```mermaid
 classDiagram
-    class EventManApp {
-        +static void main(String[] args)
-        +static JSONObject createInvalidCommandResponse(String commandId)
-        +static void displayLogs()
+  class JSONHelper {
+    +JSONObject loadJsonFromFile(String fileName)
+    +void traverseAndPrint(JSONObject jsonObject, String parentKey)
+    +Map<String, String> createEventFields(JSONObject json)
+    +void validateRequiredFields(Map<String, String> eventFields)
+  }
+
+  class ResponseHelper{
+    +JSONObject createInvalidCommandResponse(String commandId)
+    +JSONObject createResponse(String message, JSONObject data)
+  }
+
+  class StringParserHelper{
+    +void addReplacement(String placeholder, String value)
+    +String parseString(String input)
+  }
+
+  class ValidatorInterface {
+    +boolean isValid(T value)
+    +String getErrorMessage()
+  }
+
+  class DateValidator{}
+    +boolean isValid(LocalDate value)
+    +String getErrorMessage()
+  }
+  
+  class DurationValidator{}
+    +boolean isValid(Duration value)
+    +String getErrorMessage()
+  }
+  
+  class TimeValidator{}
+    +boolean isValid(LocalTime value)
+    +String getErrorMessage()
+  }
+  
+  class EventManApp {
+    +void eventManager(InputStream in, PrintStream out, String[] args, MenuCallback callback)
+  }
+
+  class ConsoleInterface {
+    +JSONObject executeCommands(JSONObject commands)
+    +String displayCommandsAndGetChoice(JSONArray commandsArray, String backCommand)
+  }
+
+  class EMObjectField {
+    +EMObjectField(String type, boolean mandatory, String modifier, String defaultValue)
+    +String getType()
+    +boolean isMandatory()
+    +String getModifier()
+    +String getDefaultValue() 
+  }
+
+  class ObjectHandlerInterface{
+    +JSONObject parseCommands(String jsonCommands)
+    +boolean isValidCommand(String commandId)
+  }
+  
+  class BaseObject{
+    -List<Field<T>> fields
+    -Map<String, String> FIELD_TYPE_MAP = new HashMap<>()
+    +addField(String name, T value)
+    +List<Field<T>> getFields()
+    +T getFieldValue(String fieldName)
+    +Object validateAndConvert(String fieldName, String valueStr, String expectedType)
+    class Field<T>{
+      +Field(String name, T value)
+      +String getName()
+      +T getValue()
     }
+  }
 
-    class ConsoleInterface {
-        -Scanner scanner
-        -MenuCallback callback
-        +executeCommands(JSONObject commands)
-        +displayCommandsAndGetChoice(JSONArray commandsArray, String backCommand)
-        +close()
-        +showMessage(String message)
-    }
+  class ObjectHandler{
+    +boolean isValidCommand(String commandId)
+    +JSONObject parseCommands(String jsonCommands)
+  }
 
-    class EventObjectMan {
-        -List<EventObject> events
-        -int nextId
-        -Map<String, Method> commandMap
-        +isValidCommand(String commandId)
-        +addEvent(EventObject event)
-        +removeEvent(String title)
-        +listEvents(JSONObject args)
-        +parseCommands(String jsonCommands)
-    }
+  class EMObject {
+    +EMObject(String objectId, Map<String, EMObjectField> fieldTypeMap, Map<String, String> jsonFields)
+    +String toString()
+  }
 
-    class EventObject {
-        -int uniqueId
-        -String title
-        -LocalDate date
-        -LocalTime startTime
-        -Duration duration
-        -String location
-        -int capacity
-        +getUniqueId()
-        +getTitle()
-        +getDate()
-        +getStartTime()
-        +getDuration()
-        +getLocation()
-        +getCapacity()
-    }
+  class EventObjectHandler {
+    +JSONObject addEventFromArgs(JSONObject args)
+    +JSONObject listEvents(JSONObject args)
+  }
 
-   class ParticipantObjectMan {
-        -List<ParticipantObject> events
-        +isValidCommand(String commandId)
-        +parseCommands(String jsonCommands)
+  class ParticipantObjectMan {
+    +JSONObject addParticipantFromArgs(JSONObject args)
+    +JSONObject listParticipants(JSONObject args)
+  }
 
-        +addParticipant(ParticipantObject event)
-    }
 
-    class ParticipantObject {
-        -int uniqueId
-        -String title
-        +getUniqueId()
-        +getTitle()
-    }
+  class MenuCallback {
+    +onMenuItemSelected(String callerID, String menuItem): String
+  }
 
-    class MenuCallback {
-        +onMenuItemSelected(String callerID, String menuItem): String
-    }
+  EventManApp --> ConsoleInterface : uses
+  EventManApp --> RestInterface : uses
+  EventManApp --> JSONHelper : uses
+  EventManApp --> ResponseHelper : uses
+  EventManApp --> ObjectHandler : uses
+  EventManApp --> EventObjectHandler : uses
+  EventManApp --> ParticipantObjectHandler : uses
+  EventManApp <|.. MenuCallback : implementa
 
-    class ObjectHandler {
-        +parseCommands(String jsonCommands): JSONObject
-        +isValidCommand(String commandId): boolean
-    }
+  DurationValidator <|.. ValidatorInterface : implements
+  DateValidator <|.. ValidatorInterface : implement
+  TimeValidator <|.. ValidatorInterface : implement
 
-    EventManApp --> ConsoleInterface : uses
-    EventManApp --> RestInterface : uses
-    EventManApp --> EventObjectMan : manages
-    ParticipantObjectMan --> ParticipantObject : contains
-    EventManApp --> ParticipantObjectMan : manages
-    EventObjectMan --> EventObject : contains
-    ConsoleInterface --> MenuCallback : interacts with
-    RestInterface --> MenuCallback : interacts with
-    ObjectHandler <|.. EventObjectMan : implements
-    ObjectHandler <|.. ParticipantObjectMan : implements
+  BaseObject --> DurationValidator : uses
+  BaseObject --> DateValidator : uses
+  BaseObject --> TimeValidator : uses
 
+  EMObject <|.. BaseObject : extends
+  EMObject --> DurationValidator : uses
+  EMObject --> DateValidator : uses
+  EMObject --> TimeValidator : uses
+  EMObject --> StringParserHelper : uses
+  
+  EventObjectHandler <|.. ObjectHandler : extends
+  EventObjectHandler --> EMObject : uses
+  EventObjectHandler --> EMObjectField : uses
+  EventObjectHandler --> ResponseHelper : uses
+
+  ObjectHandler <|.. ObjectHandlerInterface : implements
+  ObjectHandler --> ResponseHelper : uses
+
+  ParticipantObjectHandler <|.. ObjectHandler : extends
+  ParticipantObjectHandler --> EMObject : uses
+  ParticipantObjectHandler --> EMObjectField : uses
+  ParticipantObjectHandler --> ResponseHelper : uses
+  
 ```
 
 #### Supported commands structures
@@ -352,41 +408,53 @@ classDiagram
                     "id" :"addevent",
                     "description": "Add an event",
                     "args": {
-                        "title": "str",
-                        "location": "str",
-                        "capacity": "positiveInt",
-                        "date" : "date",
-                        "time" : "time",
-                        "duration" : "duration",
+                        "id": {
+                            "type": "int",
+                            "mandatory" : false,
+                            "modifier": "auto",
+                            "default": "1",
+                            },
+                        "title": {
+                            "type": "str",
+                            "mandatory" : true,
+                            },
+                        "location": {
+                            "type": "str",
+                            "mandatory" : false,
+                            "default": "here",
+                            },
+                        "capacity": {
+                            "type": "positiveInt",
+                            "mandatory" : false,
+                            "default": "12",
+                            },
+                        "date" : {
+                            "type": "date",
+                            "mandatory" : false,
+                            "default": "%DATE%",
+                            },
+                        "time" : {
+                            "type": "time",
+                            "mandatory" : false,
+                            "default": "%TIME%",
+                            },
+                        "duration" : {
+                            "type": "duration",
+                            "mandatory" : false,
+                            "default": "PT15M",
+                            },
                     },
-                },
-                {
-                    "id" : "listallupcomingevents",
-                    "description": "View all upcoming events.",
-                    "args": {
-                        "date" : "date:default",
-                    }
                 },
                 {
                     "id" : "listallevents",
                     "description": "View all events.",
                     "args": {
-                    }
-                },
-                {
-                    "id" :"addparticipant",
-                    "description": "Add a participant to an event",
-                    "args": {
-                        "name" : "str",
-                        "id": "positiveInt",
-                    }
-                },
-                {
-                    "id": "listinvitations",
-                    "description": "View invitations/participants for a specific event.",
-                    "args": {
-                        "id": "positiveInt",
-                    }
+                        "date" : {
+                            "type": "date",
+                            "mandatory" : false,
+                            "default": "%DATE%",
+                            },
+                        }
                 },
             ]
         },
@@ -395,20 +463,34 @@ classDiagram
             "description": "Participant",
             "commands": [
                 {
-                "id" :"registerparticipant",
-                "description": "Register a participant",
+                "id" :"addparticipant",
+                "description": "Add a participant",
                 "args": {
-                    "type" : "int",
-                    "name" : "str",
-                    "status": "int",
-                    "id": "positiveInt",
+                        "id": {
+                            "type": "int",
+                            "mandatory" : false,
+                            "modifier": "auto",
+                            "default": "1",
+                            },
+                        "name": {
+                            "type": "str",
+                            "mandatory" : true,
+                            },
+                        "email": {
+                            "type": "str",
+                            "mandatory" : false,
+                            "default": "",
+                            },
                     },
                 },
                 {
-                    "id": "listparticipantevents",
-                    "description": "View events for a specific participant.",
+                    "id": "listallparticipants",
+                    "description": "View all participant.",
                     "args": {
-                        "name" : "str",
+                        "name" : {
+                            "type": "str",
+                            "mandatory" : false,
+                            },
                     }
                 },
             ]
