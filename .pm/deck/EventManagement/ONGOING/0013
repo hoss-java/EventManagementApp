@@ -3,7 +3,7 @@
 # Git-deck card header
 # OBS! DON'T REMOVE CARD HEADERS
 #...
-Title: Implement a report manager class.
+Title: Implement an organizer class.
 Tags: EventMan STEP2
 Creator:
 AssignedTo:
@@ -11,12 +11,12 @@ AssignedTo:
 tartAt:
 EndAt:
 ---
-The goal of this card is to implement a report  manager.
+The goal of this card is to implement an organizer to connect events to participant.
 
 # DOD (definition of done):
 
 # TODO:
-- [] 1.
+- [ ] 1.
 
 # Reports:
 *
