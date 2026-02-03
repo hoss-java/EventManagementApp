@@ -262,8 +262,8 @@ classDiagram
   class JSONHelper {
     +JSONObject loadJsonFromFile(String fileName)
     +void traverseAndPrint(JSONObject jsonObject, String parentKey)
-    +Map<String, String> createEventFields(JSONObject json)
-    +void validateRequiredFields(Map<String, String> eventFields)
+    +Map String, String createEventFields(JSONObject json)
+    +void validateRequiredFields(Map String, String  eventFields)
   }
 
   class ResponseHelper {
@@ -319,13 +319,13 @@ classDiagram
   }
   
   class BaseObject {
-    -List<Field<T>> fields
-    -Map<String, String> FIELD_TYPE_MAP = new HashMap<>()
+    -List Field T fields
+    -Map String, String FIELD_TYPE_MAP
     +addField(String name, T value)
-    +List<Field<T>> getFields()
+    +List Field T getFields()
     +T getFieldValue(String fieldName)
     +Object validateAndConvert(String fieldName, String valueStr, String expectedType)
-    class Field<T>{
+    class Field T {
       +Field(String name, T value)
       +String getName()
       +T getValue()
@@ -338,7 +338,7 @@ classDiagram
   }
 
   class EMObject {
-    +EMObject(String objectId, Map<String, EMObjectField> fieldTypeMap, Map<String, String> jsonFields)
+    +EMObject(String objectId, Map String, EMObjectField fieldTypeMap, Map String, String jsonFields)
     +String toString()
   }
 
