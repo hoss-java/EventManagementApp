@@ -8,40 +8,80 @@
                     "id" :"addevent",
                     "description": "Add an event",
                     "args": {
-                        "title": "str",
-                        "location": "str",
-                        "capacity": "positiveInt",
-                        "date" : "date",
-                        "time" : "time",
-                        "duration" : "duration",
+                        "id": {
+                            "type": "int",
+                            "mandatory" : false,
+                            "modifier": "auto",
+                            "default": "1",
+                            },
+                        "title": {
+                            "type": "str",
+                            "mandatory" : true,
+                            },
+                        "location": {
+                            "type": "str",
+                            "mandatory" : false,
+                            "default": "here",
+                            },
+                        "capacity": {
+                            "type": "positiveInt",
+                            "mandatory" : false,
+                            "default": "12",
+                            },
+                        "date" : {
+                            "type": "date",
+                            "mandatory" : false,
+                            "default": "%DATE%",
+                            },
+                        "time" : {
+                            "type": "time",
+                            "mandatory" : false,
+                            "default": "%TIME%",
+                            },
+                        "duration" : {
+                            "type": "duration",
+                            "mandatory" : false,
+                            "default": "PT15M",
+                            },
                     },
                 },
                 {
                     "id" : "listallupcomingevents",
                     "description": "View all upcoming events.",
                     "args": {
-                        "date" : "date:default",
+                        "date" : {
+                            "type": "date",
+                            "mandatory" : false,
+                            "default": "%DATE%",
+                        },
                     }
                 },
                 {
                     "id" : "listallevents",
                     "description": "View all events.",
                     "args": {
-                    }
+                            "default": "%DATE%",
+                        }
                 },
                 {
                     "id" :"addparticipant",
                     "description": "Add a participant to an event",
                     "args": {
-                        "name" : "str",
-                        "id": "positiveInt",
+                        "name" : {
+                            "type": "str"
+                            },
+                        "id": {
+                            "type": "positiveInt"
+                            },
                     }
                 },
                 {
                     "id": "listinvitations",
                     "description": "View invitations/participants for a specific event.",
                     "args": {
-                        "id": "positiveInt",
+                        "id": {
+                            "type": "positiveInt"
+                            },
                     }
                 },
             ]
@@ -54,17 +94,27 @@
                 "id" :"registerparticipant",
                 "description": "Register a participant",
                 "args": {
-                    "type" : "int",
-                    "name" : "str",
-                    "status": "int",
-                    "id": "positiveInt",
+                    "type" : {
+                            "type": "int"
+                            },
+                    "name" : {
+                            "type": "str"
+                            },
+                    "status": {
+                            "type": "int"
+                            },
+                    "id": {
+                            "type": "positiveInt"
+                            },
                     },
                 },
                 {
                     "id": "listparticipantevents",
                     "description": "View events for a specific participant.",
                     "args": {
-                        "name" : "str",
+                        "name" : {
+                            "type": "str"
+                            },
                     }
                 },
             ]

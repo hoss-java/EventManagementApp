@@ -1,4 +1,4 @@
-package com.EventManApp.lib;
+package com.EventManApp.lib.interfaces;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -47,7 +47,7 @@ public class ConsoleInterface {
                 JSONObject arguments = command.getJSONObject("args");
 
                 for (String argName : arguments.keySet()) {
-                    String argType = arguments.getString(argName);
+                    JSONObject argType = arguments.getJSONObject(argName);
                     String argValue = getUserInput(argName, argType);
                     args.put(argName, argValue);
                 }
@@ -123,29 +123,31 @@ public class ConsoleInterface {
         return selectedCommand;
     }
 
-    private String getUserInput(String argName, String argType) {
+    private String getUserInput(String argName, JSONObject argTypeAttr) {
         // Check if the type contains an extra word
-        String[] typeParts = argType.split(":");
-        String baseType = typeParts[0];
-        String extraWord = typeParts.length > 1 ? typeParts[1] : null;
-
-        // If an extra word is present, call the corresponding function
-        if (extraWord != null) {
-            String defaultValue = getDefaultValue(baseType, extraWord);
-            if (defaultValue != null) {
-                return defaultValue; // use the returned value without asking user
-            }
-        }
+        String argType = argTypeAttr.optString("type", "str");
+        String argModifier = argTypeAttr.optString("modifier", "user");
+        boolean argMandatory = argTypeAttr.optBoolean("mandatory", true);
+        String argDefault = argTypeAttr.optString("default", "");
 
         // Default behavior
         while (true) {
-            System.out.print("Enter " + argName + " (" + argType + "): ");
-            String input = scanner.nextLine().trim();
+            if (argModifier.equals("user")){
+                System.out.print("Enter " + argName + " (" + argType + "): ");
+                String input = scanner.nextLine().trim();
 
-            if (isValid(input, baseType)) {
-                return input;
-            } else {
-                showMessage("Invalid " + baseType + ". Please try again.");
+                if (input.equals("") && argMandatory == false){
+                    return argDefault;    
+                    }
+
+                if (isValid(input, argType)) {
+                    return input;
+                } else {
+                    showMessage("Invalid " + argType + ". Please try again.");
+                }
+            }
+            else{
+                return argDefault;
             }
         }
     }

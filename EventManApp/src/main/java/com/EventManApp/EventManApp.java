@@ -1,14 +1,10 @@
 package com.EventManApp;
 
 import org.json.JSONObject;
-import java.nio.charset.StandardCharsets;
+
 import java.util.LinkedHashMap;
 import java.util.ArrayList;
 import java.util.List;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import java.io.PrintStream;
 import java.io.InputStream;
@@ -16,11 +12,15 @@ import java.io.OutputStream;
 
 import java.util.Scanner;
 
-import com.EventManApp.lib.ConsoleInterface;
+import com.EventManApp.lib.JSONHelper;
+import com.EventManApp.lib.ResponseHelper;
+
+import com.EventManApp.lib.interfaces.ConsoleInterface;
+
 import com.EventManApp.MenuCallback;
 
 import com.EventManApp.ObjectHandler;
-import com.EventManApp.EventObjectMan;
+import com.EventManApp.EventObjectHandler;
 
 /**
  * @file EventManApp.java
@@ -42,7 +42,7 @@ public class EventManApp {
      */
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        EventObjectMan eventObjectManager = new EventObjectMan();
+        EventObjectHandler eventObjectManager = new EventObjectHandler();
 
         // Add them to a list
         List<ObjectHandler> objectHandlers = new ArrayList<>();
@@ -65,7 +65,7 @@ public class EventManApp {
 
             // Handle invalid command
             if (jsonResponse == null) {
-                jsonResponse = createInvalidCommandResponse(commandId);
+                jsonResponse = ResponseHelper.createInvalidCommandResponse(commandId);
             }
 
             return jsonResponse.toString();
@@ -89,10 +89,6 @@ public class EventManApp {
         scanner.close(); // Close the scanner at the end to free resources
     }
 
-    private static JSONObject createInvalidCommandResponse(String commandId) {
-        return new JSONObject().put("message", "Invalid command: " + commandId);
-    }
-
     private static void displayLogs() {
         while (running) {
             // Print logs if any
@@ -111,40 +107,6 @@ public class EventManApp {
         }
     }
 
-    // This method must be defined within the Main class
-    private static JSONObject loadJsonFromFile(String fileName) {
-        try (InputStream inputStream = EventManApp.class.getClassLoader().getResourceAsStream(fileName)) {
-            if (inputStream == null) {
-                throw new RuntimeException("File not found: " + fileName);
-            }
-            // Read the input stream into a string
-            String jsonString = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-
-            // Create JSONObject using LinkedHashMap to preserve order
-            LinkedHashMap<String, Object> map = new LinkedHashMap<>();
-            JSONObject jsonObject = new JSONObject(map);
-            return new JSONObject(jsonString);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    private static void traverseAndPrint(JSONObject jsonObject, String parentKey) {
-        for (String key : jsonObject.keySet()) {
-            Object value = jsonObject.get(key);
-            String fullKey = parentKey.isEmpty() ? key : parentKey + "." + key;
-
-            if (value instanceof JSONObject) {
-                // Recursive call for nested JSONObject
-                traverseAndPrint((JSONObject) value, fullKey);
-            } else {
-                // Print the key and value
-                System.out.println(fullKey + ": " + value);
-            }
-        }
-    }
-
     /**
      * Launches an interactive event managment that reads commands from
      * standard input, evaluates and run them,and prints results.
@@ -152,7 +114,7 @@ public class EventManApp {
      * @param args Command-line arguments (ignored).
      */
     public static void eventManager(InputStream in, PrintStream out, String[] args, MenuCallback callback) {
-        JSONObject commands= loadJsonFromFile("commands.json");
+        JSONObject commands= JSONHelper.loadJsonFromFile("commands.json");
 
         ConsoleInterface myConsoleInterface = new ConsoleInterface(callback);
         JSONObject result = myConsoleInterface.executeCommands(commands);
