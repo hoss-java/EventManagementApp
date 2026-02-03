@@ -738,16 +738,16 @@ gantt
 > >> * UML was updated
 > </details>
 
-## 001-0014
-> **Implement a DB layer.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+## 001-0013
+> **Implement an organizer class.** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 > <details >
 >     <summary>Details</summary>
-> The goal of this card is to implement a DB layer
+> The goal of this card is to implement an organizer to connect events to participant.
 > 
 > # DOD (definition of done):
 > 
 > # TODO:
-> - [] 1.
+> - [x] 1. Add Organize object
 > 
 > # Reports:
 > *
@@ -768,16 +768,16 @@ gantt
 > * 
 > </details>
 
-## 001-0013
-> **Implement an organizer class.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+## 001-0014
+> **Implement a DB layer.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 > <details open>
 >     <summary>Details</summary>
-> The goal of this card is to implement an organizer to connect events to participant.
+> The goal of this card is to implement a DB layer
 > 
 > # DOD (definition of done):
 > 
 > # TODO:
-> - [ ] 1.
+> - [] 1.
 > 
 > # Reports:
 > *
