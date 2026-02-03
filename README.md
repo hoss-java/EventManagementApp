@@ -317,6 +317,12 @@ classDiagram
     +JSONObject parseCommands(String jsonCommands)
     +boolean isValidCommand(String commandId)
   }
+
+  class Field T {
+    +Field(String name, T value)
+    +String getName()
+    +T getValue()
+  }
   
   class BaseObject {
     -List Field T fields
@@ -325,11 +331,6 @@ classDiagram
     +List Field T getFields()
     +T getFieldValue(String fieldName)
     +Object validateAndConvert(String fieldName, String valueStr, String expectedType)
-    class Field T {
-      +Field(String name, T value)
-      +String getName()
-      +T getValue()
-    }
   }
 
   class ObjectHandler {
@@ -370,6 +371,7 @@ classDiagram
   DateValidator <|.. ValidatorInterface : implement
   TimeValidator <|.. ValidatorInterface : implement
 
+  BaseObject <|.. Field : implements
   BaseObject --> DurationValidator : uses
   BaseObject --> DateValidator : uses
   BaseObject --> TimeValidator : uses
@@ -392,7 +394,7 @@ classDiagram
   ParticipantObjectHandler --> EMObject : uses
   ParticipantObjectHandler --> EMObjectField : uses
   ParticipantObjectHandler --> ResponseHelper : uses
-  
+
 ```
 
 #### Supported commands structures
