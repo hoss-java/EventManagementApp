@@ -709,19 +709,33 @@ gantt
 > The above design is generic and will also be utilized for the participant class.
 > </details>
 
-## 001-0013
-> **Implement a report manager class.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+## 001-0012
+> **Implement a participants class.** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 > <details >
 >     <summary>Details</summary>
-> The goal of this card is to implement a report  manager.
+> The goal of this card is to implement a class for participants.
 > 
 > # DOD (definition of done):
 > 
 > # TODO:
-> - [] 1.
+> - [x] 1. Clean Up an restructure current code to be more reusable
+> - [ ] 2. Update the main to support multi interfaces.
+> - [ ] 3. Add Participant object handler
 > 
 > # Reports:
-> *
+> * The code now resembles an application, but many sections remain unoptimized. Before proceeding with the participants, it’s essential to refine the code. This involves focusing on specific components, such as event classes, to ensure consistency in their structure. The code needs some cleanup to enhance clarity and performance.
+> > * Moving JSON methods an functions to a helper class
+> > * Adding a responsHelper
+> > * Move interfaces to lib/interfaces
+> > * Many improvement were applied
+> >> * `ConsoleInterface` was moved to `lib/interfaces`
+> >> * A new addons folder was aded to `lib/validator` to add validators, for now there validators have been coded , `Duration`, `Date` and `Time`
+> >> * A new helper named `StringParserHelper` was added to parse tags with in fields. It is applied to input strings before adding to EMObjects
+> >> * `EventObject` class was removed and a new generic class named `EMObject` was coded instead. The new `EMObject` can be used to manage all kind of needed objects such as `event` , `participant` and `organizer`
+> >> * The structure the JSON used on `command.json` was updated with new attributes.
+> >> improve code structures
+> >> A participant object and object handle based on the even object was added
+> >> * UML was updated
 > </details>
 
 ## 001-0014
@@ -754,31 +768,17 @@ gantt
 > * 
 > </details>
 
-## 001-0012
-> **Implement a participants class.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+## 001-0013
+> **Implement an organizer class.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 > <details open>
 >     <summary>Details</summary>
-> The goal of this card is to implement a class for participants.
+> The goal of this card is to implement an organizer to connect events to participant.
 > 
 > # DOD (definition of done):
 > 
 > # TODO:
-> - [x] 1. Clean Up an restructure current code to be more reusable
-> - [ ] 2. Update the main to support multi interfaces.
-> - [ ] 3. Add Participant object handler
+> - [ ] 1.
 > 
 > # Reports:
-> * The code now resembles an application, but many sections remain unoptimized. Before proceeding with the participants, it’s essential to refine the code. This involves focusing on specific components, such as event classes, to ensure consistency in their structure. The code needs some cleanup to enhance clarity and performance.
-> > * Moving JSON methods an functions to a helper class
-> > * Adding a responsHelper
-> > * Move interfaces to lib/interfaces
-> > * Many improvement were applied
-> >> * `ConsoleInterface` was moved to `lib/interfaces`
-> >> * A new addons folder was aded to `lib/validator` to add validators, for now there validators have been coded , `Duration`, `Date` and `Time`
-> >> * A new helper named `StringParserHelper` was added to parse tags with in fields. It is applied to input strings before adding to EMObjects
-> >> * `EventObject` class was removed and a new generic class named `EMObject` was coded instead. The new `EMObject` can be used to manage all kind of needed objects such as `event` , `participant` and `organizer`
-> >> * The structure the JSON used on `command.json` was updated with new attributes.
-> >> improve code structures
-> >> A participant object and object handle based on the even object was added
-> >> * UML was updated
+> *
 > </details>
