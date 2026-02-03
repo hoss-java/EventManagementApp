@@ -778,5 +778,7 @@ gantt
 > >> * A new helper named `StringParserHelper` was added to parse tags with in fields. It is applied to input strings before adding to EMObjects
 > >> * `EventObject` class was removed and a new generic class named `EMObject` was coded instead. The new `EMObject` can be used to manage all kind of needed objects such as `event` , `participant` and `organizer`
 > >> * The structure the JSON used on `command.json` was updated with new attributes.
-> >> 
+> >> improve code structures
+> >> A participant object and object handle based on the even object was added
+> >> * UML was updated
 > </details>
