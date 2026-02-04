@@ -1,4 +1,4 @@
-package com.EventManApp.lib.interfaces;
+package com.EventManApp.interfaces;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -10,17 +10,18 @@ import java.util.regex.Pattern;
 
 import java.util.Scanner;
 
-import com.EventManApp.MenuCallback;
+import com.EventManApp.BaseInterface;
+import com.EventManApp.ResponseCallbackInterface;
 
-public class ConsoleInterface {
+public class ConsoleInterface extends BaseInterface {
     private final Scanner scanner;
-    private final MenuCallback callback;
 
-    public ConsoleInterface(MenuCallback callback) {
+    public ConsoleInterface(ResponseCallbackInterface callback) {
+        super(callback);
         this.scanner = new Scanner(System.in);
-        this.callback = callback;
     }
 
+    @Override
     public JSONObject executeCommands(JSONObject commands) {
         JSONObject selectedCommand = new JSONObject();
         navigateCommands(commands.getJSONArray("commands"), selectedCommand, "Exit");
@@ -52,13 +53,14 @@ public class ConsoleInterface {
                     args.put(argName, argValue);
                 }
                 selectedCommand.put("args", args);
+                selectedCommand.put("argsattributes", arguments);
             }
 
             // Check for nested commands
             if (command.has("commands")) {
                 navigateCommands(command.getJSONArray("commands"), selectedCommand, "Back");
                 if (!commandName.equals(selectedCommand.getString("id"))){
-                    String response = callback.onMenuItemSelected("ConsoleInterface",selectedCommand.toString());
+                    String response = callback.ResponseHandler("ConsoleInterface",selectedCommand.toString());
                     System.out.println("Response: " + response); // Print the JSON response
                     // Wait for the user to press Enter before proceeding
                     System.out.println("Press Enter to continue...");

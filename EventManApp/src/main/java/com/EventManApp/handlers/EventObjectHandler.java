@@ -1,4 +1,4 @@
-package com.EventManApp;
+package com.EventManApp.handlers;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -16,21 +16,25 @@ import java.time.format.DateTimeParseException;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
+import com.EventManApp.ActionCallbackInterface;
 import com.EventManApp.lib.ResponseHelper;
+import com.EventManApp.lib.JSONHelper;
+import com.EventManApp.lib.StringParserHelper;
 
 import com.EventManApp.EMObjectField;
 import com.EventManApp.EMObject;
 import com.EventManApp.ObjectHandler;
+import com.EventManApp.ValueComparator;
 
 public class EventObjectHandler extends ObjectHandler {
-    private static String emObjectId = "EventObject";
     private List<EMObject> events;
 
     private int nextId; // Counter for generating unique IDs
     private static Map<String, EMObjectField> fieldTypeMap = new HashMap<>();
 
-    public EventObjectHandler() {
-        super();
+    public EventObjectHandler(ActionCallbackInterface callback) {
+        super(callback);
+        setObjectId("EventObject");
         this.events = new ArrayList<>();
         this.nextId = 1; // Start ID from 1
 
@@ -53,8 +57,8 @@ public class EventObjectHandler extends ObjectHandler {
     // Method to initialize commands and their associated methods
     private void initializeCommands() {
         try {
-            commandMap.put("addevent", this.getClass().getDeclaredMethod("addEventFromArgs",JSONObject.class));
-            commandMap.put("listallevents", this.getClass().getDeclaredMethod("listEvents",JSONObject.class)); 
+            commandMap.put("addevent", this.getClass().getDeclaredMethod("addEventFromArgs",JSONObject.class,JSONObject.class));
+            commandMap.put("listallevents", this.getClass().getDeclaredMethod("listEvents",JSONObject.class,JSONObject.class)); 
             // Add more commands here
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
@@ -77,7 +81,19 @@ public class EventObjectHandler extends ObjectHandler {
     }
 
     // Helper method to create an event from args
+    public JSONObject addEventFromArgs() {
+        return addEventFromArgs(null, null);
+    }
+
     public JSONObject addEventFromArgs(JSONObject args) {
+        return addEventFromArgs(args, null);
+    }
+
+    public JSONObject addEventFromArgs(JSONObject args, JSONObject argsattributes) {
+        if (args == null){
+            return ResponseHelper.createResponse("Error: No arguments were provided!", null);
+        }
+
         try {
             // Initialize a map to store event fields
             Map<String, String> eventFields = new HashMap<>();
@@ -121,7 +137,15 @@ public class EventObjectHandler extends ObjectHandler {
         }
     }
 
+    public JSONObject listEvents() {
+        return listEvents(null, null);
+    }
+
     public JSONObject listEvents(JSONObject args) {
+        return listEvents(args, null);
+    }
+
+    public JSONObject listEvents(JSONObject args, JSONObject argsattributes) {
         JSONArray eventsArray = new JSONArray();
 
         if (events.isEmpty()) {
@@ -131,12 +155,34 @@ public class EventObjectHandler extends ObjectHandler {
         try {
             for (EMObject event : events) {
                 JSONObject eventJson = new JSONObject();
+                boolean matchedEvent = true;
                 for (Map.Entry<String, EMObjectField> entry : fieldTypeMap.entrySet()) {
                     String fieldName = entry.getKey();
+                    EMObjectField definition = entry.getValue();
                     String valueStr = event.getFieldValue(fieldName).toString();
-                    eventJson.put(fieldName, valueStr);
+                    String compareStr = args.optString(fieldName);
+                    if (compareStr != null &&  !compareStr.equals("")) {
+                        compareStr = StringParserHelper.parseString(compareStr);
+                        String compareMode = "=";
+                        if ( argsattributes != null){
+                            JSONObject compareAttr = JSONHelper.getJsonValue(argsattributes, "fieldName");
+                            if (compareAttr != null){
+                                compareMode = compareAttr.optString("compareMode",compareMode);
+                            }
+                        }
+                        if ( !ValueComparator.validateValue(valueStr,compareStr,definition.getType(),compareMode) ){
+                            matchedEvent = false;
+                            break;
+                        }
+                        eventJson.put(fieldName, valueStr);
+                    }
+                    else {
+                        eventJson.put(fieldName, valueStr);
+                    }
                 }
-                eventsArray.put(eventJson);
+                if (matchedEvent == true){
+                    eventsArray.put(eventJson);
+                }
             }
             JSONObject response = new JSONObject();
             response.put("events", eventsArray);
@@ -148,4 +194,5 @@ public class EventObjectHandler extends ObjectHandler {
         response.put("events", eventsArray);
         return ResponseHelper.createResponse("Events listed successfully", response);
     }
+
 }

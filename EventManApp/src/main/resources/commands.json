@@ -49,10 +49,27 @@
                     "id" : "listallevents",
                     "description": "View all events.",
                     "args": {
+                        "title": {
+                            "type": "str",
+                            "mandatory" : false,
+                            "compareMode": "="
+                            },
                         "date" : {
                             "type": "date",
                             "mandatory" : false,
                             "default": "%DATE%",
+                            "compareMode": "<="
+                            },
+                        }
+                },
+                {
+                    "id" : "listallevents",
+                    "description": "Search event by title.",
+                    "args": {
+                        "title": {
+                            "type": "str",
+                            "mandatory" : false,
+                            "compareMode": "contains"
                             },
                         }
                 },
@@ -84,12 +101,13 @@
                     },
                 },
                 {
-                    "id": "listallparticipants",
-                    "description": "View all participant.",
+                    "id": "searchparticipantbyname",
+                    "description": "Search participant by name.",
                     "args": {
                         "name" : {
                             "type": "str",
                             "mandatory" : false,
+                            "compareMode": "contains"
                             },
                     }
                 },
@@ -100,8 +118,8 @@
             "description": "Organize",
             "commands": [
                 {
-                "id" :"addorganize",
-                "description": "Add an organize",
+                "id" :"addorganizebyid",
+                "description": "Register participant to an event by id",
                 "args": {
                         "id": {
                             "type": "int",
@@ -115,8 +133,27 @@
                             },
                         "participantid": {
                             "type": "int",
+                            "mandatory" : true,
+                            },
+                    },
+                },
+                {
+                "id" :"addorganizebyname",
+                "description": "Register participant to an event by name",
+                "args": {
+                        "id": {
+                            "type": "int",
                             "mandatory" : false,
-                            "default": "",
+                            "modifier": "auto",
+                            "default": "1",
+                            },
+                        "eventtitle": {
+                            "type": "str",
+                            "mandatory" : true,
+                            },
+                        "participantname": {
+                            "type": "str",
+                            "mandatory" : true,
                             },
                     },
                 },
@@ -127,6 +164,32 @@
                         "eventid" : {
                             "type": "int",
                             "mandatory" : false,
+                            },
+                        "participantid" : {
+                            "type": "int",
+                            "mandatory" : false,
+                            },
+                    },
+                },
+                {
+                    "id" : "listallevents",
+                    "description": "Search event by title.",
+                    "args": {
+                        "title": {
+                            "type": "str",
+                            "mandatory" : false,
+                            "compareMode": "contains"
+                            },
+                        }
+                },
+                {
+                    "id": "listallparticipants",
+                    "description": "Search participant by name.",
+                    "args": {
+                        "name" : {
+                            "type": "str",
+                            "mandatory" : false,
+                            "compareMode": "contains"
                             },
                     }
                 },

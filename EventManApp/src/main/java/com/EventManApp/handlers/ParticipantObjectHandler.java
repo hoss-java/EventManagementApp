@@ -1,4 +1,4 @@
-package com.EventManApp;
+package com.EventManApp.handlers;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -16,21 +16,25 @@ import java.time.format.DateTimeParseException;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
+import com.EventManApp.ActionCallbackInterface;
 import com.EventManApp.lib.ResponseHelper;
+import com.EventManApp.lib.JSONHelper;
+import com.EventManApp.lib.StringParserHelper;
 
 import com.EventManApp.EMObjectField;
 import com.EventManApp.EMObject;
 import com.EventManApp.ObjectHandler;
+import com.EventManApp.ValueComparator;
 
 public class ParticipantObjectHandler extends ObjectHandler {
-    private static String emObjectId = "ParticipantObject";
     private List<EMObject> participants;
 
     private int nextId; // Counter for generating unique IDs
     private static Map<String, EMObjectField> fieldTypeMap = new HashMap<>();
 
-    public ParticipantObjectHandler() {
-        super();
+    public ParticipantObjectHandler(ActionCallbackInterface callback) {
+        super(callback);
+        setObjectId("ParticipantObject");
         this.participants = new ArrayList<>();
         this.nextId = 1; // Start ID from 1
 
@@ -49,8 +53,8 @@ public class ParticipantObjectHandler extends ObjectHandler {
     // Method to initialize commands and their associated methods
     private void initializeCommands() {
         try {
-            commandMap.put("addparticipant", this.getClass().getDeclaredMethod("addParticipantFromArgs",JSONObject.class));
-            commandMap.put("listallparticipants", this.getClass().getDeclaredMethod("listParticipants",JSONObject.class)); 
+            commandMap.put("addparticipant", this.getClass().getDeclaredMethod("addParticipantFromArgs",JSONObject.class,JSONObject.class));
+            commandMap.put("searchparticipantbyname", this.getClass().getDeclaredMethod("listParticipants",JSONObject.class,JSONObject.class)); 
             // Add more commands here
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
@@ -72,8 +76,20 @@ public class ParticipantObjectHandler extends ObjectHandler {
         }
     }
 
-    // Helper method to create a participant from args
+    // Helper method to create an event from args
+    public JSONObject addParticipantFromArgs() {
+        return addParticipantFromArgs(null, null);
+    }
+
     public JSONObject addParticipantFromArgs(JSONObject args) {
+        return addParticipantFromArgs(args, null);
+    }
+
+    public JSONObject addParticipantFromArgs(JSONObject args, JSONObject argsattributes) {
+        if (args == null){
+            return ResponseHelper.createResponse("Error: No arguments were provided!", null);
+        }
+
         try {
             // Initialize a map to store participant fields
             Map<String, String> participantFields = new HashMap<>();
@@ -117,7 +133,15 @@ public class ParticipantObjectHandler extends ObjectHandler {
         }
     }
 
-   public JSONObject listParticipants(JSONObject args) {
+    public JSONObject listParticipants() {
+        return listParticipants(null, null);
+    }
+
+    public JSONObject listParticipants(JSONObject args) {
+        return listParticipants(args, null);
+    }
+
+    public JSONObject listParticipants(JSONObject args, JSONObject argsattributes) {
         JSONArray participantsArray = new JSONArray();
 
         if (participants.isEmpty()) {
@@ -127,12 +151,34 @@ public class ParticipantObjectHandler extends ObjectHandler {
         try {
             for (EMObject participant : participants) {
                 JSONObject participantJson = new JSONObject();
+                boolean matchedParticipant = true;
                 for (Map.Entry<String, EMObjectField> entry : fieldTypeMap.entrySet()) {
                     String fieldName = entry.getKey();
+                    EMObjectField definition = entry.getValue();
                     String valueStr = participant.getFieldValue(fieldName).toString();
-                    participantJson.put(fieldName, valueStr);
+                    String compareStr = args.optString(fieldName);
+                    if (compareStr != null &&  !compareStr.equals("")) {
+                        compareStr = StringParserHelper.parseString(compareStr);
+                        String compareMode = "=";
+                        if ( argsattributes != null){
+                            JSONObject compareAttr = JSONHelper.getJsonValue(argsattributes, "fieldName");
+                            if (compareAttr != null){
+                                compareMode = compareAttr.optString("compareMode",compareMode);
+                            }
+                        }
+                        if ( !ValueComparator.validateValue(valueStr,compareStr,definition.getType(),compareMode) ){
+                            matchedParticipant = false;
+                            break;
+                        }
+                        participantJson.put(fieldName, valueStr);
+                    }
+                    else {
+                        participantJson.put(fieldName, valueStr);
+                    }
                 }
-                participantsArray.put(participantJson);
+                if (matchedParticipant == true){
+                    participantsArray.put(participantJson);
+                }
             }
             JSONObject response = new JSONObject();
             response.put("participants", participantsArray);

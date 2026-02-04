@@ -81,4 +81,15 @@ public class JSONHelper {
         }
         // Add validation for additional required fields if necessary
     }
+
+    public static JSONObject getJsonValue(JSONObject jsonObject, String key) {
+        // Check if the key exists and if its value is a JSONObject
+        if (jsonObject.has(key)) {
+            Object value = jsonObject.get(key);
+            if (value instanceof JSONObject) {
+                return (JSONObject) value; // Return the JSONObject
+            }
+        }
+        return null; // Return null if the key is absent or not a JSONObject
+    }
 }
