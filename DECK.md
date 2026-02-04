@@ -738,21 +738,6 @@ gantt
 > >> * UML was updated
 > </details>
 
-## 001-0013
-> **Implement an organizer class.** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
-> <details >
->     <summary>Details</summary>
-> The goal of this card is to implement an organizer to connect events to participant.
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [x] 1. Add Organize object
-> 
-> # Reports:
-> *
-> </details>
-
 ## 001-0010
 > **Implement a simple block test.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 > <details open>
@@ -766,6 +751,21 @@ gantt
 > 
 > # Reports:
 > * 
+> </details>
+
+## 001-0013
+> **Implement an organize class.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+> <details open>
+>     <summary>Details</summary>
+> The goal of this card is to implement an organizer to connect events to participant.
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [x] 1. Add Organize object
+> 
+> # Reports:
+> *
 > </details>
 
 ## 001-0014
