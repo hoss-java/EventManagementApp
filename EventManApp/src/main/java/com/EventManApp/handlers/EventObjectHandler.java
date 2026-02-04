@@ -58,7 +58,9 @@ public class EventObjectHandler extends ObjectHandler {
     private void initializeCommands() {
         try {
             commandMap.put("addevent", this.getClass().getDeclaredMethod("addEventFromArgs",JSONObject.class,JSONObject.class));
-            commandMap.put("listallevents", this.getClass().getDeclaredMethod("listEvents",JSONObject.class,JSONObject.class)); 
+            commandMap.put("removeeventbytitle", this.getClass().getDeclaredMethod("removeEventByTitle",JSONObject.class,JSONObject.class));
+            commandMap.put("removeeventbyid", this.getClass().getDeclaredMethod("removeEventByTitle",JSONObject.class,JSONObject.class));
+            commandMap.put("listevents", this.getClass().getDeclaredMethod("listEvents",JSONObject.class,JSONObject.class)); 
             // Add more commands here
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
@@ -67,20 +69,27 @@ public class EventObjectHandler extends ObjectHandler {
 
     // Add an event
     public JSONObject addEvent(EMObject event) {
-        events.add(event);
-        return ResponseHelper.createResponse("Event added successfully", null);
-    }
-
-    // Remove an event by title
-    public JSONObject removeEvent(String title) {
-        if (events.removeIf(event -> ((String)  event.getFieldValue("title")).equals(title))) {
-            return ResponseHelper.createResponse("Event removed successfully", null);
+        // Validate before adding
+        if (EMObject.isValidForAddition(events, event)) {
+            events.add(event);
+            return ResponseHelper.createResponse("Event added successfully", null, RESPONSE_DEFAULT_VERSION);
         } else {
-            return ResponseHelper.createResponse("Event not found", null);
+            throw new IllegalArgumentException("An EMObject with the same non-id fields already exists.");
         }
     }
 
-    // Helper method to create an event from args
+    // Remove an event by title
+    public JSONObject removeEvent(int id) {
+        if (events.removeIf(event -> {
+             Integer eventId = (int) event.getFieldValue("id");
+            return eventId != null && eventId.equals(id);
+        })) {
+            return ResponseHelper.createResponse("Event removed successfully", null);
+        }
+        return ResponseHelper.createResponse("Event not found", null);
+    }
+
+    // Helper method to create/remove/search an event from args
     public JSONObject addEventFromArgs() {
         return addEventFromArgs(null, null);
     }
@@ -90,52 +99,80 @@ public class EventObjectHandler extends ObjectHandler {
     }
 
     public JSONObject addEventFromArgs(JSONObject args, JSONObject argsattributes) {
-        if (args == null){
-            return ResponseHelper.createResponse("Error: No arguments were provided!", null);
+        if (args != null){
+            try {
+                // Initialize a map to store event fields
+                Map<String, String> eventFields = new HashMap<>();
+
+                // Loop through fieldTypeMap to validate and populate eventFields
+                for (Map.Entry<String, EMObjectField> entry : fieldTypeMap.entrySet()) {
+                    String fieldName = entry.getKey();
+                    EMObjectField definition = entry.getValue();
+                    String value;
+                    
+                    if (definition.getModifier().equals("auto")){
+                        value = Integer.toString(this.nextId);
+                        this.nextId++;
+                    }
+                    else{
+                        value = args.optString(fieldName, null);
+                    }
+                    // Check for mandatory fields
+                    if (definition.isMandatory() && value == null) {
+                        return ResponseHelper.createResponse("Error: " + fieldName + " is a mandatory field.", null);
+                    }
+
+                    // Use default value if the field is not mandatory and is missing
+                    if (value == null && !definition.isMandatory() && !definition.getModifier().equals("auto")) {
+                        value = definition.getDefaultValue();
+                    }
+
+                    // Add value to eventFields
+                    eventFields.put(fieldName, value);
+                }
+
+                // Create the EMObject
+                EMObject event = new EMObject(emObjectId, fieldTypeMap, eventFields);
+                addEvent(event); // Add the event to the list
+
+                return ResponseHelper.createResponse("Event added successfully", new JSONObject().put("id", (int) event.getFieldValue("id")));
+
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+                return ResponseHelper.createResponse("Error processing arguments: " + e.getMessage(), null);
+                }
         }
-
-        try {
-            // Initialize a map to store event fields
-            Map<String, String> eventFields = new HashMap<>();
-
-            // Loop through fieldTypeMap to validate and populate eventFields
-            for (Map.Entry<String, EMObjectField> entry : fieldTypeMap.entrySet()) {
-                String fieldName = entry.getKey();
-                EMObjectField definition = entry.getValue();
-                String value;
-                
-                if (definition.getModifier().equals("auto")){
-                    value = Integer.toString(this.nextId);
-                    this.nextId++;
-                }
-                else{
-                    value = args.optString(fieldName, null);
-                }
-                // Check for mandatory fields
-                if (definition.isMandatory() && value == null) {
-                    return ResponseHelper.createResponse("Error: " + fieldName + " is a mandatory field.", null);
-                }
-
-                // Use default value if the field is not mandatory and is missing
-                if (value == null && !definition.isMandatory() && !definition.getModifier().equals("auto")) {
-                    value = definition.getDefaultValue();
-                }
-
-                // Add value to eventFields
-                eventFields.put(fieldName, value);
-            }
-
-            // Create the EMObject
-            EMObject event = new EMObject(emObjectId, fieldTypeMap, eventFields);
-            addEvent(event); // Add the event to the list
-
-            return ResponseHelper.createResponse("Event added successfully", new JSONObject().put("uniqueId", (int) event.getFieldValue("id")));
-
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return ResponseHelper.createResponse("Error processing arguments: " + e.getMessage(), null);
-        }
+        return ResponseHelper.createResponse("Error: No arguments were provided!", null);
     }
+
+    public JSONObject removeEventByTitle() {
+        return removeEventByTitle(null, null);
+    }
+
+    public JSONObject removeEventByTitle(JSONObject args) {
+        return removeEventByTitle(args, null);
+    }
+
+    public JSONObject removeEventByTitle(JSONObject args, JSONObject argsattributes) {
+        if (args != null) {
+            int eventid = findId(args, new String[][] {
+                {"id", "id"},
+                {"title", "title"}},
+                "listevents"
+                );
+
+            if ( eventid != -1 ){
+                try {
+                    return removeEvent(eventid); // Add the organize to the list
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    return ResponseHelper.createResponse("Event processing arguments: " + e.getMessage(), null,RESPONSE_DEFAULT_VERSION);
+                }
+            }
+        }
+        return ResponseHelper.createResponse("Error: Invalid or/No arguments were provided!", null,RESPONSE_DEFAULT_VERSION);
+    }
+
 
     public JSONObject listEvents() {
         return listEvents(null, null);
@@ -185,13 +222,13 @@ public class EventObjectHandler extends ObjectHandler {
                 }
             }
             JSONObject response = new JSONObject();
-            response.put("events", eventsArray);
+            response.put("data", eventsArray);
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return ResponseHelper.createResponse("Error processing arguments: " + e.getMessage(), null);
         }
         JSONObject response = new JSONObject();
-        response.put("events", eventsArray);
+        response.put("data", eventsArray);
         return ResponseHelper.createResponse("Events listed successfully", response);
     }
 

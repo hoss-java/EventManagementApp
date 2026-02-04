@@ -5,73 +5,94 @@
             "description": "Event",
             "commands": [
                 {
-                    "id" :"addevent",
-                    "description": "Add an event",
-                    "args": {
-                        "id": {
-                            "type": "int",
-                            "mandatory" : false,
-                            "modifier": "auto",
-                            "default": "1",
-                            },
-                        "title": {
-                            "type": "str",
-                            "mandatory" : true,
-                            },
-                        "location": {
-                            "type": "str",
-                            "mandatory" : false,
-                            "default": "here",
-                            },
-                        "capacity": {
-                            "type": "positiveInt",
-                            "mandatory" : false,
-                            "default": "12",
-                            },
-                        "date" : {
-                            "type": "date",
-                            "mandatory" : false,
-                            "default": "%DATE%",
-                            },
-                        "time" : {
-                            "type": "time",
-                            "mandatory" : false,
-                            "default": "%TIME%",
-                            },
-                        "duration" : {
-                            "type": "duration",
-                            "mandatory" : false,
-                            "default": "PT15M",
-                            },
+                "id" :"addevent",
+                "description": "Add an event",
+                "args": {
+                    "id": {
+                        "type": "int",
+                        "mandatory" : false,
+                        "modifier": "auto",
+                        "default": "1",
+                        },
+                    "title": {
+                        "type": "str",
+                        "mandatory" : true,
+                        },
+                    "location": {
+                        "type": "str",
+                        "mandatory" : false,
+                        "default": "here",
+                        },
+                    "capacity": {
+                        "type": "positiveInt",
+                        "mandatory" : false,
+                        "default": "12",
+                        },
+                    "date" : {
+                        "type": "date",
+                        "mandatory" : false,
+                        "default": "%DATE%",
+                        },
+                    "time" : {
+                        "type": "time",
+                        "mandatory" : false,
+                        "default": "%TIME%",
+                        },
+                    "duration" : {
+                        "type": "duration",
+                        "mandatory" : false,
+                        "default": "PT15M",
+                        },
                     },
                 },
                 {
-                    "id" : "listallevents",
-                    "description": "View all events.",
-                    "args": {
-                        "title": {
-                            "type": "str",
-                            "mandatory" : false,
-                            "compareMode": "="
-                            },
-                        "date" : {
-                            "type": "date",
-                            "mandatory" : false,
-                            "default": "%DATE%",
-                            "compareMode": "<="
-                            },
-                        }
+                "id" : "listevents",
+                "description": "Search/List events.",
+                "args": {
+                    "id": {
+                        "type": "int",
+                        "mandatory" : false,
+                        "compareMode": "=",
+                        },
+                    "title": {
+                        "type": "str",
+                        "mandatory" : false,
+                        "compareMode": "contains"
+                        },
+                    "location": {
+                        "type": "str",
+                        "mandatory" : false,
+                        "compareMode": "contains",
+                        },
+                    "date" : {
+                        "type": "date",
+                        "mandatory" : false,
+                        "default": "%DATE%",
+                        "compareMode": "<="
+                        },
+                    }
                 },
                 {
-                    "id" : "listallevents",
-                    "description": "Search event by title.",
-                    "args": {
-                        "title": {
-                            "type": "str",
-                            "mandatory" : false,
-                            "compareMode": "contains"
-                            },
-                        }
+                "id" : "removeeventbyid",
+                "description": "Remove event by id.",
+                "args": {
+                    "id": {
+                        "type": "int",
+                        "mandatory" : true,
+                        "compareMode": "="
+                        },
+                    }
+                },
+                {
+                "id" : "removeeventbytitle",
+                "description": "Remove event by title.",
+                "args": {
+                    "title": {
+                        "type": "str",
+                        "mandatory" : true,
+                        "compareMode": "="
+                        },
+                    }
                 },
             ]
         },
@@ -83,34 +104,66 @@
                 "id" :"addparticipant",
                 "description": "Add a participant",
                 "args": {
-                        "id": {
-                            "type": "int",
-                            "mandatory" : false,
-                            "modifier": "auto",
-                            "default": "1",
-                            },
-                        "name": {
-                            "type": "str",
-                            "mandatory" : true,
-                            },
-                        "email": {
-                            "type": "str",
-                            "mandatory" : false,
-                            "default": "",
-                            },
+                    "id": {
+                        "type": "int",
+                        "mandatory" : false,
+                        "modifier": "auto",
+                        "default": "1",
+                        },
+                    "name": {
+                        "type": "str",
+                        "mandatory" : true,
+                        },
+                    "email": {
+                        "type": "str",
+                        "mandatory" : false,
+                        "default": "",
+                        },
                     },
                 },
                 {
-                    "id": "searchparticipantbyname",
-                    "description": "Search participant by name.",
-                    "args": {
-                        "name" : {
-                            "type": "str",
-                            "mandatory" : false,
-                            "compareMode": "contains"
-                            },
+                "id": "listparticipants",
+                "description": "Search/List participants.",
+                "args": {
+                    "id": {
+                        "type": "int",
+                        "mandatory" : false,
+                        "compareMode": "=",
+                        },
+                    "name" : {
+                        "type": "str",
+                        "mandatory" : false,
+                        "compareMode": "contains"
+                        },
                     }
                 },
+                {
+                "id" : "removeparticipantbyid",
+                "description": "Remove participant by id.",
+                "args": {
+                    "id": {
+                        "type": "int",
+                        "mandatory" : true,
+                        "compareMode": "="
+                        },
+                    }
+                },
+                {
+                "id" : "removeparticipantbyname",
+                "description": "Remove participant by id/name.",
+                "args": {
+                    "id": {
+                        "type": "int",
+                        "mandatory" : true,
+                        "compareMode": "="
+                        },
+                    "name": {
+                        "type": "str",
+                        "mandatory" : true,
+                        "compareMode": "="
+                        },
+                    },
+                }
             ]
         },
         {
@@ -121,76 +174,81 @@
                 "id" :"addorganizebyid",
                 "description": "Register participant to an event by id",
                 "args": {
-                        "id": {
-                            "type": "int",
-                            "mandatory" : false,
-                            "modifier": "auto",
-                            "default": "1",
-                            },
-                        "eventid": {
-                            "type": "int",
-                            "mandatory" : true,
-                            },
-                        "participantid": {
-                            "type": "int",
-                            "mandatory" : true,
-                            },
+                    "id": {
+                        "type": "int",
+                        "mandatory" : false,
+                        "modifier": "auto",
+                        "default": "1",
+                        },
+                    "eventid": {
+                        "type": "int",
+                        "mandatory" : true,
+                        },
+                    "participantid": {
+                        "type": "int",
+                        "mandatory" : true,
+                        },
                     },
                 },
                 {
                 "id" :"addorganizebyname",
                 "description": "Register participant to an event by name",
                 "args": {
-                        "id": {
-                            "type": "int",
-                            "mandatory" : false,
-                            "modifier": "auto",
-                            "default": "1",
-                            },
-                        "eventtitle": {
-                            "type": "str",
-                            "mandatory" : true,
-                            },
-                        "participantname": {
-                            "type": "str",
-                            "mandatory" : true,
-                            },
+                    "id": {
+                        "type": "int",
+                        "mandatory" : false,
+                        "modifier": "auto",
+                        "default": "1",
+                        },
+                    "eventtitle": {
+                        "type": "str",
+                        "mandatory" : true,
+                        },
+                    "participantname": {
+                        "type": "str",
+                        "mandatory" : true,
+                        },
                     },
                 },
                 {
-                    "id": "listallorganizes",
-                    "description": "View all participant.",
-                    "args": {
-                        "eventid" : {
-                            "type": "int",
-                            "mandatory" : false,
-                            },
-                        "participantid" : {
-                            "type": "int",
-                            "mandatory" : false,
-                            },
+                "id": "listorganizes",
+                "description": "Search/list registered participant to events.",
+                "args": {
+                    "eventid" : {
+                        "type": "int",
+                        "mandatory" : false,
+                        },
+                    "participantid" : {
+                        "type": "int",
+                        "mandatory" : false,
+                        },
                     },
                 },
                 {
-                    "id" : "listallevents",
-                    "description": "Search event by title.",
-                    "args": {
-                        "title": {
-                            "type": "str",
-                            "mandatory" : false,
-                            "compareMode": "contains"
-                            },
-                        }
+                "id" : "removeorganizebyid",
+                "description": "Remove organize by id.",
+                "args": {
+                    "id": {
+                        "type": "int",
+                        "mandatory" : true,
+                        "compareMode": "="
+                        },
+                    }
                 },
                 {
-                    "id": "listallparticipants",
-                    "description": "Search participant by name.",
-                    "args": {
-                        "name" : {
-                            "type": "str",
-                            "mandatory" : false,
-                            "compareMode": "contains"
-                            },
+                "id" : "removeparticipantfromorganize",
+                "description": "Remove participant from organize by id/name.",
+                "args": {
+                    "participantid": {
+                        "type": "int",
+                        "mandatory" : true,
+                        "compareMode": "="
+                        },
+                    "name": {
+                        "type": "str",
+                        "mandatory" : true,
+                        "compareMode": "="
+                        },
                     }
                 },
             ]

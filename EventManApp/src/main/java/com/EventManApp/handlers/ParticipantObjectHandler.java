@@ -54,7 +54,9 @@ public class ParticipantObjectHandler extends ObjectHandler {
     private void initializeCommands() {
         try {
             commandMap.put("addparticipant", this.getClass().getDeclaredMethod("addParticipantFromArgs",JSONObject.class,JSONObject.class));
-            commandMap.put("searchparticipantbyname", this.getClass().getDeclaredMethod("listParticipants",JSONObject.class,JSONObject.class)); 
+            commandMap.put("removeparticipantbyname", this.getClass().getDeclaredMethod("removeParticipantByName",JSONObject.class,JSONObject.class));
+            commandMap.put("removeparticipantbyid", this.getClass().getDeclaredMethod("removeParticipantByName",JSONObject.class,JSONObject.class));
+            commandMap.put("listparticipants", this.getClass().getDeclaredMethod("listParticipants",JSONObject.class,JSONObject.class)); 
             // Add more commands here
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
@@ -63,17 +65,24 @@ public class ParticipantObjectHandler extends ObjectHandler {
 
     // Add a participant
     public JSONObject addParticipant(EMObject participant) {
-        participants.add(participant);
-        return ResponseHelper.createResponse("Participant added successfully", null);
+        // Validate before adding
+        if (EMObject.isValidForAddition(participants, participant)) {
+            participants.add(participant);
+            return ResponseHelper.createResponse("Participant added successfully", null, RESPONSE_DEFAULT_VERSION);
+        } else {
+            throw new IllegalArgumentException("An EMObject with the same non-id fields already exists.");
+        }
     }
 
     // Remove a participant by name
-    public JSONObject removeParticipant(String name) {
-        if (participants.removeIf(participant -> ((String)  participant.getFieldValue("name")).equals(name))) {
+    public JSONObject removeParticipant(int id) {
+        if (participants.removeIf(participant -> {
+             Integer participantId = (int) participant.getFieldValue("id");
+            return participantId != null && participantId.equals(id);
+        })) {
             return ResponseHelper.createResponse("Participant removed successfully", null);
-        } else {
-            return ResponseHelper.createResponse("Participant not found", null);
         }
+        return ResponseHelper.createResponse("Participant not found", null);
     }
 
     // Helper method to create an event from args
@@ -125,12 +134,41 @@ public class ParticipantObjectHandler extends ObjectHandler {
             EMObject participant = new EMObject(emObjectId, fieldTypeMap, participantFields);
             addParticipant(participant); // Add the participant to the list
 
-            return ResponseHelper.createResponse("Participant added successfully", new JSONObject().put("uniqueId", (int) participant.getFieldValue("id")));
+            return ResponseHelper.createResponse("Participant added successfully", new JSONObject().put("id", (int) participant.getFieldValue("id")));
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return ResponseHelper.createResponse("Participant processing arguments: " + e.getMessage(), null);
         }
+    }
+
+    public JSONObject removeParticipantByName() {
+        return removeParticipantByName(null, null);
+    }
+
+    public JSONObject removeParticipantByName(JSONObject args) {
+        return removeParticipantByName(args, null);
+    }
+
+    public JSONObject removeParticipantByName(JSONObject args, JSONObject argsattributes) {
+        if (args != null) {
+            int participantid = findId(args, new String[][] {
+                {"id", "id"},
+                {"name", "name"}},
+                "listparticipants"
+                );
+
+            if ( participantid != -1 ){
+                try {
+                    return removeParticipant(participantid); // Add the organize to the list
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    return ResponseHelper.createResponse("Event processing arguments: " + e.getMessage(), null,RESPONSE_DEFAULT_VERSION);
+                }
+            }
+        }
+        return ResponseHelper.createResponse("Error: Invalid or/No arguments were provided!", null,RESPONSE_DEFAULT_VERSION);
+
     }
 
     public JSONObject listParticipants() {
@@ -181,13 +219,13 @@ public class ParticipantObjectHandler extends ObjectHandler {
                 }
             }
             JSONObject response = new JSONObject();
-            response.put("participants", participantsArray);
+            response.put("data", participantsArray);
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return ResponseHelper.createResponse("Error processing arguments: " + e.getMessage(), null);
         }
         JSONObject response = new JSONObject();
-        response.put("participants", participantsArray);
+        response.put("data", participantsArray);
         return ResponseHelper.createResponse("Participants listed successfully", response);
     }
 }

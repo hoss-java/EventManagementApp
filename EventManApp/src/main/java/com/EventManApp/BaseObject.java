@@ -19,6 +19,9 @@ public abstract class BaseObject<T> {
     }
 
     protected void addField(String name, T value) {
+        if (hasField(name) != false) {
+            throw new IllegalArgumentException("Field already exists: " + name);
+        }
         fields.add(new Field<>(name, value));
     }
 
@@ -35,13 +38,39 @@ public abstract class BaseObject<T> {
         throw new IllegalArgumentException("Field not found: " + fieldName);
     }
 
+    public boolean hasField(String fieldName) {
+        for (Field<T> field : getFields()) {
+            if (field.getName().equals(fieldName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void updateField(String fieldName, T newValue) {
+        for (Field<T> field : getFields()) {
+            if (field.getName().equals(fieldName)) {
+                field.value = newValue; // Assuming Field has setValue method
+                return;
+            }
+        }
+        throw new IllegalArgumentException("Field not found: " + fieldName);
+    }
+
+    public List<String> getFieldNames() {
+        List<String> fieldNames = new ArrayList<>();
+        for (Field<T> field : fields) {
+            fieldNames.add(field.getName());
+        }
+        return fieldNames;
+    }
+
     protected Object validateAndConvert(String fieldName, String valueStr, String expectedType) {
         switch (expectedType) {
             case "str":
                 return valueStr;
             case "int":
-                int intValue = Integer.parseInt(valueStr);
-                return intValue;
+                return Integer.parseInt(valueStr);
             case "positiveInt":
                 int positiveIntValue = Integer.parseInt(valueStr);
                 if (positiveIntValue <= 0) {
@@ -77,4 +106,3 @@ public abstract class BaseObject<T> {
         }
     }
 }
-
