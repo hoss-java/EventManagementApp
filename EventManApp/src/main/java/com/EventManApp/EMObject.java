@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.EventManApp.BaseObject;
@@ -50,6 +51,31 @@ public class EMObject extends BaseObject<Object> {
                 addField(fieldName, definition.getDefaultValue());
             }
         }
+    }
+
+
+    // Validator to check for duplicates in the existing collection
+    public static boolean isValidForAddition(List<EMObject> existingObjects, EMObject newObject) {
+        for (EMObject obj : existingObjects) {
+            boolean isMatch = true;
+            for (String key : newObject.getFieldNames()) { // Assuming a method exists to get field names
+                // Skip comparison of the "id" field
+                if ("id".equalsIgnoreCase(key)) {
+                    continue;
+                }
+                Object valueToCompare = obj.getFieldValue(key); // Assuming a method exists to get field values
+                Object currentValue = newObject.getFieldValue(key);
+                if (currentValue != null && !currentValue.equals(valueToCompare)) {
+                    isMatch = false;
+                    break;
+                }
+            }
+            // If a match is found, return false
+            if (isMatch) {
+                return false; // Duplicate found
+            }
+        }
+        return true; // No duplicates found
     }
 
     @Override

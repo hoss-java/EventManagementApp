@@ -1,10 +1,17 @@
 package com.EventManApp;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
-
 import java.util.LinkedHashMap;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import java.io.PrintStream;
 import java.io.InputStream;
@@ -15,14 +22,11 @@ import java.util.Scanner;
 import com.EventManApp.lib.JSONHelper;
 import com.EventManApp.lib.ResponseHelper;
 
-import com.EventManApp.lib.interfaces.ConsoleInterface;
-
-import com.EventManApp.MenuCallback;
+import com.EventManApp.ResponseCallbackInterface;
+import com.EventManApp.ActionCallbackInterface;
 
 import com.EventManApp.ObjectHandler;
-import com.EventManApp.EventObjectHandler;
-import com.EventManApp.ParticipantObjectHandler;
-import com.EventManApp.OrganizeObjectHandler;
+import com.EventManApp.LogHandler;
 
 /**
  * @file EventManApp.java
@@ -36,6 +40,115 @@ import com.EventManApp.OrganizeObjectHandler;
 public class EventManApp {
     private static final StringBuilder logBuffer = new StringBuilder();
     private static boolean running = true;
+    private static List<ObjectHandler> objectHandlerInstances = new ArrayList<>();
+    private static List<BaseInterface> interfaceInstances = new ArrayList<>();
+    private static LogHandler logHandler = new LogHandler();
+
+    public static ResponseCallbackInterface responseHandler = (callerID, menuItem) -> {
+        logHandler.addLog(callerID,"responseHandler",menuItem);
+
+        JSONObject selectedCommand = new JSONObject(menuItem);
+        String commandId = selectedCommand.getString("id");
+        JSONObject jsonResponse = null;
+
+        // Iterate through each CommandHandler instance
+        for (ObjectHandler handler : objectHandlerInstances) {
+            if (handler.isValidCommand(commandId)) {
+                jsonResponse = handler.parseCommands("[" + menuItem + "]"); // Add array brackets
+                break; // Exit loop if command is found
+            }
+        }
+
+        // Handle invalid command
+        if (jsonResponse == null) {
+            jsonResponse = ResponseHelper.createInvalidCommandResponse(commandId);
+        }
+
+        return jsonResponse.toString();
+    };
+
+    public static ActionCallbackInterface actionHandler = (String callerID, JSONObject payload) -> {
+        logHandler.addLog(callerID,"actionHandler",payload.toString());
+
+        String commandId = payload.getString("id");
+        JSONObject jsonResponse = null;
+
+        // Iterate through each CommandHandler instance
+        for (ObjectHandler handler : objectHandlerInstances) {
+            if (handler.isValidCommand(commandId)) {
+                JSONArray jsonArray = new JSONArray();
+                jsonArray.put(payload); // Add JSONObject to JSONArray
+                jsonResponse = handler.parseCommands(jsonArray); // Add array brackets
+                break; // Exit loop if command is found
+            }
+        }
+
+        // Handle invalid command
+        if (jsonResponse == null) {
+            jsonResponse = ResponseHelper.createInvalidCommandResponse(commandId);
+        }
+       return jsonResponse;
+    };
+
+    private static void loadModulesFromXML(String fileName) {
+        try (InputStream inputStream = EventManApp.class.getClassLoader().getResourceAsStream(fileName)) {
+            if (inputStream == null) {
+                throw new RuntimeException("File not found: " + fileName);
+            }
+
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(inputStream);
+            doc.getDocumentElement().normalize();
+
+            // Load handlers
+            NodeList handlerList = doc.getElementsByTagName("handler");
+            for (int i = 0; i < handlerList.getLength(); i++) {
+                Element element = (Element) handlerList.item(i);
+                String className = element.getTextContent();
+
+                try {
+                    // Load class dynamically
+                    Class<?> clazz = Class.forName(className);
+                    Object handlerInstance = clazz.getDeclaredConstructor(ActionCallbackInterface.class).newInstance(actionHandler);
+
+                    // Check if instance is of type ObjectHandler before adding
+                    if (handlerInstance instanceof ObjectHandler) {
+                        objectHandlerInstances.add((ObjectHandler) handlerInstance);
+                    } else {
+                        System.err.println("Class " + className + " is not an instance of ObjectHandler.");
+                    }
+                } catch (Exception e) {
+                    System.err.println("Failed to instantiate handler class: " + className);
+                    e.printStackTrace();
+                }
+            }
+
+            // Load interfaces
+            NodeList interfaceList = doc.getElementsByTagName("interface");
+            for (int i = 0; i < interfaceList.getLength(); i++) {
+                Element element = (Element) interfaceList.item(i);
+                String interfaceName = element.getAttribute("name");
+                boolean runInBackground = Boolean.parseBoolean(element.getAttribute("runInBackground"));
+
+                try {
+                    Class<?> clazz = Class.forName(interfaceName);
+                    BaseInterface interfaceInstance = (BaseInterface) clazz.getDeclaredConstructor(ResponseCallbackInterface.class).newInstance(responseHandler);
+                    // Set the runInBackground attribute
+                    interfaceInstance.setRunInBackground(runInBackground);
+
+                    // Add the instance to the list
+                    interfaceInstances.add(interfaceInstance);
+                } catch (Exception e) {
+                    System.err.println("Failed to instantiate interface class: " + interfaceName);
+                    e.printStackTrace();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     /**
      * @brief Program entry point.
@@ -44,86 +157,55 @@ public class EventManApp {
      */
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        EventObjectHandler eventObjectHandler = new EventObjectHandler();
-        ParticipantObjectHandler participantObjectHandler = new ParticipantObjectHandler();
-        OrganizeObjectHandler organizeObjectHandler = new OrganizeObjectHandler();
 
-        // Add them to a list
-        List<ObjectHandler> objectHandlers = new ArrayList<>();
-        objectHandlers.add(eventObjectHandler);
-        objectHandlers.add(participantObjectHandler);
-        objectHandlers.add(organizeObjectHandler);
+        JSONObject commands= JSONHelper.loadJsonFromFile("commands.json");
+        loadModulesFromXML("modules.xml");
 
-        MenuCallback callback = (callerID, menuItem) -> {
-            logBuffer.append(callerID).append(": ").append(menuItem).append("\n");
+        // List to keep track of background threads
+        List<Thread> backgroundThreads = new ArrayList<>();
 
-            JSONObject selectedCommand = new JSONObject(menuItem);
-            String commandId = selectedCommand.getString("id");
-            JSONObject jsonResponse = null;
+        // Check each interface and handle as background or foreground
+        for (BaseInterface interfaceInstance : interfaceInstances) {
+            if (interfaceInstance.isRunInBackground()) {
+                // Start a new thread for each background interface
+                Thread interfaceThread = new Thread(() -> {
+                    // Execute commands for the background interface
+                    JSONObject result = interfaceInstance.executeCommands(commands);
+                // Print the class name along with the result
+                System.out.println("Background Execution result from " + interfaceInstance.getClass().getSimpleName() + ": " + result);
+                });
 
-            // Iterate through each CommandHandler instance
-            for (ObjectHandler handler : objectHandlers) {
-                if (handler.isValidCommand(commandId)) {
-                    jsonResponse = handler.parseCommands("[" + menuItem + "]"); // Add array brackets
-                    break; // Exit loop if command is found
-                }
+                backgroundThreads.add(interfaceThread);
+                interfaceThread.start();
             }
-
-            // Handle invalid command
-            if (jsonResponse == null) {
-                jsonResponse = ResponseHelper.createInvalidCommandResponse(commandId);
-            }
-
-            return jsonResponse.toString();
-        };
-
-        // Start the log display thread
-        Thread logThread = new Thread(EventManApp::displayLogs);
-        logThread.start();
-
-
-        eventManager(System.in, System.out,args,callback);
-
-        // Stop the log thread when done
-        running = false;
-        try {
-            logThread.join(); // Wait for the log thread to finish
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         }
 
-        scanner.close(); // Close the scanner at the end to free resources
-    }
-
-    private static void displayLogs() {
-        while (running) {
-            // Print logs if any
-            synchronized (logBuffer) {
-                if (logBuffer.length() > 0) {
-                    System.out.println("\n\n----------\nLogs:");
-                    System.out.println(logBuffer.toString());
-                    logBuffer.setLength(0); // Clear the log buffer after printing
-                }
+        // Check each interface and handle as background or foreground
+        for (BaseInterface interfaceInstance : interfaceInstances) {
+            if (!interfaceInstance.isRunInBackground()) {
+                // Execute foreground interfaces one by one
+                JSONObject result = interfaceInstance.executeCommands(commands);
+                System.out.println("Foreground Execution result from " + interfaceInstance.getClass().getSimpleName() + ": " + result);
             }
+        }
+
+        // Stop all background threads gracefully
+        for (BaseInterface backgroundInterface : interfaceInstances) {
+            if (backgroundInterface.isRunInBackground()) {
+                backgroundInterface.setRunningFlag(false); // Assuming you have a running flag in the interface
+            }
+        }
+
+        // Wait for all background threads to complete
+        for (Thread thread : backgroundThreads) {
             try {
-                Thread.sleep(1000); // Update log display every second
+                thread.join(); // Wait for the background thread to finish
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
-    }
 
-    /**
-     * Launches an interactive event managment that reads commands from
-     * standard input, evaluates and run them,and prints results.
-     *
-     * @param args Command-line arguments (ignored).
-     */
-    public static void eventManager(InputStream in, PrintStream out, String[] args, MenuCallback callback) {
-        JSONObject commands= JSONHelper.loadJsonFromFile("commands.json");
-
-        ConsoleInterface myConsoleInterface = new ConsoleInterface(callback);
-        JSONObject result = myConsoleInterface.executeCommands(commands);
-        myConsoleInterface.close();
+        scanner.close(); // Close the scanner at the end to free resources
+        logHandler.displayLogs();
     }
 }

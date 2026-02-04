@@ -81,4 +81,38 @@ public class JSONHelper {
         }
         // Add validation for additional required fields if necessary
     }
+
+    public static JSONObject getJsonValue(JSONObject jsonObject, String key) {
+        // Check if the key exists and if its value is a JSONObject
+        if (jsonObject.has(key)) {
+            Object value = jsonObject.get(key);
+            if (value instanceof JSONObject) {
+                return (JSONObject) value; // Return the JSONObject
+            }
+        }
+        return null; // Return null if the key is absent or not a JSONObject
+    }
+
+    public static JSONObject updateJSONObject(JSONObject args, String[][] keyValuePairs) {
+        // Iterate through each key-value pair in the array
+        for (String[] pair : keyValuePairs) {
+            if (pair.length != 2) {
+                throw new IllegalArgumentException("Each pair must contain exactly two elements: [key, value].");
+            }
+
+            String key = pair[0];
+            int value; // Assuming the value is always an integer
+            
+            try {
+                value = Integer.parseInt(pair[1]); // Convert string to integer
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Value for key '" + key + "' must be an integer.");
+            }
+
+            // Update or add the key-value pair in the JSONObject
+            args.put(key, value);
+        }
+
+        return args; // Return the updated JSONObject
+    }
 }

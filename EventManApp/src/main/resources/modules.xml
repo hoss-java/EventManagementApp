@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <handlers>
+        <handler>com.EventManApp.handlers.EventObjectHandler</handler>
+        <handler>com.EventManApp.handlers.ParticipantObjectHandler</handler>
+        <handler>com.EventManApp.handlers.OrganizeObjectHandler</handler>
+    </handlers>
+    <interfaces>
+        <interface name="com.EventManApp.interfaces.ConsoleInterface" runInBackground="false"/>
+    </interfaces>
+</configuration>
