@@ -1,22 +1,21 @@
 package com.EventManApp.interfaces;
 
-import java.util.List;
-import java.util.Arrays;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Scanner;
+import java.util.regex.Pattern;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
-import java.time.Duration;
-import java.util.regex.Pattern;
-
-import java.util.Scanner;
-
-import com.EventManApp.lib.TokenizedString;
-import com.EventManApp.lib.DebugUtil;
 import com.EventManApp.BaseInterface;
 import com.EventManApp.ResponseCallbackInterface;
+import com.EventManApp.lib.DebugUtil;
+import com.EventManApp.lib.TokenizedString;
 
 public class ConsoleInterface extends BaseInterface {
     private final Scanner scanner;

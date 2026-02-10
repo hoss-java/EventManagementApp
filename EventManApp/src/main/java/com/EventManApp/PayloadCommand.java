@@ -2,11 +2,10 @@ package com.EventManApp;
 
 import org.json.JSONObject;
 
-import java.util.List;
 import java.util.Map;
 
-import com.EventManApp.lib.DebugUtil;
 import com.EventManApp.PayloadDetail;
+import com.EventManApp.lib.DebugUtil;
 
 public class PayloadCommand {
     private String id; // Required for each command

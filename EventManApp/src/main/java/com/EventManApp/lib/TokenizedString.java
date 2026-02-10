@@ -1,6 +1,7 @@
 package com.EventManApp.lib;
 
 import com.EventManApp.lib.DebugUtil;
+
 public class TokenizedString {
     private String originalString;
     private String separator;

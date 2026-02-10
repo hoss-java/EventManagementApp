@@ -3,15 +3,14 @@ package com.EventManApp;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-
-import com.EventManApp.lib.ResponseHelper;
-
 import com.EventManApp.PayloadCommand;
 import com.EventManApp.Payload;
 import com.EventManApp.lib.DebugUtil;
+import com.EventManApp.lib.ResponseHelper;
+
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CommandHandler {
     protected Map<String, Method> commandMap; // Commands mapping

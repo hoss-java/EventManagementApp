@@ -2,8 +2,8 @@ package com.EventManApp;
 
 import org.json.JSONObject;
 
-import com.EventManApp.lib.TokenizedString;
 import com.EventManApp.lib.DebugUtil;
+import com.EventManApp.lib.TokenizedString;
 
 public class PayloadDetail {
     private String field;  // Optional, can be null

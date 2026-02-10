@@ -1,33 +1,29 @@
 package com.EventManApp;
 
-//import java.util.List;
-import java.util.Arrays;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import com.EventManApp.lib.ResponseHelper;
-import com.EventManApp.lib.JSONHelper;
-import com.EventManApp.lib.StringParserHelper;
+import java.util.function.Predicate;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.function.Predicate;
-
 import com.EventManApp.KVObjectHandler;
+import com.EventManApp.Payload;
 import com.EventManApp.PayloadCommand;
 import com.EventManApp.CommandHandler;
-import com.EventManApp.Payload;
-
-import java.util.List;
-import com.EventManApp.lib.TokenizedString;
 import com.EventManApp.lib.DebugUtil;
+import com.EventManApp.lib.JSONHelper;
+import com.EventManApp.lib.ResponseHelper;
+import com.EventManApp.lib.StringParserHelper;
+import com.EventManApp.lib.TokenizedString;
 
 public class PayloadHandler extends CommandHandler{
     private static final String RESPONSE_DEFAULT_VERSION = "1.0"; // Default version
@@ -257,6 +253,7 @@ public class PayloadHandler extends CommandHandler{
 
                         if ("auto".equals(fieldDetail.getModifier())) {
                             value = String.valueOf(subject.getNextId());
+                            System.out.println("auto value " + value);
                         } else {
                             String fieldStr = fieldDetail.getField();
                             String typeStr = fieldDetail.getTypeChaine();

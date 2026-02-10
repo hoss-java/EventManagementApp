@@ -1,21 +1,11 @@
 package com.EventManApp.lib;
 
 import org.json.JSONObject;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
-import java.util.ArrayList;
-import java.util.List;
-
 import java.util.HashMap;
 import java.util.Map;
-
-import org.json.JSONObject;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
-import java.io.PrintStream;
-import java.io.InputStream;
 import java.io.OutputStream;
 
 public class JSONHelper {
