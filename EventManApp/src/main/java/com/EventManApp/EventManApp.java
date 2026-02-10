@@ -19,6 +19,8 @@ import java.io.OutputStream;
 
 import java.util.Scanner;
 
+import java.io.File;
+
 import com.EventManApp.lib.JSONHelper;
 import com.EventManApp.lib.ResponseHelper;
 
@@ -28,6 +30,11 @@ import com.EventManApp.ActionCallbackInterface;
 //import com.EventManApp.ObjectHandler;
 import com.EventManApp.LogHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import com.EventManApp.storages.DatabaseKVObjectStorage;
+import com.EventManApp.storages.FileKVObjectStorage;
+import com.EventManApp.storages.MemoryKVObjectStorage;
+import com.EventManApp.KVObjectStorageFactory;
 
 /**
  * @file EventManApp.java
@@ -123,7 +130,12 @@ public class EventManApp {
 
         JSONObject commands= JSONHelper.loadJsonFromFile("commands.json");
         loadModulesFromXML("modules.xml");
-        kvObjectHandler = new KVObjectHandler(null);
+
+        File storageFile = new File("kvobjects.txt");
+        // Create a FileKVObjectStorage instance
+        KVObjectStorage storage = KVObjectStorageFactory.createKVObjectStorage("file", storageFile);
+        //KVObjectStorage storage = KVObjectStorageFactory.createKVObjectStorage("memory", null);
+        kvObjectHandler = new KVObjectHandler(null,storage);
         kvSubjectHandler = new KVSubjectHandler("subjects.xml");
         payloadHandler = new PayloadHandler(kvObjectHandler,kvSubjectHandler);
 
