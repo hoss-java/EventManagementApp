@@ -16,8 +16,21 @@ The goal of this card is to implement a DB layer
 # DOD (definition of done):
 
 # TODO:
-- [] 1.
+- [ ] 1. Spike to find ways to implement a data manager layer
 
 # Reports:
-*
+* I realize it needs to apply many changes on the current designed to apply an efficient data layer.
+* The current object handlers use an object named EMObject, the object has already an identifier and handlers set it when they create an object. It means objects have already an identifier but it is not use.
+* In the current design each handler creates its own EMObject list. So there is nothing unrelated to the handler in the list, they don't need to check it!
+* Howw it looks like now
+> * The core is based on a multi  key-value object named BaseObject, base object it self use a internal sub object to manage filed (key-value : String-<value-type>). This object dose not care about teh number of fields and fields name/type or owner. Its only check names to avoid key duplication.
+> * EMObject extends BaseObject and adds a fields map and an id to specify objects. 
+>> * It uses a mao based on EMObjectField which is the class to define field attributes such as type, modifier, default value and so on.
+>> * An EMObject stores a key-value base data based an JSON source according to a field map. In other words it get a field map and an JSON source, then creates a BaseObject from THE JSON source according to the fields map. It means values stored on the JSON as String is validated and converted to types defined via the fields map,
+>> * Additional key-vlues(s) on the JSON that are not covered by the fields maps are ignored.
+>> * So EMObject contains , an **id**, **fields** map and also **fields key-value(s) data**
+>> * It has also a validator method that can be override if needed. For now validator supports **str**, **int**, **unsigned**, **date**, **time** and **duration** only.
+>>> TOFIX ->>**isValidForAddition**
 
+* All variables and files with name EM were change to KV to make it more generic name.
+* Add and remove objects can be moved from all type handlers to KVObjectHandler, It just needs to know id for both add and remove, and also which object(s) to remove

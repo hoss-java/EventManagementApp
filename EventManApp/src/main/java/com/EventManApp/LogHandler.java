@@ -1,10 +1,14 @@
 package com.EventManApp;
 
+import org.json.JSONObject;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.EventManApp.lib.DebugUtil;
 
 public class LogHandler {
     private List<LogEntry> logBuffer;
@@ -26,9 +30,17 @@ public class LogHandler {
             this.message = message;
         }
 
+        public JSONObject toJSON() {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("logID", this.logID);
+            jsonObject.put("logGroup", this.logGroup);
+            jsonObject.put("message", this.message);
+            return jsonObject;
+        }
+    
         @Override
         public String toString() {
-            return "Log ID: " + logID + "("+logGroup+")"+" | Message: " + message;
+            return toJSON().toString();
         }
     }
 

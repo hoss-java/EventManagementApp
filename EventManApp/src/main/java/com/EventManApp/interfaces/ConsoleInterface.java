@@ -1,5 +1,8 @@
 package com.EventManApp.interfaces;
 
+import java.util.List;
+import java.util.Arrays;
+import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -10,6 +13,8 @@ import java.util.regex.Pattern;
 
 import java.util.Scanner;
 
+import com.EventManApp.lib.TokenizedString;
+import com.EventManApp.lib.DebugUtil;
 import com.EventManApp.BaseInterface;
 import com.EventManApp.ResponseCallbackInterface;
 
@@ -23,25 +28,25 @@ public class ConsoleInterface extends BaseInterface {
 
     @Override
     public JSONObject executeCommands(JSONObject commands) {
-        JSONObject selectedCommand = new JSONObject();
-        navigateCommands(commands.getJSONArray("commands"), selectedCommand, "Exit");
-        return selectedCommand;
+        JSONObject peyload = new JSONObject();
+        navigateCommands("root",commands.getJSONArray("commands"), peyload, "Exit");
+        return peyload;
     }
 
-    private void navigateCommands(JSONArray commandsArray, JSONObject selectedCommand, String backCommand) {
+    private void navigateCommands(String rootID,JSONArray commandsArray, JSONObject peyload, String backCommand) {
         while (true) {
             String commandName = displayCommandsAndGetChoice(commandsArray, backCommand);
             if (commandName.equals(backCommand)) {
                 return; // Exit to the previous menu
             }
-
+            
             JSONObject command = findCommandByName(commandsArray, commandName);
             if (command == null) {
                 showMessage("Invalid choice, please try again.");
                 continue;
             }
 
-            selectedCommand.put("id", commandName);
+            peyload.put("identifier", rootID);
 
             if (command.has("args")) {
                 JSONObject args = new JSONObject();
@@ -50,17 +55,26 @@ public class ConsoleInterface extends BaseInterface {
                 for (String argName : arguments.keySet()) {
                     JSONObject argType = arguments.getJSONObject(argName);
                     String argValue = getUserInput(argName, argType);
-                    args.put(argName, argValue);
+                    String argField = argType.optString("field", argName);
+                    args.put(argField, argValue);
                 }
-                selectedCommand.put("args", args);
-                selectedCommand.put("argsattributes", arguments);
+                JSONObject peyloadCommand = new JSONObject();
+                peyloadCommand.put("id", command.getString("action"));
+                peyloadCommand.put("data", args);
+                peyloadCommand.put("args", arguments);
+
+                JSONArray payloadCommandsArray = new JSONArray();
+                payloadCommandsArray.put(peyloadCommand);
+                // Put the commands list into the JSON object
+                peyload.put("commands", payloadCommandsArray);                
             }
 
             // Check for nested commands
+            // need to add try catch
             if (command.has("commands")) {
-                navigateCommands(command.getJSONArray("commands"), selectedCommand, "Back");
-                if (!commandName.equals(selectedCommand.getString("id"))){
-                    String response = callback.ResponseHandler("ConsoleInterface",selectedCommand.toString());
+                navigateCommands(command.getString("id"), command.getJSONArray("commands"), peyload, "Back");
+                if (!rootID.equals(peyload.getString("identifier"))){
+                    String response = callback.ResponseHandler("ConsoleInterface",peyload.toString());
                     System.out.println("Response: " + response); // Print the JSON response
                     // Wait for the user to press Enter before proceeding
                     System.out.println("Press Enter to continue...");
@@ -127,7 +141,9 @@ public class ConsoleInterface extends BaseInterface {
 
     private String getUserInput(String argName, JSONObject argTypeAttr) {
         // Check if the type contains an extra word
-        String argType = argTypeAttr.optString("type", "str");
+        String argField = (new TokenizedString(argTypeAttr.optString("field", argName),"@")).getPart(-1);
+        String argDescription = argTypeAttr.optString("description", argField);
+        String argType = (new TokenizedString(argTypeAttr.optString("type", "str"),"@")).getPart(-1);
         String argModifier = argTypeAttr.optString("modifier", "user");
         boolean argMandatory = argTypeAttr.optBoolean("mandatory", true);
         String argDefault = argTypeAttr.optString("default", "");
@@ -135,7 +151,7 @@ public class ConsoleInterface extends BaseInterface {
         // Default behavior
         while (true) {
             if (argModifier.equals("user")){
-                System.out.print("Enter " + argName + " (" + argType + "): ");
+                System.out.print("Enter " + argDescription + (argMandatory ? "*" : "") +" (" + argType + "): ");
                 String input = scanner.nextLine().trim();
 
                 if (input.equals("") && argMandatory == false){
@@ -201,7 +217,7 @@ public class ConsoleInterface extends BaseInterface {
                 }
                 return true;
 
-            case "positiveInt":
+            case "unsigned":
                 if (!input.matches("\\d+")) {
                     System.out.println("Hint: Input should be a positive integer greater than zero. Example: 1, 100, or 456.");
                     return false; // Matches only positive integers.

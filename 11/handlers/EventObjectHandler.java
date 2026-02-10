@@ -26,16 +26,15 @@ import com.EventManApp.EMObject;
 import com.EventManApp.ObjectHandler;
 import com.EventManApp.ValueComparator;
 
-public class EventObjectHandler extends ObjectHandler {
-    private List<EMObject> events;
+public class SubjectHandler extends KVObjectHandler {
+    //private EMObjectStorage storage;
 
     private int nextId; // Counter for generating unique IDs
-    private static Map<String, EMObjectField> fieldTypeMap = new HashMap<>();
+    private static Map<String, KVObjectField> fieldTypeMap = new HashMap<>();
 
-    public EventObjectHandler(ActionCallbackInterface callback) {
+    public SubjectHandler(String identifier, ActionCallbackInterface callback) {
         super(callback);
-        setObjectId("EventObject");
-        this.events = new ArrayList<>();
+        //setObjectId("EventObject");
         this.nextId = 1; // Start ID from 1
 
         initializeFieldTypeMap();
@@ -67,27 +66,6 @@ public class EventObjectHandler extends ObjectHandler {
         }
     }
 
-    // Add an event
-    public JSONObject addEvent(EMObject event) {
-        // Validate before adding
-        if (EMObject.isValidForAddition(events, event)) {
-            events.add(event);
-            return ResponseHelper.createResponse("Event added successfully", null, RESPONSE_DEFAULT_VERSION);
-        } else {
-            throw new IllegalArgumentException("An EMObject with the same non-id fields already exists.");
-        }
-    }
-
-    // Remove an event by title
-    public JSONObject removeEvent(int id) {
-        if (events.removeIf(event -> {
-             Integer eventId = (int) event.getFieldValue("id");
-            return eventId != null && eventId.equals(id);
-        })) {
-            return ResponseHelper.createResponse("Event removed successfully", null);
-        }
-        return ResponseHelper.createResponse("Event not found", null);
-    }
 
     // Helper method to create/remove/search an event from args
     public JSONObject addEventFromArgs() {

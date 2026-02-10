@@ -1,36 +1,12 @@
-package com.EventManApp;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.EventManApp.lib.ResponseHelper;
-import com.EventManApp.lib.JSONHelper;
-import com.EventManApp.ActionCallbackInterface;
-
-public class ObjectHandler implements ObjectHandlerInterface {
-    protected String RESPONSE_DEFAULT_VERSION = "1.0"; // Default version
-    protected String emObjectId = "NoId";
+public class CommandManager {
     protected final ActionCallbackInterface callback;
     protected Map<String, Method> commandMap;
 
-    public ObjectHandler(ActionCallbackInterface callback) {
+    public CommandManager(ActionCallbackInterface callback) {
         this.callback = callback;
         this.commandMap = new HashMap<>();
         }
 
-    // Getter and Setter for runInBackground
-    public String getObjectId() {
-        return emObjectId;
-    }
-
-    public void setObjectId(String objectId) {
-        this.emObjectId = objectId;
-    }
 
     // Check if a command is valid
     @Override

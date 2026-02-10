@@ -10,11 +10,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class BaseObject<T> {
+public abstract class KVBaseObject<T> {
     protected List<Field<T>> fields;
-    private static final Map<String, String> FIELD_TYPE_MAP = new HashMap<>();
 
-    public BaseObject() {
+    public KVBaseObject() {
         fields = new ArrayList<>();
     }
 
@@ -63,29 +62,6 @@ public abstract class BaseObject<T> {
             fieldNames.add(field.getName());
         }
         return fieldNames;
-    }
-
-    protected Object validateAndConvert(String fieldName, String valueStr, String expectedType) {
-        switch (expectedType) {
-            case "str":
-                return valueStr;
-            case "int":
-                return Integer.parseInt(valueStr);
-            case "positiveInt":
-                int positiveIntValue = Integer.parseInt(valueStr);
-                if (positiveIntValue <= 0) {
-                    throw new IllegalArgumentException(fieldName + " must be a positive integer.");
-                }
-                return positiveIntValue;
-            case "date":
-                return java.time.LocalDate.parse(valueStr);
-            case "time":
-                return java.time.LocalTime.parse(valueStr);
-            case "duration":
-                return java.time.Duration.parse(valueStr);
-            default:
-                throw new IllegalArgumentException("Unknown type for field: " + fieldName);
-        }
     }
 
     public static class Field<T> {
