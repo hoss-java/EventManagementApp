@@ -1,0 +1,21 @@
+<subjects>
+    <subject identifier="event">
+        <field name="id" field="id" type="int" mandatory="true" modifier="auto" defaultValue="1"/>
+        <field name="title" field="title" description="Title" type="str" mandatory="true" modifier="user" defaultValue="workshop"/>
+        <field name="location" field="location" description="Location" type="str" mandatory="false" modifier="user" defaultValue="here"/>
+        <field name="capacity" field="capacity" description="Capacity" type="unsigned" mandatory="false" modifier="user" defaultValue="1"/>
+        <field name="date" field="date" description="Date" type="date" mandatory="false" modifier="user" defaultValue="2023-10-01"/> <!-- Example Date -->
+        <field name="starttime" field="starttime" description="Time" type="time" mandatory="false" modifier="user" defaultValue="00:00:00"/>
+        <field name="duration" field="duration" description="Duration" type="duration" mandatory="false" modifier="user" defaultValue="PT0H"/>
+    </subject>
+    <subject identifier="participant">
+        <field name="id" field="id" type="int" mandatory="true" modifier="auto" defaultValue="1"/>
+        <field name="name" field="name" description="Name" type="str" mandatory="true" modifier="user" defaultValue=""/>
+        <field name="email" field="email" description="Enaik" type="str" mandatory="false" modifier="user" defaultValue=""/>
+    </subject>    
+    <subject identifier="organize">
+        <field name="id" field="id" type="int" mandatory="true" modifier="auto" defaultValue="1"/>
+        <field name="eventid" field="eventid@id:event.title" description="Event" type="int@str" mandatory="true" modifier="user" defaultValue=""/>
+        <field name="participantid" field="participantid@id:participant.name" description="Participant" type="int@str" mandatory="false" modifier="user" defaultValue=""/>
+    </subject>
+</subjects>

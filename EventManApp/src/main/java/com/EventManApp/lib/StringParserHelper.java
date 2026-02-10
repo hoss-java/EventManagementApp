@@ -25,13 +25,24 @@ public class StringParserHelper {
         replacements.put(placeholder, value);
     }
 
-    // Static method to parse the input string
-    public static String parseString(String input) {
-        for (Map.Entry<String, String> entry : replacements.entrySet()) {
+    // Static method to parse the input string with optional replacements
+    public static String parseString(String input, Map<String, String> customReplacements) {
+        Map<String, String> effectiveReplacements = new HashMap<>(replacements); // Start with the default replacements
+
+        if (customReplacements != null) {
+            effectiveReplacements.putAll(customReplacements); // Add custom replacements if provided
+        }
+
+        for (Map.Entry<String, String> entry : effectiveReplacements.entrySet()) {
             String placeholder = entry.getKey();
             String replacement = entry.getValue();
             input = input.replace(placeholder, replacement);
         }
         return input;
+    }
+
+    // Overloaded method to use default replacements only
+    public static String parseString(String input) {
+        return parseString(input, null);
     }
 }

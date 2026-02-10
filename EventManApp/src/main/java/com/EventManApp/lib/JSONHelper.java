@@ -33,8 +33,6 @@ public class JSONHelper {
             String jsonString = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
 
             // Create JSONObject using LinkedHashMap to preserve order
-            LinkedHashMap<String, Object> map = new LinkedHashMap<>();
-            JSONObject jsonObject = new JSONObject(map);
             return new JSONObject(jsonString);
         } catch (IOException e) {
             e.printStackTrace();

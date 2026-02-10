@@ -25,8 +25,9 @@ import com.EventManApp.lib.ResponseHelper;
 import com.EventManApp.ResponseCallbackInterface;
 import com.EventManApp.ActionCallbackInterface;
 
-import com.EventManApp.ObjectHandler;
+//import com.EventManApp.ObjectHandler;
 import com.EventManApp.LogHandler;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * @file EventManApp.java
@@ -39,25 +40,20 @@ import com.EventManApp.LogHandler;
  */
 public class EventManApp {
     private static final StringBuilder logBuffer = new StringBuilder();
-    private static boolean running = true;
-    private static List<ObjectHandler> objectHandlerInstances = new ArrayList<>();
+    private boolean running = true;
     private static List<BaseInterface> interfaceInstances = new ArrayList<>();
     private static LogHandler logHandler = new LogHandler();
+    private static KVObjectHandler kvObjectHandler;
+    private static KVSubjectHandler kvSubjectHandler;
+    private static PayloadHandler payloadHandler;
 
     public static ResponseCallbackInterface responseHandler = (callerID, menuItem) -> {
-        logHandler.addLog(callerID,"responseHandler",menuItem);
+        //logHandler.addLog(callerID,"responseHandler",menuItem);
 
-        JSONObject selectedCommand = new JSONObject(menuItem);
-        String commandId = selectedCommand.getString("id");
+        String commandId = "selectedCommand.getString";
         JSONObject jsonResponse = null;
 
-        // Iterate through each CommandHandler instance
-        for (ObjectHandler handler : objectHandlerInstances) {
-            if (handler.isValidCommand(commandId)) {
-                jsonResponse = handler.parseCommands("[" + menuItem + "]"); // Add array brackets
-                break; // Exit loop if command is found
-            }
-        }
+        jsonResponse = payloadHandler.parsePayload(menuItem);
 
         // Handle invalid command
         if (jsonResponse == null) {
@@ -70,18 +66,8 @@ public class EventManApp {
     public static ActionCallbackInterface actionHandler = (String callerID, JSONObject payload) -> {
         logHandler.addLog(callerID,"actionHandler",payload.toString());
 
-        String commandId = payload.getString("id");
+        String commandId = "selectedCommand.getString";
         JSONObject jsonResponse = null;
-
-        // Iterate through each CommandHandler instance
-        for (ObjectHandler handler : objectHandlerInstances) {
-            if (handler.isValidCommand(commandId)) {
-                JSONArray jsonArray = new JSONArray();
-                jsonArray.put(payload); // Add JSONObject to JSONArray
-                jsonResponse = handler.parseCommands(jsonArray); // Add array brackets
-                break; // Exit loop if command is found
-            }
-        }
 
         // Handle invalid command
         if (jsonResponse == null) {
@@ -100,29 +86,6 @@ public class EventManApp {
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.parse(inputStream);
             doc.getDocumentElement().normalize();
-
-            // Load handlers
-            NodeList handlerList = doc.getElementsByTagName("handler");
-            for (int i = 0; i < handlerList.getLength(); i++) {
-                Element element = (Element) handlerList.item(i);
-                String className = element.getTextContent();
-
-                try {
-                    // Load class dynamically
-                    Class<?> clazz = Class.forName(className);
-                    Object handlerInstance = clazz.getDeclaredConstructor(ActionCallbackInterface.class).newInstance(actionHandler);
-
-                    // Check if instance is of type ObjectHandler before adding
-                    if (handlerInstance instanceof ObjectHandler) {
-                        objectHandlerInstances.add((ObjectHandler) handlerInstance);
-                    } else {
-                        System.err.println("Class " + className + " is not an instance of ObjectHandler.");
-                    }
-                } catch (Exception e) {
-                    System.err.println("Failed to instantiate handler class: " + className);
-                    e.printStackTrace();
-                }
-            }
 
             // Load interfaces
             NodeList interfaceList = doc.getElementsByTagName("interface");
@@ -160,6 +123,10 @@ public class EventManApp {
 
         JSONObject commands= JSONHelper.loadJsonFromFile("commands.json");
         loadModulesFromXML("modules.xml");
+        kvObjectHandler = new KVObjectHandler(null);
+        kvSubjectHandler = new KVSubjectHandler("subjects.xml");
+        payloadHandler = new PayloadHandler(kvObjectHandler,kvSubjectHandler);
+
 
         // List to keep track of background threads
         List<Thread> backgroundThreads = new ArrayList<>();

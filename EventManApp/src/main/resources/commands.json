@@ -5,78 +5,109 @@
             "description": "Event",
             "commands": [
                 {
-                "id" :"addevent",
+                "id" :"event.add",
                 "description": "Add an event",
+                "action" : "event.add",
                 "args": {
                     "id": {
+                        "field" : "id",
                         "type": "int",
                         "mandatory" : false,
                         "modifier": "auto",
-                        "default": "1",
+                        "defaultValue": "1",
                         },
                     "title": {
+                        "field" : "title",
+                        "description": "Title",
                         "type": "str",
                         "mandatory" : true,
                         },
                     "location": {
+                        "field" : "location",
+                        "description": "Location",
                         "type": "str",
                         "mandatory" : false,
-                        "default": "here",
+                        "defaultValue": "here",
                         },
                     "capacity": {
-                        "type": "positiveInt",
+                        "field" : "capacity",
+                        "description": "Capacity",
+                        "type": "unsigned",
                         "mandatory" : false,
-                        "default": "12",
+                        "defaultValue": "12",
                         },
                     "date" : {
+                        "field" : "date",
+                        "description": "Date",
                         "type": "date",
                         "mandatory" : false,
-                        "default": "%DATE%",
+                        "defaultValue": "%DATE%",
                         },
                     "time" : {
+                        "field" : "time",
+                        "description": "Time",
                         "type": "time",
                         "mandatory" : false,
-                        "default": "%TIME%",
+                        "defaultValue": "%TIME%",
                         },
                     "duration" : {
+                        "field" : "duration",
+                        "description": "Duration",
                         "type": "duration",
                         "mandatory" : false,
-                        "default": "PT15M",
+                        "defaultValue": "PT15M",
                         },
                     },
                 },
                 {
-                "id" : "listevents",
+                "id" : "event.getsall",
+                "description": "List all events.",
+                "action" : "event.gets",
+                "args": {
+                    }
+                },
+                {
+                "id" : "event.gets",
                 "description": "Search/List events.",
+                "action" : "event.get",
                 "args": {
                     "id": {
+                        "field" : "id",
                         "type": "int",
                         "mandatory" : false,
                         "compareMode": "=",
                         },
                     "title": {
+                        "field" : "title",
+                        "description": "Title",
                         "type": "str",
                         "mandatory" : false,
                         "compareMode": "contains"
                         },
                     "location": {
+                        "field" : "location",
+                        "description": "Location",
                         "type": "str",
                         "mandatory" : false,
                         "compareMode": "contains",
                         },
                     "date" : {
+                        "field" : "date",
+                        "description": "Date",
                         "type": "date",
                         "mandatory" : false,
-                        "default": "%DATE%",
+                        "defaultValue": "%DATE%",
                         "compareMode": "<="
                         },
                     }
                 },
                 {
-                "id" : "removeeventbyid",
+                "id" : "event.removebyid",
                 "description": "Remove event by id.",
+                "action" : "event.remove",
                 "args": {
                     "id": {
+                        "field" : "id",
                         "type": "int",
                         "mandatory" : true,
                         "compareMode": "="
@@ -84,10 +115,13 @@
                     }
                 },
                 {
-                "id" : "removeeventbytitle",
+                "id" : "event.removebytitle",
                 "description": "Remove event by title.",
+                "action" : "event.remove",
                 "args": {
                     "title": {
+                        "field" : "title",
+                        "description": "Title",
                         "type": "str",
                         "mandatory" : true,
                         "compareMode": "="
@@ -101,36 +135,53 @@
             "description": "Participant",
             "commands": [
                 {
-                "id" :"addparticipant",
+                "id" :"participant.add",
                 "description": "Add a participant",
+                "action" : "participant.add",
                 "args": {
                     "id": {
+                        "field" : "id",
                         "type": "int",
                         "mandatory" : false,
                         "modifier": "auto",
-                        "default": "1",
+                        "defaultValue": "1",
                         },
                     "name": {
+                        "field" : "name",
+                        "description": "Name",
                         "type": "str",
                         "mandatory" : true,
                         },
                     "email": {
+                        "field" : "email",
+                        "description": "Email",
                         "type": "str",
                         "mandatory" : false,
-                        "default": "",
+                        "defaultValue": "",
                         },
                     },
                 },
                 {
-                "id": "listparticipants",
+                "id" : "participant.getsall",
+                "description": "List all participants.",
+                "action" : "participant.gets",
+                "args": {
+                    }
+                },
+                {
+                "id": "participant.gets",
                 "description": "Search/List participants.",
+                "action" : "participant.gets",
                 "args": {
                     "id": {
+                        "field" : "id",
                         "type": "int",
                         "mandatory" : false,
                         "compareMode": "=",
                         },
                     "name" : {
+                        "field" : "name",
+                        "description": "Name",
                         "type": "str",
                         "mandatory" : false,
                         "compareMode": "contains"
@@ -138,32 +189,38 @@
                     }
                 },
                 {
-                "id" : "removeparticipantbyid",
-                "description": "Remove participant by id.",
+                "id" : "participant.removebyname",
+                "description": "Remove participant by id/name.",
+                "action" : "participant.remove",
                 "args": {
                     "id": {
+                        "field" : "id",
+                        "type": "int",
+                        "mandatory" : true,
+                        "compareMode": "="
+                        },
+                    "name": {
+                        "field" : "name",
+                        "description": "Name",
+                        "type": "str",
+                        "mandatory" : true,
+                        "compareMode": "="
+                        },
+                    },
+                },
+                {
+                "id" : "participant.removebyid",
+                "description": "Remove participant by id.",
+                "action" : "participant.remove",
+                "args": {
+                    "id": {
+                        "field" : "id",
                         "type": "int",
                         "mandatory" : true,
                         "compareMode": "="
                         },
                     }
                 },
-                {
-                "id" : "removeparticipantbyname",
-                "description": "Remove participant by id/name.",
-                "args": {
-                    "id": {
-                        "type": "int",
-                        "mandatory" : true,
-                        "compareMode": "="
-                        },
-                    "name": {
-                        "type": "str",
-                        "mandatory" : true,
-                        "compareMode": "="
-                        },
-                    },
-                }
             ]
         },
         {
@@ -171,83 +228,65 @@
             "description": "Organize",
             "commands": [
                 {
-                "id" :"addorganizebyid",
-                "description": "Register participant to an event by id",
+                "id" :"organize.add",
+                "description": "Register participant to an event",
+                "action" : "organize.add",
                 "args": {
                     "id": {
+                        "field" : "id",
                         "type": "int",
                         "mandatory" : false,
                         "modifier": "auto",
-                        "default": "1",
+                        "defaultValue": "1",
                         },
                     "eventid": {
-                        "type": "int",
+                        "description": "Event",
+                        "field" : "eventid@id:event.title",
+                        "type": "int@str",
                         "mandatory" : true,
                         },
                     "participantid": {
-                        "type": "int",
+                        "description": "Participan",
+                        "field" : "participantid@id:participant.name",
+                        "type": "int@str",
                         "mandatory" : true,
                         },
                     },
                 },
                 {
-                "id" :"addorganizebyname",
-                "description": "Register participant to an event by name",
+                "id" : "organize.getsall",
+                "description": "List all organize.",
+                "action" : "organize.gets",
                 "args": {
-                    "id": {
-                        "type": "int",
-                        "mandatory" : false,
-                        "modifier": "auto",
-                        "default": "1",
-                        },
-                    "eventtitle": {
-                        "type": "str",
-                        "mandatory" : true,
-                        },
-                    "participantname": {
-                        "type": "str",
-                        "mandatory" : true,
-                        },
-                    },
-                },
-                {
-                "id": "listorganizes",
-                "description": "Search/list registered participant to events.",
-                "args": {
-                    "eventid" : {
-                        "type": "int",
-                        "mandatory" : false,
-                        },
-                    "participantid" : {
-                        "type": "int",
-                        "mandatory" : false,
-                        },
-                    },
-                },
-                {
-                "id" : "removeorganizebyid",
-                "description": "Remove organize by id.",
-                "args": {
-                    "id": {
-                        "type": "int",
-                        "mandatory" : true,
-                        "compareMode": "="
-                        },
                     }
                 },
                 {
-                "id" : "removeparticipantfromorganize",
-                "description": "Remove participant from organize by id/name.",
+                "id": "organize.gets",
+                "description": "Search/list registered participant to events.",
+                "action" : "organize.gets",
+                "args": {
+                    "participantid" : {
+                        "field" : "participantid@id:participant.name",
+                        "description": "Participant",
+                        "type": "int@str",
+                        "mandatory" : false,
+                        "compareMode": "=",
+                        "defaultValue": "-1",
+                        },
+                    },
+                },
+                {
+                "id" : "organize.remove",
+                "description": "Remove participant from organize by name.",
+                "action" : "organize.remove",
                 "args": {
                     "participantid": {
-                        "type": "int",
+                        "field" : "participantid@id:participant.name",
+                        "description": "Participant",
+                        "type": "int@str",
                         "mandatory" : true,
-                        "compareMode": "="
-                        },
-                    "name": {
-                        "type": "str",
-                        "mandatory" : true,
-                        "compareMode": "="
+                        "compareMode": "=",
+                        "defaultValue": "-1",
                         },
                     }
                 },
