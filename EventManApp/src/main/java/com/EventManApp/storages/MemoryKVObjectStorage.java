@@ -3,8 +3,8 @@ package com.EventManApp.storages;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.EventManApp.KVObjectStorage;
 import com.EventManApp.KVObject;
+import com.EventManApp.KVObjectStorage;
 import com.EventManApp.lib.DebugUtil;
 
 public class MemoryKVObjectStorage implements KVObjectStorage {
@@ -27,5 +27,10 @@ public class MemoryKVObjectStorage implements KVObjectStorage {
     @Override
     public List<KVObject> getKVObjects() {
         return new ArrayList<>(kvObjects);
+    }
+
+    @Override
+    public int countKVObjects() {
+        return kvObjects.size();
     }
 }

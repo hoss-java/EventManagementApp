@@ -1,10 +1,32 @@
 package com.EventManApp;
 
+import com.EventManApp.ActionCallbackInterface;
+import com.EventManApp.ConfigManager;
+import com.EventManApp.ResponseCallbackInterface;
+import com.EventManApp.KVObjectStorageFactory;
+import com.EventManApp.lib.JSONHelper;
+import com.EventManApp.lib.ResponseHelper;
+import com.EventManApp.LogHandler;
+import com.EventManApp.storages.DatabaseKVObjectStorage;
+import com.EventManApp.storages.FileKVObjectStorage;
+import com.EventManApp.storages.MemoryKVObjectStorage;
+import com.EventManApp.storages.DatabaseKVSubjectStorage;
+import com.EventManApp.storages.FileKVSubjectStorage;
+import com.EventManApp.storages.MemoryKVSubjectStorage;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
-import java.util.LinkedHashMap;
+
+import java.io.File;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Scanner;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -12,29 +34,6 @@ import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-
-import java.io.PrintStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import java.util.Scanner;
-
-import java.io.File;
-
-import com.EventManApp.lib.JSONHelper;
-import com.EventManApp.lib.ResponseHelper;
-
-import com.EventManApp.ResponseCallbackInterface;
-import com.EventManApp.ActionCallbackInterface;
-
-//import com.EventManApp.ObjectHandler;
-import com.EventManApp.LogHandler;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import com.EventManApp.storages.DatabaseKVObjectStorage;
-import com.EventManApp.storages.FileKVObjectStorage;
-import com.EventManApp.storages.MemoryKVObjectStorage;
-import com.EventManApp.KVObjectStorageFactory;
 
 /**
  * @file EventManApp.java
@@ -128,17 +127,31 @@ public class EventManApp {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
+        // Define the appdata folder path
+        String appDataFolder = ".appdata";
+
+        // Create the appdata folder if it doesn't exist
+        File directory = new File(appDataFolder);
+        if (!directory.exists()) {
+            directory.mkdirs(); // Create the folder
+            System.out.println("Created directory: " + appDataFolder);
+        }
+
+        ConfigManager configManager = ConfigManager.getInstance(".appdata/config.json");
         JSONObject commands= JSONHelper.loadJsonFromFile("commands.json");
         loadModulesFromXML("modules.xml");
 
-        File storageFile = new File("kvobjects.txt");
+        File objectStorageFile = new File(".appdata/kvobjects.txt");
         // Create a FileKVObjectStorage instance
-        KVObjectStorage storage = KVObjectStorageFactory.createKVObjectStorage("file", storageFile);
-        //KVObjectStorage storage = KVObjectStorageFactory.createKVObjectStorage("memory", null);
-        kvObjectHandler = new KVObjectHandler(null,storage);
-        kvSubjectHandler = new KVSubjectHandler("subjects.xml");
-        payloadHandler = new PayloadHandler(kvObjectHandler,kvSubjectHandler);
+        KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("file", objectStorageFile);
+        //KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("memory", null);
+        kvObjectHandler = new KVObjectHandler(null,objectStorage);
 
+        File subjectStorageFile = new File(".appdata/kvsubjects.txt");
+        KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("file", subjectStorageFile);
+        //KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("memory", null);
+        kvSubjectHandler = new KVSubjectHandler("subjects.xml",subjectStorage);
+        payloadHandler = new PayloadHandler(kvObjectHandler,kvSubjectHandler);
 
         // List to keep track of background threads
         List<Thread> backgroundThreads = new ArrayList<>();
@@ -159,6 +172,8 @@ public class EventManApp {
             }
         }
 
+        System.out.println("Press Enter to continue...");
+        scanner.nextLine(); // Wait for a key press
         // Check each interface and handle as background or foreground
         for (BaseInterface interfaceInstance : interfaceInstances) {
             if (!interfaceInstance.isRunInBackground()) {
@@ -186,5 +201,6 @@ public class EventManApp {
 
         scanner.close(); // Close the scanner at the end to free resources
         logHandler.displayLogs();
+        configManager.saveConfig();
     }
 }

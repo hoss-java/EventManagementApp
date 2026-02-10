@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.EventManApp.lib.DebugUtil;
+import com.EventManApp.lib.DebugUtil; // Optional if DebugUtil is used
 
 public class LogHandler {
     private List<LogEntry> logBuffer;

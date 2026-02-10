@@ -2,13 +2,10 @@ package com.EventManApp;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import com.EventManApp.lib.validators.*;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public abstract class KVBaseObject<T> {
     protected List<Field<T>> fields;

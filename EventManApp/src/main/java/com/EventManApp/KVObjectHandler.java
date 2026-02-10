@@ -1,24 +1,24 @@
 package com.EventManApp;
 
-import java.util.Arrays;
-import java.util.ArrayList;
+import com.EventManApp.ActionCallbackInterface;
+import com.EventManApp.KVObjectHandlerInterface;
+import com.EventManApp.KVObjectStorage;
+import com.EventManApp.lib.DebugUtil;
+import com.EventManApp.lib.JSONHelper;
+import com.EventManApp.lib.ResponseHelper;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.EventManApp.KVObjectHandlerInterface;
-import com.EventManApp.KVObjectStorage;
-import com.EventManApp.lib.ResponseHelper;
-import com.EventManApp.lib.JSONHelper;
-import com.EventManApp.ActionCallbackInterface;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.EventManApp.lib.DebugUtil;
+import java.util.ArrayList;
 
 public class KVObjectHandler implements KVObjectHandlerInterface {
     private String DEFAULT_RESPONSE_VERSION = "1.0"; // Default version
@@ -62,6 +62,7 @@ public class KVObjectHandler implements KVObjectHandlerInterface {
 
     // Add a kvObject
     public Boolean addKVObject(KVObject kvObject) {
+        //DebugUtil.debug(kvObject.toString());
         // Validate before adding
         if (isUniqueEntry(kvObject,uniqueEntryCheckSkippedfields)) {
             kvObjectStorage.addKVObject(kvObject);

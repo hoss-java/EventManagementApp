@@ -1,22 +1,21 @@
 package com.EventManApp.storages;
 
 import org.json.JSONObject;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-
-import com.EventManApp.KVObjectStorage;
 import com.EventManApp.KVObject;
 import com.EventManApp.KVObjectField;
+import com.EventManApp.KVObjectStorage;
 import com.EventManApp.lib.DebugUtil;
-
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class FileKVObjectStorage implements KVObjectStorage {
     private File file;
@@ -79,6 +78,23 @@ public class FileKVObjectStorage implements KVObjectStorage {
         return kvObjects;
     }
 
+    @Override
+    public int countKVObjects() {
+        if (!file.exists() || file.length() == 0) {
+            return 0; // Return 0 if the file does not exist or is empty
+        }
+
+        int lineCount = 0;
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            while (reader.readLine() != null) {
+                lineCount++; // Increment the line count for each line read
+            }
+        } catch (IOException e) {
+            e.printStackTrace(); // Handle exceptions
+        }
+        return lineCount; // Return the total line count
+    }
+
     private KVObject deserialize(String line) {
         // Here we assume the line is in JSON format. Implement a method to convert JSON to KVObject.
         // For simplicity, we use a dummy implementation. Replace with actual deserialization.
@@ -105,10 +121,10 @@ public class FileKVObjectStorage implements KVObjectStorage {
         Map<String, String> jsonFields = new HashMap<>();
         for (String key : jsonObject.keySet()) {
             if (!key.equals("identifier") && !key.equals("fieldTypeMap")) {
-                jsonFields.put(key, jsonObject.getString(key));
+                Object value = jsonObject.get(key);
+                jsonFields.put(key, value != null ? value.toString() : null); // Convert to String
             }
         }
-
         return new KVObject(identifier, fieldTypeMap, jsonFields);
     }
 }

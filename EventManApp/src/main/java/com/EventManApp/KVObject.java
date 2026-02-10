@@ -1,5 +1,11 @@
 package com.EventManApp;
 
+import com.EventManApp.KVBaseObject;
+import com.EventManApp.KVObjectField;
+import com.EventManApp.lib.DebugUtil;
+import com.EventManApp.lib.StringParserHelper;
+import com.EventManApp.lib.validators.*;
+
 import org.json.JSONObject;
 
 import java.time.Duration;
@@ -9,13 +15,6 @@ import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.EventManApp.KVBaseObject;
-import com.EventManApp.lib.StringParserHelper;
-import com.EventManApp.KVObjectField;
-import com.EventManApp.lib.validators.*;
-
-import com.EventManApp.lib.DebugUtil;
 
 public class KVObject extends KVBaseObject<Object> {
     private String identifier;

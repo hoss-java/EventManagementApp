@@ -1,20 +1,24 @@
 package com.EventManApp;
 
+import com.EventManApp.KVSubject;
+import com.EventManApp.KVSubjectHandlerInterface;
+import com.EventManApp.KVSubjectStorage;
+import com.EventManApp.lib.DebugUtil;
+
 import org.w3c.dom.*;
 import javax.xml.parsers.*;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.EventManApp.KVSubjectHandlerInterface;
-import com.EventManApp.KVSubject;
-import com.EventManApp.lib.DebugUtil;
-
 public class KVSubjectHandler implements KVSubjectHandlerInterface {
-    private Map<String, KVSubject> subjects = new HashMap<>();
+    private KVSubjectStorage kvSubjectStorage;
 
-    public KVSubjectHandler(String xmlFilePath) {
-        loadDataFromXML(xmlFilePath);
+    public KVSubjectHandler(String xmlFilePath, KVSubjectStorage storage) {
+        this.kvSubjectStorage = storage; // Initialize using injected storage
+        if (this.kvSubjectStorage.countKVSubjects() == 0) {
+            loadDataFromXML(xmlFilePath);
+        }
     }
 
     private void loadDataFromXML(String xmlFilePath) {
@@ -41,21 +45,25 @@ public class KVSubjectHandler implements KVSubjectHandlerInterface {
 
     @Override
     public void addKVSubject(String identifier, Element subjectElement) {
-        if (!subjects.containsKey(identifier)) {
+        // Check if the storage already contains the identifier
+        if (kvSubjectStorage.getKVSubject(identifier) == null) {
             KVSubject subject = new KVSubject(identifier);
-            initializeFieldTypeMap(subject, subjectElement); // Pass the XML element to initialize fields
-            subjects.put(identifier, subject);
+            initializeFieldTypeMap(subject, subjectElement);
+            kvSubjectStorage.addKVSubject(subject); // Use storage method to add
         }
     }
 
     @Override
     public void removeKVSubject(String identifier) {
-        subjects.remove(identifier);
+        KVSubject subject = kvSubjectStorage.getKVSubject(identifier);
+        if (subject != null) {
+            kvSubjectStorage.removeKVSubject(subject); // Use storage method to remove
+        }
     }
 
     @Override
     public KVSubject getKVSubject(String identifier) {
-        return subjects.get(identifier);
+        return kvSubjectStorage.getKVSubject(identifier); // Use storage method to get
     }
 
     // New method to get fieldTypeMap for a given identifier
