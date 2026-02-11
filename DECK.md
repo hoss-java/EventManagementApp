@@ -765,7 +765,341 @@ gantt
 > - [x] 1. Add Organize object
 > 
 > # Reports:
-> *
+> * To make it possible the tables were restructured.
+> * Now all group items are seen as KVObject, each object has its own identifier
+> * KVObjects are separated when they saved via a storage class.
+> * There is no table(object) manager specified for a group anymore
+> * A KVObject manager handles all kind of objects.
+> * A subject manager was implemented. A subject define contents of an object type, A subject can be seen as a schema.
+> * For now three pre-define schema have been added,(`event`, 'participant', and `organize`)
+> * In the first run the subject handlers reads pre-define data for subjects from a xml file named `subjects.xml` from the resources folder. And save them through Storage manager. After the first time when the sorage manager created a copy of the schema , the subject handler looks for subjects om the storage. It means it can be change if it needed.
+> ```
+> >```
+> ><subjects>
+> >    <subject identifier="event">
+> >        <field name="id" field="id" type="int" mandatory="true" modifier="auto" >defaultValue="1"/>
+> >        <field name="title" field="title" description="Title" type="str" mandatory>="true" modifier="user" defaultValue="workshop"/>
+> >        <field name="location" field="location" description="Location" type="str" >mandatory="false" modifier="user" defaultValue="here"/>
+> >        <field name="capacity" field="capacity" description="Capacity" type=">unsigned" mandatory="false" modifier="user" defaultValue="1"/>
+> >        <field name="date" field="date" description="Date" type="date" mandatory=">false" modifier="user" defaultValue="2023-10-01"/> <!-- Example Date -->
+> >        <field name="starttime" field="starttime" description="Time" type="time" >mandatory="false" modifier="user" defaultValue="00:00:00"/>
+> >        <field name="duration" field="duration" description="Duration" type=">duration" mandatory="false" modifier="user" defaultValue="PT0H"/>
+> >    </subject>
+> >    <subject identifier="participant">
+> >        <field name="id" field="id" type="int" mandatory="true" modifier="auto" >defaultValue="1"/>
+> >        <field name="name" field="name" description="Name" type="str" mandatory=">true" modifier="user" defaultValue=""/>
+> >        <field name="email" field="email" description="Enaik" type="str" mandatory>="false" modifier="user" defaultValue=""/>
+> >    </subject>    
+> >    <subject identifier="organize">
+> >        <field name="id" field="id" type="int" mandatory="true" modifier="auto" >defaultValue="1"/>
+> >        <field name="eventid" field="eventid@id:event.title" description="Event" >type="int@str" mandatory="true" modifier="user" defaultValue=""/>
+> >        <field name="participantid" field="participantid@id:participant.name" >description="Participant" type="int@str" mandatory="false" modifier="user"> defaultValue=""/>
+> >    </subject>
+> ></subjects>
+> >```
+> * There was some issue to auto id with the KVOBjects and the old system did not work and could not be adapted to new objects. To fix issues an improve other parts a new class name ConfigManager was added. ConfigManager handles and responsible to save and reading settings (a singleton class).
+> * For now KVObjects support there functions, `add` , `remove` and `gets` or `get` they are flexible and can be used and configured for almost all needs.
+> * All KVOBjects functions `add` , `remove` and `gets` support chain commands, in other words they can be configured to find an object in a group of objects and then use result to apply next steps. For example a filed define as "participantid@id:participant.name", means `participantid` is `id` of `participant.name`. or in an action means we send/input a name, it will find id of name in the object group of participant and use it as participantid on organize table. A chain has no limit on the number of parts.
+> * The structure of `commands.json` was also improved, now a commands.json looks >like below
+> >```
+> >{
+> >    "commands": [
+> >        {
+> >            "id" : "event",
+> >            "description": "Event",
+> >            "commands": [
+> >                {
+> >                "id" :"event.add",
+> >                "description": "Add an event",
+> >                "action" : "event.add",
+> >                "args": {
+> >                    "id": {
+> >                        "field" : "id",
+> >                        "type": "int",
+> >                        "mandatory" : false,
+> >                        "modifier": "auto",
+> >                        "defaultValue": "1",
+> >                        },
+> >                    "title": {
+> >                        "field" : "title",
+> >                        "description": "Title",
+> >                        "type": "str",
+> >                        "mandatory" : true,
+> >                        },
+> >                    "location": {
+> >                        "field" : "location",
+> >                        "description": "Location",
+> >                        "type": "str",
+> >                        "mandatory" : false,
+> >                        "defaultValue": "here",
+> >                        },
+> >                    "capacity": {
+> >                        "field" : "capacity",
+> >                        "description": "Capacity",
+> >                        "type": "unsigned",
+> >                        "mandatory" : false,
+> >                        "defaultValue": "12",
+> >                        },
+> >                    "date" : {
+> >                        "field" : "date",
+> >                        "description": "Date",
+> >                        "type": "date",
+> >                        "mandatory" : false,
+> >                        "defaultValue": "%DATE%",
+> >                        },
+> >                    "time" : {
+> >                        "field" : "time",
+> >                        "description": "Time",
+> >                        "type": "time",
+> >                        "mandatory" : false,
+> >                        "defaultValue": "%TIME%",
+> >                        },
+> >                    "duration" : {
+> >                        "field" : "duration",
+> >                        "description": "Duration",
+> >                        "type": "duration",
+> >                        "mandatory" : false,
+> >                        "defaultValue": "PT15M",
+> >                        },
+> >                    },
+> >                },
+> >                {
+> >                "id" : "event.getsall",
+> >                "description": "List all events.",
+> >                "action" : "event.gets",
+> >                "args": {
+> >                    }
+> >                },
+> >                {
+> >                "id" : "event.gets",
+> >                "description": "Search/List events.",
+> >                "action" : "event.get",
+> >                "args": {
+> >                    "id": {
+> >                        "field" : "id",
+> >                        "type": "int",
+> >                        "mandatory" : false,
+> >                        "compareMode": "=",
+> >                        },
+> >                    "title": {
+> >                        "field" : "title",
+> >                        "description": "Title",
+> >                        "type": "str",
+> >                        "mandatory" : false,
+> >                        "compareMode": "contains"
+> >                        },
+> >                    "location": {
+> >                        "field" : "location",
+> >                        "description": "Location",
+> >                        "type": "str",
+> >                        "mandatory" : false,
+> >                        "compareMode": "contains",
+> >                        },
+> >                    "date" : {
+> >                        "field" : "date",
+> >                        "description": "Date",
+> >                        "type": "date",
+> >                        "mandatory" : false,
+> >                        "defaultValue": "%DATE%",
+> >                        "compareMode": "<="
+> >                        },
+> >                    }
+> >                },
+> >                {
+> >                "id" : "event.removebyid",
+> >                "description": "Remove event by id.",
+> >                "action" : "event.remove",
+> >                "args": {
+> >                    "id": {
+> >                        "field" : "id",
+> >                        "type": "int",
+> >                        "mandatory" : true,
+> >                        "compareMode": "="
+> >                        },
+> >                    }
+> >                },
+> >                {
+> >                "id" : "event.removebytitle",
+> >                "description": "Remove event by title.",
+> >                "action" : "event.remove",
+> >                "args": {
+> >                    "title": {
+> >                        "field" : "title",
+> >                        "description": "Title",
+> >                        "type": "str",
+> >                        "mandatory" : true,
+> >                        "compareMode": "="
+> >                        },
+> >                    }
+> >                },
+> >            ]
+> >        },
+> >        {
+> >            "id" : "participant",
+> >            "description": "Participant",
+> >            "commands": [
+> >                {
+> >                "id" :"participant.add",
+> >                "description": "Add a participant",
+> >                "action" : "participant.add",
+> >                "args": {
+> >                    "id": {
+> >                        "field" : "id",
+> >                        "type": "int",
+> >                        "mandatory" : false,
+> >                        "modifier": "auto",
+> >                        "defaultValue": "1",
+> >                        },
+> >                    "name": {
+> >                        "field" : "name",
+> >                        "description": "Name",
+> >                        "type": "str",
+> >                        "mandatory" : true,
+> >                        },
+> >                    "email": {
+> >                        "field" : "email",
+> >                        "description": "Email",
+> >                        "type": "str",
+> >                        "mandatory" : false,
+> >                        "defaultValue": "",
+> >                        },
+> >                    },
+> >                },
+> >                {
+> >                "id" : "participant.getsall",
+> >                "description": "List all participants.",
+> >                "action" : "participant.gets",
+> >                "args": {
+> >                    }
+> >                },
+> >                {
+> >                "id": "participant.gets",
+> >                "description": "Search/List participants.",
+> >                "action" : "participant.gets",
+> >                "args": {
+> >                    "id": {
+> >                        "field" : "id",
+> >                        "type": "int",
+> >                        "mandatory" : false,
+> >                        "compareMode": "=",
+> >                        },
+> >                    "name" : {
+> >                        "field" : "name",
+> >                        "description": "Name",
+> >                        "type": "str",
+> >                        "mandatory" : false,
+> >                        "compareMode": "contains"
+> >                        },
+> >                    }
+> >                },
+> >                {
+> >                "id" : "participant.removebyname",
+> >                "description": "Remove participant by id/name.",
+> >                "action" : "participant.remove",
+> >                "args": {
+> >                    "id": {
+> >                        "field" : "id",
+> >                        "type": "int",
+> >                        "mandatory" : true,
+> >                        "compareMode": "="
+> >                        },
+> >                    "name": {
+> >                        "field" : "name",
+> >                        "description": "Name",
+> >                        "type": "str",
+> >                        "mandatory" : true,
+> >                        "compareMode": "="
+> >                        },
+> >                    },
+> >                },
+> >                {
+> >                "id" : "participant.removebyid",
+> >                "description": "Remove participant by id.",
+> >                "action" : "participant.remove",
+> >                "args": {
+> >                    "id": {
+> >                        "field" : "id",
+> >                        "type": "int",
+> >                        "mandatory" : true,
+> >                        "compareMode": "="
+> >                        },
+> >                    }
+> >                },
+> >            ]
+> >        },
+> >        {
+> >            "id" : "organize",
+> >            "description": "Organize",
+> >            "commands": [
+> >                {
+> >                "id" :"organize.add",
+> >                "description": "Register participant to an event",
+> >                "action" : "organize.add",
+> >                "args": {
+> >                    "id": {
+> >                        "field" : "id",
+> >                        "type": "int",
+> >                        "mandatory" : false,
+> >                        "modifier": "auto",
+> >                        "defaultValue": "1",
+> >                        },
+> >                    "eventid": {
+> >                        "description": "Event",
+> >                        "field" : "eventid@id:event.title",
+> >                        "type": "int@str",
+> >                        "mandatory" : true,
+> >                        },
+> >                    "participantid": {
+> >                        "description": "Participan",
+> >                        "field" : "participantid@id:participant.name",
+> >                        "type": "int@str",
+> >                        "mandatory" : true,
+> >                        },
+> >                    },
+> >                },
+> >                {
+> >                "id" : "organize.getsall",
+> >                "description": "List all organize.",
+> >                "action" : "organize.gets",
+> >                "args": {
+> >                    }
+> >                },
+> >                {
+> >                "id": "organize.gets",
+> >                "description": "Search/list registered participant to events.",
+> >                "action" : "organize.gets",
+> >                "args": {
+> >                    "participantid" : {
+> >                        "field" : "participantid@id:participant.name",
+> >                        "description": "Participant",
+> >                        "type": "int@str",
+> >                        "mandatory" : false,
+> >                        "compareMode": "=",
+> >                        "defaultValue": "-1",
+> >                        },
+> >                    },
+> >                },
+> >                {
+> >                "id" : "organize.remove",
+> >                "description": "Remove participant from organize by name.",
+> >                "action" : "organize.remove",
+> >                "args": {
+> >                    "participantid": {
+> >                        "field" : "participantid@id:participant.name",
+> >                        "description": "Participant",
+> >                        "type": "int@str",
+> >                        "mandatory" : true,
+> >                        "compareMode": "=",
+> >                        "defaultValue": "-1",
+> >                        },
+> >                    }
+> >                },
+> >            ]
+> >        },
+> >    ]
+> >}
+> >
+> >```
 > </details>
 
 ## 001-0014
@@ -795,4 +1129,53 @@ gantt
 > 
 > * All variables and files with name EM were change to KV to make it more generic name.
 > * Add and remove objects can be moved from all type handlers to KVObjectHandler, It just needs to know id for both add and remove, and also which object(s) to remove
+> * 
+> 
+> ```sql
+> -- Define user, password, and database
+> -- Define user, password, and database
+> SET @username := 'eventman';
+> SET @password := 'eventman-pass';
+> SET @database := 'eventman';
+> SET @ip_range := '172.32.0.%';
+> 
+> -- Drop the user if it exists
+> SET @drop_user_stmt = CONCAT('DROP USER IF EXISTS ''', @username, '''@''', @ip_range, '''');
+> PREPARE stmt FROM @drop_user_stmt;
+> EXECUTE stmt;
+> DEALLOCATE PREPARE stmt;
+> 
+> -- Create the user
+> SET @create_user_stmt = CONCAT('CREATE USER ''', @username, '''@''', @ip_range, ''' IDENTIFIED BY ''', @password, '''');
+> PREPARE stmt FROM @create_user_stmt;
+> EXECUTE stmt;
+> DEALLOCATE PREPARE stmt;
+> 
+> -- Create the database
+> SET @create_database_stmt = CONCAT('CREATE DATABASE IF NOT EXISTS ', @database);
+> PREPARE stmt FROM @create_database_stmt;
+> EXECUTE stmt;
+> DEALLOCATE PREPARE stmt;
+> 
+> -- Grant privileges to the user
+> SET @grant_stmt = CONCAT('GRANT ALL PRIVILEGES ON ', @database, '.* TO ''', @username, '''@''', @ip_range, '''');
+> PREPARE stmt FROM @grant_stmt;
+> EXECUTE stmt;
+> DEALLOCATE PREPARE stmt;
+> 
+> -- Optional: Flush privileges to ensure changes take effect
+> FLUSH PRIVILEGES;
+> 
+> -- Verify the created user and display grants
+> SET @verify_stmt = CONCAT('SHOW GRANTS FOR ''', @username, '''@''', @ip_range, '''');
+> PREPARE stmt FROM @verify_stmt;
+> EXECUTE stmt;
+> DEALLOCATE PREPARE stmt;
+> 
+> -- Instead, you can directly execute SHOW GRANTS
+> -- SHOW GRANTS FOR 'eventman'@'172.32.0.%';
+> 
+> -- End of script
+> 
+> ```
 > </details>
