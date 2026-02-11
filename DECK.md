@@ -773,8 +773,7 @@ gantt
 > * A subject manager was implemented. A subject define contents of an object type, A subject can be seen as a schema.
 > * For now three pre-define schema have been added,(`event`, 'participant', and `organize`)
 > * In the first run the subject handlers reads pre-define data for subjects from a xml file named `subjects.xml` from the resources folder. And save them through Storage manager. After the first time when the sorage manager created a copy of the schema , the subject handler looks for subjects om the storage. It means it can be change if it needed.
-> ```
-> >```
+> >```xml
 > ><subjects>
 > >    <subject identifier="event">
 > >        <field name="id" field="id" type="int" mandatory="true" modifier="auto" >defaultValue="1"/>
@@ -801,7 +800,7 @@ gantt
 > * For now KVObjects support there functions, `add` , `remove` and `gets` or `get` they are flexible and can be used and configured for almost all needs.
 > * All KVOBjects functions `add` , `remove` and `gets` support chain commands, in other words they can be configured to find an object in a group of objects and then use result to apply next steps. For example a filed define as "participantid@id:participant.name", means `participantid` is `id` of `participant.name`. or in an action means we send/input a name, it will find id of name in the object group of participant and use it as participantid on organize table. A chain has no limit on the number of parts.
 > * The structure of `commands.json` was also improved, now a commands.json looks >like below
-> >```
+> >```json
 > >{
 > >    "commands": [
 > >        {
