@@ -5,6 +5,7 @@
 mrun() {
     # Initialize an array to hold directive names
     local directives=()
+    local non_directives=()
     local interactive_flag="-it"  # Default to interactive mode
 
     # Loop through all provided arguments
@@ -13,23 +14,28 @@ mrun() {
             # If the argument is a directive, add it to the array
             directives+=("$arg")
         else
+            non_directives+=("$arg")
             # If it's not a directive, break out of the loop
-            break
+            #break
         fi
     done
 
     # Shift the processed arguments
-    set -- "${@:$#}"  # Shift out the directives for further processing
+    set -- "${non_directives[@]}" # Retain only the non-directive arguments for the command
 
     output=""
     exit_code=1
     # Check for the --noit directive
     if [[ " ${directives[@]} " =~ " --noit " ]]; then
         # Capture the output of the Docker command
+        set -x
         output=$(docker exec  maven mvn -f EventManagementApp/EventManApp "$@" $exec_cmd)
+        set +x
         exit_code=$?
     else
+        set -x
         docker exec -it maven mvn -f EventManagementApp/EventManApp "$@" $exec_cmd
+        set +x
         exit_code=$?
     fi
 
@@ -54,6 +60,7 @@ mvn(){
 mstatus() {
     # Initialize an array to hold directive names
     local directives=()
+    local non_directives=()
     local interactive_flag="-it"  # Default to interactive mode
 
     # Loop through all provided arguments
@@ -62,13 +69,14 @@ mstatus() {
             # If the argument is a directive, add it to the array
             directives+=("$arg")
         else
+            non_directives+=("$arg")
             # If it's not a directive, break out of the loop
-            break
+            #break
         fi
     done
 
     # Shift the processed arguments
-    set -- "${@:$#}"  # Shift out the directives for further processing
+    set -- "${non_directives[@]}" # Retain only the non-directive arguments for the command
 
     exit_code=1
     # Check if Docker is running and if the container exists

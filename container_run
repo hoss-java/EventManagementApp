@@ -1,0 +1,171 @@
+#!/bin/bash
+
+#set -x
+# Function to get the command based on the provided exec_cmd
+get_command() {
+    # Declare the array with key-value pairs as a string
+    local commands="
+maven:mvn -f EventManagementApp/EventManApp
+mysql:mysql -u root -pmypass
+sshd:bash"
+
+    input="$1"
+    echo "$commands" | awk -F: -v key="$input" '$1 == key { print $2 }'
+}
+
+# Function to run the Maven command inside the Docker container
+container_run() {
+    # Initialize an array to hold directive names
+    local directives=()
+    local non_directives=()
+    local exec_cmd="$1"  # The command (e.g., maven, mysql) to execute, passed as the first argument
+    shift  # Shift to process the remaining arguments
+
+    # Retrieve the command based on exec_cmd
+    local command_to_run
+    command_to_run=$(get_command "$exec_cmd")
+
+    if [ -z "$command_to_run" ]; then
+        echo "Command not found for: $exec_cmd"
+        return 1
+    fi
+
+    # Loop through all provided arguments
+    for arg in "$@"; do
+        if [[ $arg == --* ]]; then
+            # If the argument is a directive, add it to the array
+            directives+=("$arg")
+        else
+            non_directives+=("$arg")
+            # If it's not a directive, break out of the loop
+            #break
+        fi
+    done
+
+    # Shift out the processed directives
+    set -- "${non_directives[@]}" # Retain only the non-directive arguments for the command
+
+    local output=""
+    local exit_code=1
+
+    # Check for the --noit directive and run the appropriate Docker command
+    if [[ " ${directives[@]} " =~ " --noit " ]]; then
+        # Capture the output of the Docker command without TTY
+        set -x
+        output=$(docker exec "$exec_cmd" $command_to_run "$@")
+        set +x
+        exit_code=$?
+    elif [[ " ${directives[@]} " =~ " --it " ]]; then
+        # Run with -it option for interactive mode
+        set -x
+        docker exec -it "$exec_cmd" $command_to_run "$@"
+        set +x
+        exit_code=$?
+    elif [[ " ${directives[@]} " =~ " --i " ]]; then
+        # Run with -i only for interactive input
+        set -x
+        docker exec -i "$exec_cmd" $command_to_run "$@"
+        set +x
+        exit_code=$?
+    else
+        # Default: use -it for interactive unless specified otherwise
+        set -x
+        docker exec -it "$exec_cmd" $command_to_run "$@"
+        set +x
+        exit_code=$?
+    fi
+
+    # Print the output if the exit code is not 0
+    if [ $exit_code -ne 0 ]; then
+        echo "Error running Docker command:"
+        echo "$output"
+    elif [[ ! " ${directives[@]} " =~ " --quiet " ]]; then
+        # If --quiet is not present, print the output anyway
+        echo "$output"
+    fi
+
+    # Return the exit status
+    return $exit_code
+}
+
+container_status() {
+    # Initialize an array to hold directive names
+    local directives=()
+    local non_directives=()
+    local interactive_flag="-it"  # Default to interactive mode
+
+    # First argument is the name of the container (e.g., maven, mysql)
+    local container_name="$1"
+    shift  # Shift to process the remaining arguments
+
+    # Check if the provided container name exists
+    if [ -z "$(get_command "$container_name")" ]; then
+        echo "Invalid container name: $container_name"
+        return 1
+    fi
+
+    # Loop through all provided arguments
+    for arg in "$@"; do
+        if [[ $arg == --* ]]; then
+            # If the argument is a directive, add it to the array
+            directives+=("$arg")
+        else
+            non_directives+=("$arg")
+            # If it's not a directive, break out of the loop
+            #break
+        fi
+    done
+
+    # Shift the processed arguments
+    set -- "${non_directives[@]}" # Retain only the non-directive arguments for the command
+
+    local output=""
+    local exit_code=1
+
+    # Check if Docker is running and if the specified container exists
+    if [ "$(docker ps -q -f name="$container_name")" ]; then
+        echo "Docker container '$container_name' is available."
+        # Capture the output of the Docker command
+        output=$(docker inspect --format='{{.Name}} - {{.State.Status}}' "$container_name")
+        exit_code=$?
+    elif [[ ! " ${directives[@]} " =~ " --quiet " ]]; then
+        echo "$output"
+    fi
+
+    # Print the output if the exit code is not 0
+    if [ $exit_code -ne 0 ]; then
+        echo "Docker container '$container_name' is not running or does not exist."
+        echo "Error running Docker command:"
+        echo "$output"
+    else
+        # Print the output if successful and not in quiet mode
+        if [[ ! " ${directives[@]} " =~ " --quiet " ]]; then
+            echo "$output"
+        fi
+    fi
+
+    # Return the exit status
+    return $exit_code
+}
+
+mvn(){
+    container_run maven "$@"
+    return $?
+}
+
+mysql(){
+    container_run mysql "$@"
+    return $?
+}
+
+cli(){
+    container_run sshd "$@"
+    return $?
+}
+
+# Main code block
+#if [ "$0" = "$BASH_SOURCE" ]; then
+# Main part: Loop through valid containers and run containerstatus
+container_status "maven"
+container_status "mysql"
+container_status "sshd"
