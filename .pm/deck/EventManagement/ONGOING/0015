@@ -1,0 +1,23 @@
+---
+#...
+# Git-deck card header
+# OBS! DON'T REMOVE CARD HEADERS
+#...
+Title: Update README and other documents.
+Tags:
+Creator:
+AssignedTo:
+# Time tracker settings
+tartAt:
+EndAt:
+---
+The goal of this card is to update README with findings and changes.
+
+# DOD (definition of done):
+README.md is updated.
+
+# TODO:
+- [] 1.
+
+# Reports:
+*
