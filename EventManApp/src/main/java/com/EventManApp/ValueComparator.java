@@ -13,14 +13,34 @@ interface TriFunction<T, U, V, R> {
     R apply(T t, U u, V v);
 }
 
+/**
+ * Class for comparing values of different types such as Strings, Integers, 
+ * Dates, and more using specified comparison modes.
+ */
 public class ValueComparator {
 
+    /** 
+     * Map of comparison methods for different value types.
+     */
     private static final Map<String, TriFunction<String, String, String, Boolean>> comparisonMethods = new HashMap<>();
+
+    /** 
+     * Map of integer comparison methods.
+     */
     private static final Map<String, BiFunction<Integer, Integer, Boolean>> integerComparisons = new HashMap<>();
+
+    /** 
+     * Map of date comparison methods.
+     */
     private static final Map<String, BiFunction<Date, Date, Boolean>> dateComparisons = new HashMap<>();
+
+    /** 
+     * Map of string comparison methods.
+     */
     private static final Map<String, BiFunction<String, String, Boolean>> stringComparisons = new HashMap<>();
 
     static {
+        // Initialize comparison methods
         comparisonMethods.put("str", ValueComparator::compareStrings);
         comparisonMethods.put("int", ValueComparator::compareIntegers);
         comparisonMethods.put("positiveint", ValueComparator::comparePositiveIntegers);
@@ -54,6 +74,16 @@ public class ValueComparator {
         stringComparisons.put("compareToIgnoreCase", (a, b) -> a.compareToIgnoreCase(b) == 0); // Lexicographical comparison ignoring case
     }
 
+    /**
+     * Validates a value against a comparison string based on the specified type and comparison mode.
+     * 
+     * @param valueStr the value to validate as a String
+     * @param compareStr the value to compare against as a String
+     * @param type the type of the value (e.g., "str", "int", "date")
+     * @param compareMode the comparison mode (e.g., "=", "<", "startsWith")
+     * @return true if the value is valid according to the comparison, otherwise false
+     * @throws IllegalArgumentException if an invalid type or comparison mode is specified
+     */
     public static boolean validateValue(String valueStr, String compareStr, String type, String compareMode) {
         if (compareStr == null || compareStr.isEmpty()) {
             return true; // Passed if no comparison string is provided
@@ -69,6 +99,15 @@ public class ValueComparator {
         return comparisonFunction.apply(valueStr, compareStr, compareMode); // pass compareMode
     }
 
+    /**
+     * Compares two strings based on the specified comparison mode.
+     *
+     * @param valueStr the first string
+     * @param compareStr the second string
+     * @param compareMode the comparison mode
+     * @return true if the comparison is valid, otherwise false
+     * @throws IllegalArgumentException if an invalid mode is specified for string comparison
+     */
     private static Boolean compareStrings(String valueStr, String compareStr, String compareMode) {
         BiFunction<String, String, Boolean> comparisonFunction = stringComparisons.get(compareMode);
         if (comparisonFunction != null) {
@@ -77,6 +116,14 @@ public class ValueComparator {
         throw new IllegalArgumentException("Invalid comparison mode for string: " + compareMode);
     }
 
+    /**
+     * Compares two integers represented as strings based on the specified comparison mode.
+     *
+     * @param valueStr the first integer as a string
+     * @param compareStr the second integer as a string
+     * @param compareMode the comparison mode
+     * @return true if the comparison is valid, otherwise false
+     */
     private static Boolean compareIntegers(String valueStr, String compareStr, String compareMode) {
         try {
             int value = Integer.parseInt(valueStr);
@@ -92,6 +139,14 @@ public class ValueComparator {
         }
     }
 
+    /**
+     * Compares positive integers represented as strings based on the specified comparison mode.
+     *
+     * @param valueStr the first positive integer as a string
+     * @param compareStr the second integer as a string
+     * @param compareMode the comparison mode
+     * @return true if the comparison is valid, otherwise false
+     */
     private static Boolean comparePositiveIntegers(String valueStr, String compareStr, String compareMode) {
         try {
             int value = Integer.parseInt(valueStr);
@@ -103,14 +158,39 @@ public class ValueComparator {
         }
     }
 
+    /**
+     * Compares two dates based on the specified comparison mode.
+     *
+     * @param valueStr the first date as a string
+     * @param compareStr the second date as a string
+     * @param compareMode the comparison mode
+     * @return true if the comparison is valid, otherwise false
+     */
     private static Boolean compareDates(String valueStr, String compareStr, String compareMode) {
         return compareTimestamps(valueStr, compareStr, compareMode, "yyyy-MM-dd");
     }
 
+    /**
+     * Compares two times based on the specified comparison mode.
+     *
+     * @param valueStr the first time as a string
+     * @param compareStr the second time as a string
+     * @param compareMode the comparison mode
+     * @return true if the comparison is valid, otherwise false
+     */
     private static Boolean compareTimes(String valueStr, String compareStr, String compareMode) {
         return compareTimestamps(valueStr, compareStr, compareMode, "HH:mm:ss");
     }
 
+    /**
+     * Compares two timestamps based on the specified comparison mode and format.
+     *
+     * @param valueStr the first timestamp as a string
+     * @param compareStr the second timestamp as a string
+     * @param compareMode the comparison mode
+     * @param format the date/time format
+     * @return true if the comparison is valid, otherwise false
+     */
     private static Boolean compareTimestamps(String valueStr, String compareStr, String compareMode, String format) {
         SimpleDateFormat sdf = new SimpleDateFormat(format);
         sdf.setLenient(false);
@@ -128,6 +208,15 @@ public class ValueComparator {
         }
     }
 
+    /**
+     * Compares two durations represented as strings based on the specified comparison mode.
+     *
+     * @param valueStr the first duration as a string
+     * @param compareStr the second duration as a string
+     * @param compareMode the comparison mode
+     * @return true if the comparison is valid, otherwise false
+     * @throws IllegalArgumentException if an invalid mode is specified for duration comparison
+     */
     private static Boolean compareDurations(String valueStr, String compareStr, String compareMode) {
         if ("=".equals(compareMode)) {
             return valueStr.equals(compareStr);

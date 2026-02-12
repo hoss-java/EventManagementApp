@@ -9,37 +9,78 @@ import java.util.Map;
 import com.EventManApp.lib.DebugUtil;
 import com.EventManApp.PayloadCommand;
 
+/**
+ * Represents a payload containing an identifier, optional data, 
+ * and a list of commands.
+ */
 public class Payload {
-    private String identifier;
-    private Map<String, Object> data;
-    private List<PayloadCommand> commands;
+    private String identifier;  /**< The identifier of the payload */
+    private Map<String, Object> data;  /**< Optional data associated with the payload */
+    private List<PayloadCommand> commands;  /**< List of commands associated with the payload */
 
     // Getters
+
+    /**
+     * Gets the identifier of the payload.
+     * 
+     * @return the identifier
+     */
     public String getIdentifier() {
         return identifier;
     }
 
+    /**
+     * Gets the optional data map associated with the payload.
+     * 
+     * @return a map of data, or null if not set
+     */
     public Map<String, Object> getData() {
         return data;
     }
 
+    /**
+     * Gets the list of commands associated with the payload.
+     * 
+     * @return a list of PayloadCommand instances, or null if not set
+     */
     public List<PayloadCommand> getCommands() {
         return commands;
     }
 
     // Setters
+
+    /**
+     * Sets the identifier of the payload.
+     * 
+     * @param identifier the identifier to set
+     */
     public void setIdentifier(String identifier) {
         this.identifier = identifier;
     }
 
+    /**
+     * Sets the optional data map for the payload.
+     * 
+     * @param data the data to associate with this payload
+     */
     public void setData(Map<String, Object> data) {
         this.data = data;
     }
 
+    /**
+     * Sets the list of commands associated with the payload.
+     * 
+     * @param commands the list of commands to associate with this payload
+     */
     public void setCommands(List<PayloadCommand> commands) {
         this.commands = commands;
     }
 
+    /**
+     * Converts this Payload instance to a JSON object.
+     * 
+     * @return a JSONObject representing the Payload instance
+     */
     public JSONObject toJSON() {
         JSONObject jsonObject = new JSONObject();
 
@@ -67,6 +108,11 @@ public class Payload {
         return jsonObject;
     }
 
+    /**
+     * Returns a string representation of this Payload instance in JSON format.
+     * 
+     * @return a JSON string representation of this instance
+     */
     @Override
     public String toString() {
         return toJSON().toString();
