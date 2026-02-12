@@ -1,7 +1,8 @@
 #!/bin/bash
 
-#set -x
 # Function to get the command based on the provided exec_cmd
+# @param $1 The key to look up the command
+# @return The corresponding command string if found, else an empty string
 get_command() {
     # Declare the array with key-value pairs as a string
     local commands="
@@ -16,12 +17,14 @@ remotemysql@sshd:mysql -u eventman -peventmanpass -h 172.32.0.16"
 }
 
 # Function to run the Maven command inside the Docker container
+# @param $1 The command to execute (e.g., mvm@maven, mysql@mysql)
+# @param $# Additional arguments to be passed to the command
+# @return 0 if the command runs successfully, non-zero exit code otherwise
 container_run() {
     # Initialize an array to hold directive names
     local directives=()
     local non_directives=()
     local exec_cmd="$1"
-    # The command (e.g., mvm@maven, mysql@mysql) to execute, passed as the first argument
     local docker_name=$(echo "$1" | awk -F@ '{ print $2 }')
     shift  # Shift to process the remaining arguments
 
@@ -41,8 +44,6 @@ container_run() {
             directives+=("$arg")
         else
             non_directives+=("$arg")
-            # If it's not a directive, break out of the loop
-            #break
         fi
     done
 
@@ -92,6 +93,10 @@ container_run() {
     return $exit_code
 }
 
+# Function to check the status of a Docker container
+# @param $1 The name of the container to check (e.g., maven, mysql)
+# @param $# Additional arguments to be passed to the command
+# @return 0 if the container is running, non-zero exit code otherwise
 container_status() {
     # Initialize an array to hold directive names
     local directives=()
@@ -109,8 +114,6 @@ container_status() {
             directives+=("$arg")
         else
             non_directives+=("$arg")
-            # If it's not a directive, break out of the loop
-            #break
         fi
     done
 
@@ -146,39 +149,56 @@ container_status() {
     return $exit_code
 }
 
-mvn(){
+# Function to run Maven command in a Docker container
+# @param $# Additional arguments to be passed to the Maven command
+# @return The exit status of the container_run function
+mvn() {
     container_run mvn@maven "$@"
     return $?
 }
 
-javac(){
+# Function to run Java compiler in a Docker container
+# @param $# Additional arguments to be passed to the javac command
+# @return The exit status of the container_run function
+javac() {
     container_run javac@maven "$@"
     return $?
 }
 
-javad(){
+# Function to run Java command in a Docker container
+# @param $# Additional arguments to be passed to the java command
+# @return The exit status of the container_run function
+javad() {
     container_run java@maven "$@"
     return $?
 }
 
-mysql(){
+# Function to run MySQL command in a Docker container
+# @param $# Additional arguments to be passed to the MySQL command
+# @return The exit status of the container_run function
+mysql() {
     container_run mysql@mysql "$@"
     return $?
 }
 
-cli(){
+# Function to run CLI command in a Docker container
+# @param $# Additional arguments to be passed to the CLI command
+# @return The exit status of the container_run function
+cli() {
     container_run cli@sshd "$@"
     return $?
 }
 
-remotemysql(){
+# Function to run remote MySQL command in a Docker container
+# @param $# Additional arguments to be passed to the remote MySQL command
+# @return The exit status of the container_run function
+remotemysql() {
     container_run remotemysql@sshd "$@"
     return $?
 }
 
 # Main code block
-#if [ "$0" = "$BASH_SOURCE" ]; then
-# Main part: Loop through valid containers and run containerstatus
+# Check the status of specified containers
 container_status "maven"
 container_status "mysql"
 container_status "sshd"

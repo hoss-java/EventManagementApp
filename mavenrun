@@ -1,7 +1,8 @@
 #!/bin/bash
 
-#set -x
 # Function to run the Maven command inside the Docker container
+# @param $# Additional arguments to be passed to the Maven command
+# @return 0 if the command runs successfully, non-zero exit code otherwise
 mrun() {
     # Initialize an array to hold directive names
     local directives=()
@@ -15,8 +16,6 @@ mrun() {
             directives+=("$arg")
         else
             non_directives+=("$arg")
-            # If it's not a directive, break out of the loop
-            #break
         fi
     done
 
@@ -27,14 +26,14 @@ mrun() {
     exit_code=1
     # Check for the --noit directive
     if [[ " ${directives[@]} " =~ " --noit " ]]; then
-        # Capture the output of the Docker command
+        # Capture the output of the Docker command without TTY
         set -x
-        output=$(docker exec  maven mvn -f EventManagementApp/EventManApp "$@" $exec_cmd)
+        output=$(docker exec maven mvn -f EventManagementApp/EventManApp "$@")
         set +x
         exit_code=$?
     else
         set -x
-        docker exec -it maven mvn -f EventManagementApp/EventManApp "$@" $exec_cmd
+        docker exec -it maven mvn -f EventManagementApp/EventManApp "$@"
         set +x
         exit_code=$?
     fi
@@ -52,11 +51,17 @@ mrun() {
     return $exit_code
 }
 
-mvn(){
+# Function to run the Maven command using mrun
+# @param $# Additional arguments to be passed to the mrun function
+# @return The exit status of the mrun function
+mvn() {
     mrun "$@"
     return $?
 }
 
+# Function to check the status of the Maven Docker container
+# @param $# Additional arguments (not used in this function)
+# @return 0 if the container is running, non-zero exit code otherwise
 mstatus() {
     # Initialize an array to hold directive names
     local directives=()
@@ -70,8 +75,6 @@ mstatus() {
             directives+=("$arg")
         else
             non_directives+=("$arg")
-            # If it's not a directive, break out of the loop
-            #break
         fi
     done
 
@@ -82,7 +85,6 @@ mstatus() {
     # Check if Docker is running and if the container exists
     if [ "$(docker ps -q -f name=maven)" ]; then
         echo "Docker container 'maven' is available."
-        # Display container short info
         # Capture the output of the Docker command
         output=$(docker inspect --format='{{.Name}} - {{.State.Status}}' maven)
         exit_code=$?
@@ -102,11 +104,11 @@ mstatus() {
     return $exit_code
 }
 
+# Check the status of the Maven Docker container
 mstatus
 mavenStatus=$?
 
 # Main code block
-#if [ "$0" = "$BASH_SOURCE" ]; then
 if [ "$0" = "./mavenrun" ] || [ "$0" = "mavenrun" ]; then
     if [ "$mavenStatus" -eq 0 ]; then
         # Run the mrun function with any additional arguments passed to the script

@@ -1,4 +1,5 @@
 -- Define user, password, and database
+-- Settings should be updated according to local requirements.
 SET @username := 'phpmyadmin';
 SET @password := 'phppass';
 SET @database := '*';
@@ -26,6 +27,7 @@ DEALLOCATE PREPARE stmt;
 FLUSH PRIVILEGES;
 
 -- Verify the created user and display grants
+-- In the cass of unsuccessful operations above, an error will be displayed; otherwise, nothing will be shown.
 SET @verify_stmt = CONCAT('SHOW GRANTS FOR ''', @username, '''@''', @ip_range, '''');
 PREPARE stmt FROM @verify_stmt;
 EXECUTE stmt;
