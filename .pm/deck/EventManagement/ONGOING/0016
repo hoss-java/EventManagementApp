@@ -1,0 +1,25 @@
+---
+#...
+# Git-deck card header
+# OBS! DON'T REMOVE CARD HEADERS
+#...
+Title: Implement MongoDB and redis to storages.
+Tags:
+Creator:
+AssignedTo:
+# Time tracker settings
+tartAt:
+EndAt:
+---
+The goal of this card is to implement MongoDB as storage
+
+# DOD (definition of done):
+MongoDB interface is implemented for both Subject an Object.
+
+# TODO:
+- [ ] 1. Develop a MongoDB Storage class for Subject
+- [ ] 2. Develop a MongoDB Storage class for Object
+- [ ] 3. Update Storage factories to use new storages
+
+# Reports:
+*
