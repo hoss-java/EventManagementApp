@@ -1210,15 +1210,19 @@ gantt
 > 2. Secret keys are stored in a text file which is easy to read
 > </details>
 
-## 001-0016
-> **Implement MongoDB and redis to storages.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+## 001-0015
+> **Update README and other documents.** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 > <details >
 >     <summary>Details</summary>
+> The goal of this card is to update README with findings and changes.
 > 
 > # DOD (definition of done):
+> README.md is updated.
 > 
 > # TODO:
-> - [] 1.
+> - [x] 1. Add comments to resources.
+> - [x] 2. Update the UML digram on README
+> - [x] 3. Add a part to readme to expaine how the app works
 > 
 > # Reports:
 > *
@@ -1351,19 +1355,19 @@ gantt
 > * 
 > </details>
 
-## 001-0015
-> **Update README and other documents.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+## 001-0016
+> **Implement MongoDB and redis to storages.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 > <details open>
 >     <summary>Details</summary>
-> The goal of this card is to update README with findings and changes.
+> The goal of this card is to implement MongoDB as storage
 > 
 > # DOD (definition of done):
-> README.md is updated.
+> MongoDB interface is implemented for both Subject an Object.
 > 
 > # TODO:
-> - [x] 1. Add comments to resources.
-> - [x] 2. Update the UML digram on README
-> - [x] 3. Add a part to readme to expaine how the app works
+> - [ ] 1. Develop a MongoDB Storage class for Subject
+> - [ ] 2. Develop a MongoDB Storage class for Object
+> - [ ] 3. Update Storage factories to use new storages
 > 
 > # Reports:
 > *
