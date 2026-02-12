@@ -276,6 +276,20 @@ classDiagram
     +String parseString(String input)
   }
 
+  class DebugUtil {
+    +void debug(Object... params) 
+    +void debugAndWait(Object... params)
+  }
+
+  class TokenizedString {
+    +String getPart(int index) 
+    +String getPart(int index, String defaultValue)
+    +int getCount()
+    +String removePart(int index)
+    +String addPart(String newPart, int index)
+    +String getOriginalString()
+  }
+
   class ValidatorInterface {
     +boolean isValid(T value)
     +String getErrorMessage()
@@ -296,6 +310,70 @@ classDiagram
     +String getErrorMessage()
   }
   
+  class KVObjectStorage {
+    +void addKVObject(KVObject kvObject)
+    +boolean removeKVObject(KVObject kvObject)
+    +List<KVObject> getKVObjects(String identifier)
+    +int countKVObjects(String identifier)
+    +void close()
+  }
+
+  class DatabaseKVObjectStorage {
+  }
+
+  class DatabaseKVSubjectStorage {
+  }
+
+  class FileKVObjectStorage {
+  }
+
+  class KVSubjectStorage {
+    +void addKVSubject(KVSubject kvSubject)
+    +boolean removeKVSubject(KVSubject kvSubject)
+    +KVSubject getKVSubject(String identifier)
+    +List<KVSubject> getAllKVSubjects()
+    +int countKVSubjects()
+    +void close()
+  }
+
+  class FileKVSubjectStorage {
+  }
+
+  class MemoryKVObjectStorage {
+  }
+
+  class MemoryKVSubjectStorage {
+  }
+
+  class KVObjectStorageFactory {
+    +KVObjectStorage createKVObjectStorage(String type, Object config)
+  }
+
+  class KVSubjectStorageFactory {
+    +KVSubjectStorage createKVSubjectStorage(String type, Object config) 
+  }
+
+  class ConfigManager {
+    +void saveConfig()
+    +<T> T getSetting(String section, String key, T defaultValue)
+    +<T> void setSetting(String section, String key, T value)
+  }
+
+  class DatabaseConfig {
+    +String getDecryptedPassword()
+    +String getUrl()
+    +String getDatabase()
+    +String getUsername()
+  }
+
+  class EncryptionUtil {
+    +SecretKey generateKey()
+    +String encrypt(String plainText, SecretKey key)
+    +String decrypt(String encryptedText, SecretKey key)
+    +String keyToString(SecretKey key)
+    +SecretKey stringToKey(String keyStr)
+  }
+
   class EventManApp {
     +void eventManager(InputStream in, PrintStream out, String[] args, MenuCallback callback)
   }
@@ -362,49 +440,59 @@ classDiagram
     +onMenuItemSelected(String callerID, String menuItem): String
   }
 
-  EventManApp --> ConsoleInterface : uses
-  EventManApp --> RestInterface : uses
+  EventManApp --> ActionCallbackInterface : uses
+  EventManApp --> ConfigManager : uses
+  EventManApp --> ResponseCallbackInterface : uses
+  EventManApp --> KVObjectStorageFactory : uses
   EventManApp --> JSONHelper : uses
   EventManApp --> ResponseHelper : uses
-  EventManApp --> ObjectHandler : uses
-  EventManApp --> EventObjectHandler : uses
-  EventManApp --> ParticipantObjectHandler : uses
-  EventManApp --> OrganizeObjectHandler : uses
-  EventManApp <|.. MenuCallback : implementa
+  EventManApp --> LogHandler : uses
+  EventManApp --> DatabaseKVObjectStorage : uses
+  EventManApp --> FileKVObjectStorage : uses
+  EventManApp --> MemoryKVObjectStorage : uses
+  EventManApp --> DatabaseKVSubjectStorage : uses
+  EventManApp --> FileKVSubjectStorage : uses
+  EventManApp --> MemoryKVSubjectStorage : uses
+  EventManApp --> DatabaseConfig : uses
+
+  DatabaseKVObjectStorage --> KVObjectStorage : implements 
+  FileKVObjectStorage --> KVObjectStorage : implements
+  MemoryKVObjectStorage --> KVObjectStorage : implements
+  
+  DatabaseKVSubjectStorage --> KVSubjectStorage : implements
+  FileKVSubjectStorage --> KVSubjectStorage : implements
+  MemoryKVSubjectStoragev --> KVSubjectStorage : implements
+
+  DatabaseConfig --> EncryptionUtil : uses
 
   DurationValidator <|.. ValidatorInterface : implements
   DateValidator <|.. ValidatorInterface : implement
   TimeValidator <|.. ValidatorInterface : implement
 
-  BaseObject <|.. Field : implements
-  BaseObject --> DurationValidator : uses
-  BaseObject --> DateValidator : uses
-  BaseObject --> TimeValidator : uses
+  KVBaseObject --> DurationValidator : uses
+  KVBaseObject --> DurationValidator : uses
+  KVBaseObject --> DateValidator : uses
+  KVBaseObject --> TimeValidator : uses
 
-  EMObject <|.. BaseObject : extends
-  EMObject --> DurationValidator : uses
-  EMObject --> DateValidator : uses
-  EMObject --> TimeValidator : uses
-  EMObject --> StringParserHelper : uses
+  KVObject <|.. KVBaseObject : extends
+  KVObject --> StringParserHelper : uses
+  KVObject --> KVObjectField : uses
+
+  KVObjectHandler <|.. KVObjectHandlerInterface : interface
+  KVObjectHandler --> KVObject : uses
+  KVObjectHandler --> JSONHelper : uses
+  KVObjectHandler --> ResponseHelper : uses
+  KVObjectHandler --> KVObjectStorage : uses
+
+  KVBaseSubject --> KVObjectField : uses
+  KVBaseSubject --> ConfigManager : uses
   
-  EventObjectHandler <|.. ObjectHandler : extends
-  EventObjectHandler --> EMObject : uses
-  EventObjectHandler --> EMObjectField : uses
-  EventObjectHandler --> ResponseHelper : uses
-
-  ObjectHandler <|.. ObjectHandlerInterface : implements
-  ObjectHandler --> ResponseHelper : uses
-
-  ParticipantObjectHandler <|.. ObjectHandler : extends
-  ParticipantObjectHandler --> EMObject : uses
-  ParticipantObjectHandler --> EMObjectField : uses
-  ParticipantObjectHandler --> ResponseHelper : uses
-
-  OrganizeObjectHandler <|.. ObjectHandler : extends
-  OrganizeObjectHandler --> EMObject : uses
-  OrganizeObjectHandler --> EMObjectField : uses
-  OrganizeObjectHandler --> ResponseHelper : uses
-
+  KVSubject <|.. KVBaseSubject : extends
+  KVSubject --> KVObjectField : uses
+  
+  KVSubjectHandler <|.. KVSubjectHandlerInterface : interface
+  KVSubjectHandler --> KVSubject : uses
+  KVSubjectHandler --> KVSubjectStorage : uses  
 ```
 
 #### Supported commands structures
@@ -417,56 +505,128 @@ classDiagram
             "description": "Event",
             "commands": [
                 {
-                    "id" :"addevent",
-                    "description": "Add an event",
-                    "args": {
-                        "id": {
-                            "type": "int",
-                            "mandatory" : false,
-                            "modifier": "auto",
-                            "default": "1",
-                            },
-                        "title": {
-                            "type": "str",
-                            "mandatory" : true,
-                            },
-                        "location": {
-                            "type": "str",
-                            "mandatory" : false,
-                            "default": "here",
-                            },
-                        "capacity": {
-                            "type": "positiveInt",
-                            "mandatory" : false,
-                            "default": "12",
-                            },
-                        "date" : {
-                            "type": "date",
-                            "mandatory" : false,
-                            "default": "%DATE%",
-                            },
-                        "time" : {
-                            "type": "time",
-                            "mandatory" : false,
-                            "default": "%TIME%",
-                            },
-                        "duration" : {
-                            "type": "duration",
-                            "mandatory" : false,
-                            "default": "PT15M",
-                            },
+                "id" :"event.add",
+                "description": "Add an event",
+                "action" : "event.add",
+                "args": {
+                    "id": {
+                        "field" : "id",
+                        "type": "int",
+                        "mandatory" : false,
+                        "modifier": "auto",
+                        "defaultValue": "1",
+                        },
+                    "title": {
+                        "field" : "title",
+                        "description": "Title",
+                        "type": "str",
+                        "mandatory" : true,
+                        },
+                    "location": {
+                        "field" : "location",
+                        "description": "Location",
+                        "type": "str",
+                        "mandatory" : false,
+                        "defaultValue": "here",
+                        },
+                    "capacity": {
+                        "field" : "capacity",
+                        "description": "Capacity",
+                        "type": "unsigned",
+                        "mandatory" : false,
+                        "defaultValue": "12",
+                        },
+                    "date" : {
+                        "field" : "date",
+                        "description": "Date",
+                        "type": "date",
+                        "mandatory" : false,
+                        "defaultValue": "%DATE%",
+                        },
+                    "time" : {
+                        "field" : "time",
+                        "description": "Time",
+                        "type": "time",
+                        "mandatory" : false,
+                        "defaultValue": "%TIME%",
+                        },
+                    "duration" : {
+                        "field" : "duration",
+                        "description": "Duration",
+                        "type": "duration",
+                        "mandatory" : false,
+                        "defaultValue": "PT15M",
+                        },
                     },
                 },
                 {
-                    "id" : "listallevents",
-                    "description": "View all events.",
-                    "args": {
-                        "date" : {
-                            "type": "date",
-                            "mandatory" : false,
-                            "default": "%DATE%",
-                            },
-                        }
+                "id" : "event.getsall",
+                "description": "List all events.",
+                "action" : "event.gets",
+                "args": {
+                    }
+                },
+                {
+                "id" : "event.gets",
+                "description": "Search/List events.",
+                "action" : "event.get",
+                "args": {
+                    "id": {
+                        "field" : "id",
+                        "type": "int",
+                        "mandatory" : false,
+                        "compareMode": "=",
+                        },
+                    "title": {
+                        "field" : "title",
+                        "description": "Title",
+                        "type": "str",
+                        "mandatory" : false,
+                        "compareMode": "contains"
+                        },
+                    "location": {
+                        "field" : "location",
+                        "description": "Location",
+                        "type": "str",
+                        "mandatory" : false,
+                        "compareMode": "contains",
+                        },
+                    "date" : {
+                        "field" : "date",
+                        "description": "Date",
+                        "type": "date",
+                        "mandatory" : false,
+                        "defaultValue": "%DATE%",
+                        "compareMode": "<="
+                        },
+                    }
+                },
+                {
+                "id" : "event.removebyid",
+                "description": "Remove event by id.",
+                "action" : "event.remove",
+                "args": {
+                    "id": {
+                        "field" : "id",
+                        "type": "int",
+                        "mandatory" : true,
+                        "compareMode": "="
+                        },
+                    }
+                },
+                {
+                "id" : "event.removebytitle",
+                "description": "Remove event by title.",
+                "action" : "event.remove",
+                "args": {
+                    "title": {
+                        "field" : "title",
+                        "description": "Title",
+                        "type": "str",
+                        "mandatory" : true,
+                        "compareMode": "="
+                        },
+                    }
                 },
             ]
         },
@@ -475,34 +635,159 @@ classDiagram
             "description": "Participant",
             "commands": [
                 {
-                "id" :"addparticipant",
+                "id" :"participant.add",
                 "description": "Add a participant",
+                "action" : "participant.add",
                 "args": {
-                        "id": {
-                            "type": "int",
-                            "mandatory" : false,
-                            "modifier": "auto",
-                            "default": "1",
-                            },
-                        "name": {
-                            "type": "str",
-                            "mandatory" : true,
-                            },
-                        "email": {
-                            "type": "str",
-                            "mandatory" : false,
-                            "default": "",
-                            },
+                    "id": {
+                        "field" : "id",
+                        "type": "int",
+                        "mandatory" : false,
+                        "modifier": "auto",
+                        "defaultValue": "1",
+                        },
+                    "name": {
+                        "field" : "name",
+                        "description": "Name",
+                        "type": "str",
+                        "mandatory" : true,
+                        },
+                    "email": {
+                        "field" : "email",
+                        "description": "Email",
+                        "type": "str",
+                        "mandatory" : false,
+                        "defaultValue": "",
+                        },
                     },
                 },
                 {
-                    "id": "listallparticipants",
-                    "description": "View all participant.",
-                    "args": {
-                        "name" : {
-                            "type": "str",
-                            "mandatory" : false,
-                            },
+                "id" : "participant.getsall",
+                "description": "List all participants.",
+                "action" : "participant.gets",
+                "args": {
+                    }
+                },
+                {
+                "id": "participant.gets",
+                "description": "Search/List participants.",
+                "action" : "participant.gets",
+                "args": {
+                    "id": {
+                        "field" : "id",
+                        "type": "int",
+                        "mandatory" : false,
+                        "compareMode": "=",
+                        },
+                    "name" : {
+                        "field" : "name",
+                        "description": "Name",
+                        "type": "str",
+                        "mandatory" : false,
+                        "compareMode": "contains"
+                        },
+                    }
+                },
+                {
+                "id" : "participant.removebyname",
+                "description": "Remove participant by id/name.",
+                "action" : "participant.remove",
+                "args": {
+                    "id": {
+                        "field" : "id",
+                        "type": "int",
+                        "mandatory" : true,
+                        "compareMode": "="
+                        },
+                    "name": {
+                        "field" : "name",
+                        "description": "Name",
+                        "type": "str",
+                        "mandatory" : true,
+                        "compareMode": "="
+                        },
+                    },
+                },
+                {
+                "id" : "participant.removebyid",
+                "description": "Remove participant by id.",
+                "action" : "participant.remove",
+                "args": {
+                    "id": {
+                        "field" : "id",
+                        "type": "int",
+                        "mandatory" : true,
+                        "compareMode": "="
+                        },
+                    }
+                },
+            ]
+        },
+        {
+            "id" : "organize",
+            "description": "Organize",
+            "commands": [
+                {
+                "id" :"organize.add",
+                "description": "Register participant to an event",
+                "action" : "organize.add",
+                "args": {
+                    "id": {
+                        "field" : "id",
+                        "type": "int",
+                        "mandatory" : false,
+                        "modifier": "auto",
+                        "defaultValue": "1",
+                        },
+                    "eventid": {
+                        "description": "Event",
+                        "field" : "eventid@id:event.title",
+                        "type": "int@str",
+                        "mandatory" : true,
+                        },
+                    "participantid": {
+                        "description": "Participan",
+                        "field" : "participantid@id:participant.name",
+                        "type": "int@str",
+                        "mandatory" : true,
+                        },
+                    },
+                },
+                {
+                "id" : "organize.getsall",
+                "description": "List all organize.",
+                "action" : "organize.gets",
+                "args": {
+                    }
+                },
+                {
+                "id": "organize.gets",
+                "description": "Search/list registered participant to events.",
+                "action" : "organize.gets",
+                "args": {
+                    "participantid" : {
+                        "field" : "participantid@id:participant.name",
+                        "description": "Participant",
+                        "type": "int@str",
+                        "mandatory" : false,
+                        "compareMode": "=",
+                        "defaultValue": "-1",
+                        },
+                    },
+                },
+                {
+                "id" : "organize.remove",
+                "description": "Remove participant from organize by name.",
+                "action" : "organize.remove",
+                "args": {
+                    "participantid": {
+                        "field" : "participantid@id:participant.name",
+                        "description": "Participant",
+                        "type": "int@str",
+                        "mandatory" : true,
+                        "compareMode": "=",
+                        "defaultValue": "-1",
+                        },
                     }
                 },
             ]
@@ -511,6 +796,52 @@ classDiagram
 }
 
 ```
+
+## how it works
+1 . At start (the first time) a schema is loaded from `subject.xml`
+>```xml
+><subjects>
+>    <subject identifier="event">
+>        <field name="id" field="id" type="int" mandatory="true" modifier=">auto" defaultValue="1"/>
+>        <field name="title" field="title" description="Title" type="str" >mandatory="true" modifier="user" defaultValue="workshop"/>
+>        <field name="location" field="location" description="Location" >type="str" mandatory="false" modifier="user" defaultValue="here"/>
+>        <field name="capacity" field="capacity" description="Capacity" >type="unsigned" mandatory="false" modifier="user" defaultValue="1">/>
+>        <field name="date" field="date" description="Date" type="date" >mandatory="false" modifier="user" defaultValue="2023-10-01"/> <!--> Example Date -->
+>        <field name="starttime" field="starttime" description="Time" type=>"time" mandatory="false" modifier="user" defaultValue="00:00:00"/>
+>        <field name="duration" field="duration" description="Duration" >type="duration" mandatory="false" modifier="user" defaultValue=">PT0H"/>
+>    </subject>
+>    <subject identifier="participant">
+>        <field name="id" field="id" type="int" mandatory="true" modifier=">auto" defaultValue="1"/>
+>        <field name="name" field="name" description="Name" type="str" >mandatory="true" modifier="user" defaultValue=""/>
+>        <field name="email" field="email" description="Enaik" type="str" >mandatory="false" modifier="user" defaultValue=""/>
+>    </subject>    
+>    <subject identifier="organize">
+>        <field name="id" field="id" type="int" mandatory="true" modifier=">auto" defaultValue="1"/>
+>        <field name="eventid" field="eventid@id:event.title" description=">Event" type="int@str" mandatory="true" modifier="user" >defaultValue=""/>
+>        <field name="participantid" field=">participantid@id:participant.name" description="Participant" type=>"int@str" mandatory="false" modifier="user" defaultValue=""/>
+>    </subject>
+></subjects>
+>
+>```
+2. Subjects are stored in a table named `kvsubjects`, each subject become as a row in the table.
+3. For each subject an object table is created (in the first time)
+4. In other words an object table is a data table, an the subject table define how to read object tables. It means to read/write/remove object tables, subject rows are used.
+
+## What it supports for now
+* A Storage manager define what the storage target is
+* For now it supports memory, file and sql (sql server and sqlite)
+* **OBS!** sqlite has been not tested yet!
+
+## What more to do
+1. Adding tests
+2. Adding a MongoSB or similar non-sql db
+3. Add new interfaces (ssh, REST)
+4. Reorganize files in a correct way for example in a Spring way
+5. Try to implement a web base Frontend
+
+## Issues
+1. In the case of db it cant close db connections in a correct way
+2. Secret keys are stored in a text file which is easy to read
 
 * References
 > * https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
