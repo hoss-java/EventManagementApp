@@ -843,5 +843,6 @@ classDiagram
 1. In the case of db it cant close db connections in a correct way
 2. Secret keys are stored in a text file which is easy to read
 
+
 * References
 > * https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
