@@ -37,7 +37,7 @@ public class KVObject extends KVBaseObject<Object> {
             String fieldName = entry.getKey();
             String valueStr = StringParserHelper.parseString(entry.getValue());
             KVObjectField definition = this.fieldTypeMap.get(fieldName);
-            String expectedType = (definition != null) ? definition.getType() : null;
+            String expectedType = (definition != null) ? definition.getEnterType() : null;
 
 
             Object value;
@@ -73,7 +73,7 @@ public class KVObject extends KVBaseObject<Object> {
     public String getFieldType(String fieldName) {
         //DebugUtil.debug(fieldName);
         KVObjectField fieldDetail = fieldTypeMap.get(fieldName);
-        return (fieldDetail != null) ? fieldDetail.getType() : null; // Return the type or null if not found
+        return (fieldDetail != null) ? fieldDetail.getEnterType() : null; // Return the type or null if not found
     }
 
     public Object validator(String valueStr, String expectedType, String fieldName) {

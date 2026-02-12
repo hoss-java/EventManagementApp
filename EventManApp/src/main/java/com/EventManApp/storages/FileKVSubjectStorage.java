@@ -179,4 +179,8 @@ public class FileKVSubjectStorage implements KVSubjectStorage {
 
         return kvSubject; // Return the fully constructed KVSubject
     }
+
+    @Override
+    public void close() {
+    }
 }

@@ -83,7 +83,7 @@ public class KVObjectHandler implements KVObjectHandlerInterface {
 
     // Existing method that returns a KVObject based on identifier and a validator function
     public KVObject getKVObject(String identifier, Predicate<KVObject> validator) {
-        return kvObjectStorage.getKVObjects().stream()
+        return kvObjectStorage.getKVObjects(identifier).stream()
             .filter(kvObject -> kvObject.getIdentifier().equals(identifier) && validator.test(kvObject))
             .findFirst()
             .orElse(null);
@@ -91,7 +91,7 @@ public class KVObjectHandler implements KVObjectHandlerInterface {
 
     // Existing method that returns a list of KVObjects based on identifier and a validator function
     public List<KVObject> getKVObjects(String identifier, Predicate<KVObject> validator) {
-        return kvObjectStorage.getKVObjects().stream()
+        return kvObjectStorage.getKVObjects(identifier).stream()
             .filter(kvObject -> kvObject.getIdentifier().equals(identifier) && validator.test(kvObject))
             .collect(Collectors.toList());
     }

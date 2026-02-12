@@ -13,6 +13,7 @@ import com.EventManApp.storages.MemoryKVObjectStorage;
 import com.EventManApp.storages.DatabaseKVSubjectStorage;
 import com.EventManApp.storages.FileKVSubjectStorage;
 import com.EventManApp.storages.MemoryKVSubjectStorage;
+import com.EventManApp.DatabaseConfig;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Properties;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -141,15 +143,19 @@ public class EventManApp {
         JSONObject commands= JSONHelper.loadJsonFromFile("commands.json");
         loadModulesFromXML("modules.xml");
 
-        File objectStorageFile = new File(".appdata/kvobjects.txt");
+        DatabaseConfig dbConfigFile = new DatabaseConfig("db.properties");
+
+        //KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("database", dbConfigFile);
         // Create a FileKVObjectStorage instance
-        KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("file", objectStorageFile);
-        //KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("memory", null);
+        //File objectStorageFile = new File(".appdata");
+        //KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("file", objectStorageFile);
+        KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("memory", null);
         kvObjectHandler = new KVObjectHandler(null,objectStorage);
 
-        File subjectStorageFile = new File(".appdata/kvsubjects.txt");
-        KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("file", subjectStorageFile);
-        //KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("memory", null);
+        //KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("database", dbConfigFile);
+        //File subjectStorageFile = new File(".appdata/kvsubjects.txt");
+        //KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("file", subjectStorageFile);
+        KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("memory", null);
         kvSubjectHandler = new KVSubjectHandler("subjects.xml",subjectStorage);
         payloadHandler = new PayloadHandler(kvObjectHandler,kvSubjectHandler);
 
@@ -199,6 +205,8 @@ public class EventManApp {
             }
         }
 
+        objectStorage.close();
+        subjectStorage.close();
         scanner.close(); // Close the scanner at the end to free resources
         logHandler.displayLogs();
         configManager.saveConfig();

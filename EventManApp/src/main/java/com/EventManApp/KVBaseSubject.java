@@ -26,6 +26,11 @@ public abstract class KVBaseSubject {
         return fieldTypeMap;
     }
 
+    // Setter for fieldTypeMap
+    public void setFieldTypeMap(Map<String, KVObjectField> fieldTypeMap) {
+        this.fieldTypeMap = fieldTypeMap; // Set the new fieldTypeMap
+    }
+
     // Method to get the next ID
     public void setNextId(int nextId) {
         ConfigManager configManager = ConfigManager.getInstance(null);

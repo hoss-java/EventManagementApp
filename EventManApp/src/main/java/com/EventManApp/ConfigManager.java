@@ -47,22 +47,21 @@ public class ConfigManager {
         }
     }
 
-    // Get a setting with type safety
+    @SuppressWarnings("unchecked")
+    private <T> T castToGeneric(Object value) {
+        return (T) value; // Unchecked cast
+    }
+
     public <T> T getSetting(String section, String key, T defaultValue) {
         JSONObject sectionObj = getSection(section);
 
         if (sectionObj != null && sectionObj.has(key)) {
             Object value = sectionObj.get(key);
-
-            // Check type compatibility
-            if (defaultValue.getClass().isInstance(value)) {
-                return (T) value; // Cast with type checking
-            }
+            return castToGeneric(value);
         }
-        return defaultValue; // Return default if not found or incompatible
+        return defaultValue; // Return default if not found
     }
 
-    // Set a setting
     public <T> void setSetting(String section, String key, T value) {
         JSONObject sectionObj = getSection(section);
         if (sectionObj == null) {
