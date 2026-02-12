@@ -40,4 +40,8 @@ public class MemoryKVSubjectStorage implements KVSubjectStorage {
     public int countKVSubjects() {
         return kvSubjects.size(); // Return the number of subjects stored in memory
     }
+
+    @Override
+    public void close() {
+    }
 }

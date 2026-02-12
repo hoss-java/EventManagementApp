@@ -8,6 +8,7 @@ import com.EventManApp.KVObjectStorage;
 import com.EventManApp.storages.DatabaseKVObjectStorage;
 import com.EventManApp.storages.FileKVObjectStorage;
 import com.EventManApp.storages.MemoryKVObjectStorage;
+import com.EventManApp.DatabaseConfig;
 
 public class KVObjectStorageFactory {
     public static KVObjectStorage createKVObjectStorage(String type, Object config) {
@@ -26,9 +27,9 @@ public class KVObjectStorageFactory {
                 }
 
             case "database":
-                if (config instanceof String) {
+                if (config instanceof DatabaseConfig) {
                     try {
-                        return new DatabaseKVObjectStorage((String) config); // Handle SQLException
+                        return DatabaseKVObjectStorage.getInstance((DatabaseConfig) config); // Handle SQLException
                     } catch (SQLException e) {
                         throw new RuntimeException("Failed to create DatabaseKVObjectStorage: " + e.getMessage(), e);
                     }

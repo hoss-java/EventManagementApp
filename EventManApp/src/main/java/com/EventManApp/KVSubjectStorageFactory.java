@@ -8,6 +8,7 @@ import com.EventManApp.KVSubjectStorage;
 import com.EventManApp.storages.DatabaseKVSubjectStorage;
 import com.EventManApp.storages.FileKVSubjectStorage;
 import com.EventManApp.storages.MemoryKVSubjectStorage;
+import com.EventManApp.DatabaseConfig;
 
 public class KVSubjectStorageFactory {
     public static KVSubjectStorage createKVSubjectStorage(String type, Object config) {
@@ -25,9 +26,9 @@ public class KVSubjectStorageFactory {
                     throw new IllegalArgumentException("For 'file' storage, config must be of type File");
                 }
             case "database":
-                if (config instanceof String) {
+                if (config instanceof DatabaseConfig) {
                     try {
-                        return new DatabaseKVSubjectStorage((String) config); // Handle SQLException
+                        return DatabaseKVSubjectStorage.getInstance((DatabaseConfig) config); // Handle SQLException
                     } catch (SQLException e) {
                         throw new RuntimeException("Failed to create DatabaseKVSubjectStorage: " + e.getMessage(), e);
                     }

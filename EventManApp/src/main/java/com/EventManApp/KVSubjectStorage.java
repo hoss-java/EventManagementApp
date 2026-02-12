@@ -10,4 +10,5 @@ public interface KVSubjectStorage {
     KVSubject getKVSubject(String identifier);
     List<KVSubject> getAllKVSubjects();
     int countKVSubjects();
+    void close();
 }

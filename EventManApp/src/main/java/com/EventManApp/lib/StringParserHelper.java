@@ -2,6 +2,7 @@ package com.EventManApp.lib;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,5 +44,17 @@ public class StringParserHelper {
     // Overloaded method to use default replacements only
     public static String parseString(String input) {
         return parseString(input, null);
+    }
+
+    public static Duration parseDuration(String durationString) {
+        String[] parts = durationString.split(":");
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Invalid format. Expecting mm:ss");
+        }
+
+        long minutes = Long.parseLong(parts[0].trim());
+        long seconds = Long.parseLong(parts[1].trim()); // Assume no overflow check
+
+        return Duration.ofMinutes(minutes).plusSeconds(seconds);
     }
 }

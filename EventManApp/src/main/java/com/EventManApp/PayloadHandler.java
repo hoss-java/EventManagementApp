@@ -479,6 +479,7 @@ public class PayloadHandler extends CommandHandler{
 
     @Override
     public JSONObject getRows(String identifier, PayloadCommand command) {
+        //DebugUtil.debug(identifier, command.toString());
         try {
             Predicate<KVObject> validator = createValidator(command);
 
