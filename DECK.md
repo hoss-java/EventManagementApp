@@ -738,24 +738,9 @@ gantt
 > >> * UML was updated
 > </details>
 
-## 001-0010
-> **Implement a simple block test.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
-> <details open>
->     <summary>Details</summary>
-> The goal of this card is to implement a simple block test system to project.
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [ ] 1. 
-> 
-> # Reports:
-> * 
-> </details>
-
 ## 001-0013
-> **Implement an organize class.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
-> <details open>
+> **Implement an organize class.** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
+> <details >
 >     <summary>Details</summary>
 > The goal of this card is to implement an organizer to connect events to participant.
 > 
@@ -1102,15 +1087,15 @@ gantt
 > </details>
 
 ## 001-0014
-> **Implement a DB layer.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
-> <details open>
+> **Implement a DB layer.** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
+> <details >
 >     <summary>Details</summary>
 > The goal of this card is to implement a DB layer
 > 
 > # DOD (definition of done):
 > 
 > # TODO:
-> - [ ] 1. Spike to find ways to implement a data manager layer
+> - [x] 1. Spike to find ways to implement a data manager layer
 > 
 > # Reports:
 > * I realize it needs to apply many changes on the current designed to apply an efficient data layer.
@@ -1177,4 +1162,65 @@ gantt
 > -- End of script
 > 
 > ```
+> 
+> ## how it works
+> 1 . At start (the first time) a schema is loaded from `subject.xml`
+> >```xml
+> ><subjects>
+> >    <subject identifier="event">
+> >        <field name="id" field="id" type="int" mandatory="true" modifier=">auto" defaultValue="1"/>
+> >        <field name="title" field="title" description="Title" type="str" >mandatory="true" modifier="user" defaultValue="workshop"/>
+> >        <field name="location" field="location" description="Location" >type="str" mandatory="false" modifier="user" defaultValue="here"/>
+> >        <field name="capacity" field="capacity" description="Capacity" >type="unsigned" mandatory="false" modifier="user" defaultValue="1">/>
+> >        <field name="date" field="date" description="Date" type="date" >mandatory="false" modifier="user" defaultValue="2023-10-01"/> <!--> Example Date -->
+> >        <field name="starttime" field="starttime" description="Time" type=>"time" mandatory="false" modifier="user" defaultValue="00:00:00"/>
+> >        <field name="duration" field="duration" description="Duration" >type="duration" mandatory="false" modifier="user" defaultValue=">PT0H"/>
+> >    </subject>
+> >    <subject identifier="participant">
+> >        <field name="id" field="id" type="int" mandatory="true" modifier=">auto" defaultValue="1"/>
+> >        <field name="name" field="name" description="Name" type="str" >mandatory="true" modifier="user" defaultValue=""/>
+> >        <field name="email" field="email" description="Enaik" type="str" >mandatory="false" modifier="user" defaultValue=""/>
+> >    </subject>    
+> >    <subject identifier="organize">
+> >        <field name="id" field="id" type="int" mandatory="true" modifier=">auto" defaultValue="1"/>
+> >        <field name="eventid" field="eventid@id:event.title" description=">Event" type="int@str" mandatory="true" modifier="user" >defaultValue=""/>
+> >        <field name="participantid" field=">participantid@id:participant.name" description="Participant" type=>"int@str" mandatory="false" modifier="user" defaultValue=""/>
+> >    </subject>
+> ></subjects>
+> >
+> >```
+> 2. Subjects are stored in a table named `kvsubjects`, each subject become as a row in the table.
+> 3. For each subject an object table is created (in the first time)
+> 4. In other words an object table is a data table, an the subject table define how to read object tables. It means to read/write/remove object tables, subject rows are used.
+> 
+> ## What it supports for now
+> * A Storage manager define what the storage target is
+> * For now it supports memory, file and sql (sql server and sqlite)
+> * **OBS!** sqlite has been not tested yet!
+> 
+> ## What more to do
+> 1. Adding tests
+> 2. Adding a MongoSB or similar non-sql db
+> 3. Add new interfaces (ssh, REST)
+> 4. Reorganize files in a correct way for example in a Spring way
+> 5. Try to implement a web base Frontend
+> 
+> ## Issues
+> 1. In the case of db it cant close db connections in a correct way
+> 2. Secret keys are stored in a text file which is easy to read
+> </details>
+
+## 001-0010
+> **Implement a simple block test.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+> <details open>
+>     <summary>Details</summary>
+> The goal of this card is to implement a simple block test system to project.
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [ ] 1. 
+> 
+> # Reports:
+> * 
 > </details>
