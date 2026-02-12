@@ -1361,7 +1361,9 @@ gantt
 > README.md is updated.
 > 
 > # TODO:
-> - [] 1.
+> - [x] 1. Add comments to resources.
+> - [x] 2. Update the UML digram on README
+> - [x] 3. Add a part to readme to expaine how the app works
 > 
 > # Reports:
 > *
