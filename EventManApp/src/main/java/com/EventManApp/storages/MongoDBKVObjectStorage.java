@@ -174,7 +174,7 @@ public class MongoDBKVObjectStorage implements KVObjectStorage {
     public void close() {
         if (mongoClient != null) {
             mongoClient.close();
-            System.out.println("MongoDB connection closed.");
+            System.out.println("MongoDBKVObjectStorage connection closed.");
         }
     }
 }

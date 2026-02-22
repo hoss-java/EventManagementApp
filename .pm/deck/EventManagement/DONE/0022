@@ -11,6 +11,7 @@ AssignedTo:
 tartAt:
 EndAt:
 ---
+The goal of this card is to develop a remote interface to connect via REST
 
 # DOD (definition of done):
 
@@ -18,4 +19,4 @@ EndAt:
 - [] 1.
 
 # Reports:
-*
+* It has already done via 0018
