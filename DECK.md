@@ -1228,136 +1228,9 @@ gantt
 > *
 > </details>
 
-## 001-0017
-> **Reorganize file according to Spring projects.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0018
-> **Add a REST interface.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0019
-> **Spike how to add an ssh interface.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0020
-> **Add unit tests.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0021
-> **Apply Springcore functionalites to the app.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0022
-> **Develop a remote interface to connect via REST.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0023
-> **Auto generate commands json.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0024
-> **Spike frameworks that can be applied to the app.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0010
-> **Implement a simple block test.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
-> <details open>
->     <summary>Details</summary>
-> The goal of this card is to implement a simple block test system to project.
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [ ] 1. 
-> 
-> # Reports:
-> * 
-> </details>
-
 ## 001-0016
-> **Implement MongoDB and redis to storages.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
-> <details open>
+> **Implement MongoDB and redis to storages.** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
+> <details >
 >     <summary>Details</summary>
 > The goal of this card is to implement MongoDB as storage
 > 
@@ -1487,4 +1360,131 @@ gantt
 > >#or
 > >db.yourCollectionName.find().limit(10).toArray()
 > >```
+> </details>
+
+## 001-0017
+> **Reorganize file according to Spring projects.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0019
+> **Spike how to add an ssh interface.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0020
+> **Add unit tests.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0021
+> **Apply Springcore functionalites to the app.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0022
+> **Develop a remote interface to connect via REST.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0023
+> **Auto generate commands json.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0024
+> **Spike frameworks that can be applied to the app.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+> <details >
+>     <summary>Details</summary>
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
+> </details>
+
+## 001-0010
+> **Implement a simple block test.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+> <details open>
+>     <summary>Details</summary>
+> The goal of this card is to implement a simple block test system to project.
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [ ] 1. 
+> 
+> # Reports:
+> * 
+> </details>
+
+## 001-0018
+> **Add a REST interface.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+> <details open>
+>     <summary>Details</summary>
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
 > </details>
