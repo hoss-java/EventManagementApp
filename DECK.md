@@ -1365,10 +1365,126 @@ gantt
 > MongoDB interface is implemented for both Subject an Object.
 > 
 > # TODO:
-> - [ ] 1. Develop a MongoDB Storage class for Subject
-> - [ ] 2. Develop a MongoDB Storage class for Object
-> - [ ] 3. Update Storage factories to use new storages
+> - [x] 1. Develop a MongoDB Storage class for Subject
+> - [x] 2. Develop a MongoDB Storage class for Object
+> - [x] 3. Update Storage factories to use new storages
+> - [x] 4. Recap how to connect to mongodb (the container of mongodb)
 > 
 > # Reports:
-> *
+> 
+> ## Recaping
+> * It is little bit complicated to setup MongoDB containers and also setting up a client (Mongo shell) to connect with the MongoDB server remotely.
+> * For some reasons MongoDB package has been removed from Alpine after version 3.9. And The only way to install (not build from the source) is to change repositories to version 3.9. So the current container is based on newer Alpine versions (3.19) but MongoDB packages are fetched from 3.9 repositories.
+> * MongoDb package `mongodb` contains both MongoDB server and Mongo-shell.
+> * There is also a Nodejs-based client, but it can be quite complicated. In fact, Nodejs itself is extremely complex. Nodejs applications often rely on other Nodejs packages, and a small change in one package can disrupt multiple other apps. However, Alpine now supports Nodejs v20.15.0 (though it's possible to build a newer version if needed). In the case of `mongosh`, which is a Node.js application, it uses a library named `mongodb-url`. This package does very little; it is primarily used to concatenate two strings. For some reason, the developers of `mongosh` updated it from version 7.0.0 to 7.0.1, adding a requirement for Nodejs v20.19.1. As a result, many MongoDB-related JavaScript packages have stopped working. Interestingly, `npm`, the standard tool for fetching and installing Nodejs modules, is no longer compatible with the new Nodejs versions. It has been replaced by a new program called yarn. Yarn itself is a Nodejs application that relies on several other Nodejs modules. A change in any of these modules can affect yarn's functionality.There are only a few days each year when yarn works properly. After an update from its developers, it usually functions for just a few hours before another module update potentially breaks it again!
+> * There is also a package named `mongodb-tools` that provide some tools to import and export to a MongoDb server. It also provide a monitor tools. This package can be found on all Alpine versions.
+> * `mongodb-tools` has no shell to work work a server interactively.
+> * The only way to access a true MongoDB shell is to install the complete MongoDB package from the mongodb repository, which is available for Alpine 3.9 or older versions.
+> * So sshd and cli updated to provide a MongoDb shell. To avoid conflict that can be install from new Alpine repositories and MongoDb that is only available on versiom 3.9, first other packages are installed from the default repositories for the installed Alpine then repository are changed to 3.9 repositories to fetch `mongodb`.
+> * To use the container base `mongosh` after sourcing `container_run` (`source container_run`)
+> * Based added functions/commands to `container_run` , to run Mongo shell local from the mongodb container it self :
+> >```
+> ># Without user/pass
+> >mongo
+> >
+> ># With user/pass (admin/mypass is the default setting by the container composer)
+> >mongo -u "admin" -p "mypass" --authenticationDatabase "admin"
+> >
+> ># To remote connect (it will be connected from sshd container to the mongodb container via dcoker networks)
+> >mongosh -u "admin" -p "mypass" --authenticationDatabase "admin"
+> >```
+> * **OBS!** It needed to update both `container_run` script and also the mongodb container to work with shell and an enabled auth.
+> * A short guide to how to use mongo-shell
+> >```
+> ># select database (admin uses/sets to admin db)
+> >use admin;
+> >
+> ># get admin database users
+> >db.getUsers():
+> ># Or we can specify a user to get info
+> >db.getUser("admin");
+> >
+> ># Now create a db and user for eventman
+> >use eventman;
+> >db.createUser(
+> >   {
+> >     user: "eventman",
+> >     pwd: "eventmanpass",  // Use a strong password
+> >     roles: [
+> >       { role: "readWrite", db: "eventman" }
+> >     ]
+> >   }
+> > )
+> ># Now check the created user
+> >db.getUsers();
+> >```
+> * Working with mongodb shell and creating a user for Event app
+> > (remote) `mongosh -u "admin" -p "mypass" --authenticationDatabase "admin"`  or (local) `mongo -u "admin" -p "mypass" --authenticationDatabase "admin"`
+> >```
+> ># get db list
+> >show dbs
+> ># or 
+> >db.adminCommand({ listDatabases: 1 });
+> >
+> ># get user list for current db if it has been selected
+> >db.getUsers()
+> ># or to get all in the case of using shell with an admin permission
+> >db.adminCommand({ usersInfo: 1 })
+> >
+> ># Select a db (for example admin, added by the container set up)
+> >use admin
+> ># test it with getUsers
+> >db.getUsers();
+> ># or by specifing user
+> >db.getUser("admin");
+> >
+> ># Add a new user and db for example eventman
+> >use eventman
+> >db.createUser({
+> >  user: "eventman",
+> >  pwd: "eventmanpass", // Replace with a strong password
+> >  roles: [
+> >    { role: "readWrite", db: "eventman" }
+> >  ]
+> >});
+> >
+> ># update password for a user for example eventman
+> >db.updateUser("eventman", {
+> >  pwd: "eventmanpass" // Replace with the desired new password
+> >});
+> >```
+> * When a user/db is create now to work with the created db we can run shell with the new user
+> > `mongosh -u "eventman" -p "eventmanpass" --authenticationDatabase "eventman"`
+> >```
+> ># the new user is limited to eventman db, so it needs to use eventman and also use function based on evenman user
+> >use eventman
+> >db.getUser("eventman");
+> >```
+> * For now both mysql and mongodb use the same db name and user password so there is no need to creat a new secret key or crypted password but in the case of need to create new credentialm `PasswordEncryptor.java` added to `EventManagementApp/tools` can be used
+> >```
+> >java PasswordEncryptor.java eventman
+> >>Encrypted Password: JxFlOWvzPUy8kLgJ0ISHtQ==
+> >>Secret Key (base64): +i6eNd20SaUcK9DUde2AEA==
+> >```
+> * Verify added dbs, collections and documents via a mongo shell
+> > `ongosh -u "eventman" -p "eventmanpass" --authenticationDatabase "eventman"`
+> >```
+> >use evenman
+> ># Get user info and its database
+> >db.getUser("eventman")
+> >
+> ># Get database name/info
+> >db.getCollectionNames().filter(function(name) { return name === 'KVSubjects'; 
+> >db.adminCommand({ listDatabases: 1 })
+> >
+> ># Get collections stored in a database
+> >show collections
+> >#or
+> >db.getCollectionNames()
+> >
+> ># Get documents stored in a collection
+> >db.KVSubjects.find().toArray()
+> >#or
+> >db.yourCollectionName.find().limit(10).toArray()
+> >```
 > </details>
