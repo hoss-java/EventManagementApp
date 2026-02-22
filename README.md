@@ -79,7 +79,7 @@
 * Step 4: Automate testing and integrating it to GitHub workflows ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 * Step 5: Add advanced/required futures according the project scenario ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 * Step 6: Documenting and summarizing findings, developments, and integrations. ![status](https://img.shields.io/badge/status-ONGOING-yellow)
-* Step 7: Touch a service implementation of the project ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+* Step 7: Touch a service implementation of the project ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 
 ### Sandbox (Containerized CI environment)
 
