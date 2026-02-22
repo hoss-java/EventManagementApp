@@ -11,8 +11,10 @@ AssignedTo:
 tartAt:
 EndAt:
 ---
+The goal of this card is to generate commands.json automatically from subjects.xml
 
 # DOD (definition of done):
+`commands.json` is generated inside of the code automatically.
 
 # TODO:
 - [] 1.
