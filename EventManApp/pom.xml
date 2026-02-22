@@ -85,6 +85,7 @@
         <artifactId>mongodb-driver-sync</artifactId>
         <version>4.7.0</version> <!-- Check for the latest version -->
     </dependency>
+
   </dependencies>
   
   <build>

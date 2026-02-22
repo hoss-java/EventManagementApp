@@ -14,6 +14,9 @@ import com.EventManApp.storages.DatabaseKVSubjectStorage;
 import com.EventManApp.storages.FileKVSubjectStorage;
 import com.EventManApp.storages.MemoryKVSubjectStorage;
 import com.EventManApp.DatabaseConfig;
+import com.EventManApp.MenuUI;
+import com.EventManApp.InputUI;
+import com.EventManApp.lib.DebugUtil;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -27,7 +30,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Scanner;
+import java.util.Map;
 import java.util.Properties;
 
 import org.w3c.dom.Document;
@@ -54,6 +57,9 @@ public class EventManApp {
     private static KVObjectHandler kvObjectHandler;
     private static KVSubjectHandler kvSubjectHandler;
     private static PayloadHandler payloadHandler;
+    // List to keep track of background threads
+    private static List<Thread> backgroundThreads = new ArrayList<>();
+
 
     public static ResponseCallbackInterface responseHandler = (callerID, menuItem) -> {
         //logHandler.addLog(callerID,"responseHandler",menuItem);
@@ -120,6 +126,99 @@ public class EventManApp {
         }
     }
 
+    private static void startbackgroundInterface(JSONObject commands) {
+        // Check each interface and handle as background or foreground
+        for (BaseInterface interfaceInstance : interfaceInstances) {
+            if (interfaceInstance.isRunInBackground()) {
+                // Start a new thread for each background interface
+                Thread interfaceThread = new Thread(() -> {
+                    // Execute commands for the background interface
+                    JSONObject result = interfaceInstance.executeCommands(commands);
+                // Print the class name along with the result
+                System.out.println("Background Execution result from " + interfaceInstance.getClass().getSimpleName() + ": " + result);
+                });
+
+                backgroundThreads.add(interfaceThread);
+                interfaceThread.start();
+            }
+        }
+    }
+
+    private static void stopbackgroundInterface() {
+        // Stop all background threads gracefully
+        for (BaseInterface backgroundInterface : interfaceInstances) {
+            if (backgroundInterface.isRunInBackground()) {
+                backgroundInterface.setRunningFlag(false); // Assuming you have a running flag in the interface
+            }
+        }
+
+        // Wait for all background threads to complete
+        for (Thread thread : backgroundThreads) {
+            try {
+                thread.join(15000); // Wait for the thread to finish (with a timeout if needed)
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Preserve the interrupted status
+                // Optionally, you may want to log this interruption or handle it
+            }
+
+            if (thread.isAlive()) {
+                // If the thread is still alive after waiting, you can choose to log it or take other actions
+                System.out.println("Warning: Thread " + thread.getName() + " did not finish in time.");
+            }
+        }
+    }
+
+    private static void runForegroundInterface(JSONObject commands) {
+        // Check each interface and handle as background or foreground
+        // Create the root JSON object
+        JSONObject rootJson = new JSONObject();
+        JSONArray commandsArray = new JSONArray();
+
+        for (BaseInterface interfaceInstance : interfaceInstances) {
+            if (!interfaceInstance.isRunInBackground()) {
+                // Get the class name to use for id and description
+                String className = interfaceInstance.getClass().getSimpleName();
+                
+                // Create a JSON object for this command
+                JSONObject commandJson = new JSONObject();
+                commandJson.put("id", className);
+                commandJson.put("description", "Run " + className);
+
+                // Add the command to the array
+                commandsArray.put(commandJson);                
+            }
+        }
+
+        // Add the commands array to the root JSON object
+        rootJson.put("commands", commandsArray);
+        MenuUI menuUI = new MenuUI("Available Interfaces");
+        JSONObject selectedMenuObject = menuUI.displayMenu(rootJson);
+
+        String id = null;
+
+        if (selectedMenuObject.has("command")) {
+            JSONObject commandObject = selectedMenuObject.getJSONObject("command");
+            if (commandObject.has("id")) {
+                id = commandObject.getString("id");
+                for (BaseInterface interfaceInstance : interfaceInstances) {
+                    if (!interfaceInstance.isRunInBackground() && id.equals(interfaceInstance.getClass().getSimpleName())) {
+                        // Execute foreground interfaces one by one
+                        JSONObject result = interfaceInstance.executeCommands(commands);
+                        System.out.println("Foreground Execution result from " + interfaceInstance.getClass().getSimpleName() + ": " + result);
+                    }
+                }
+
+            }
+        }
+    }
+
+
+    public static void logActiveThreads() {
+        Map<Thread, StackTraceElement[]> allThreads = Thread.getAllStackTraces();
+        for (Thread thread : allThreads.keySet()) {
+            System.out.println("Thread Name: " + thread.getName() + " | State: " + thread.getState());
+        }
+    }
 
     /**
      * @brief Program entry point.
@@ -127,7 +226,7 @@ public class EventManApp {
      * @param args Command-line arguments (ignored by this application).
      */
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+        InputUI inputUI = new InputUI();
 
         // Define the appdata folder path
         String appDataFolder = ".appdata";
@@ -161,56 +260,16 @@ public class EventManApp {
         kvSubjectHandler = new KVSubjectHandler("subjects.xml",subjectStorage);
         payloadHandler = new PayloadHandler(kvObjectHandler,kvSubjectHandler);
 
-        // List to keep track of background threads
-        List<Thread> backgroundThreads = new ArrayList<>();
+        startbackgroundInterface(commands);
+        inputUI.waitForKeyPress();
 
-        // Check each interface and handle as background or foreground
-        for (BaseInterface interfaceInstance : interfaceInstances) {
-            if (interfaceInstance.isRunInBackground()) {
-                // Start a new thread for each background interface
-                Thread interfaceThread = new Thread(() -> {
-                    // Execute commands for the background interface
-                    JSONObject result = interfaceInstance.executeCommands(commands);
-                // Print the class name along with the result
-                System.out.println("Background Execution result from " + interfaceInstance.getClass().getSimpleName() + ": " + result);
-                });
-
-                backgroundThreads.add(interfaceThread);
-                interfaceThread.start();
-            }
-        }
-
-        System.out.println("Press Enter to continue...");
-        scanner.nextLine(); // Wait for a key press
-        // Check each interface and handle as background or foreground
-        for (BaseInterface interfaceInstance : interfaceInstances) {
-            if (!interfaceInstance.isRunInBackground()) {
-                // Execute foreground interfaces one by one
-                JSONObject result = interfaceInstance.executeCommands(commands);
-                System.out.println("Foreground Execution result from " + interfaceInstance.getClass().getSimpleName() + ": " + result);
-            }
-        }
-
-        // Stop all background threads gracefully
-        for (BaseInterface backgroundInterface : interfaceInstances) {
-            if (backgroundInterface.isRunInBackground()) {
-                backgroundInterface.setRunningFlag(false); // Assuming you have a running flag in the interface
-            }
-        }
-
-        // Wait for all background threads to complete
-        for (Thread thread : backgroundThreads) {
-            try {
-                thread.join(); // Wait for the background thread to finish
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
+        runForegroundInterface(commands);
+        stopbackgroundInterface();
 
         objectStorage.close();
         subjectStorage.close();
-        scanner.close(); // Close the scanner at the end to free resources
         logHandler.displayLogs();
         configManager.saveConfig();
+        logActiveThreads();
     }
 }

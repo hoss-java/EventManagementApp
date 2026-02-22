@@ -16,7 +16,6 @@ public class KVSubjectHandler implements KVSubjectHandlerInterface {
 
     public KVSubjectHandler(String xmlFilePath, KVSubjectStorage storage) {
         this.kvSubjectStorage = storage; // Initialize using injected storage
-        DebugUtil.debug(this.kvSubjectStorage.countKVSubjects());
         if (this.kvSubjectStorage.countKVSubjects() == 0) {
             loadDataFromXML(xmlFilePath);
         }

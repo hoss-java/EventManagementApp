@@ -88,7 +88,7 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
         }
 
         // You can also log the current thread's context class loader
-        System.out.println("Current ClassLoader: " + Thread.currentThread().getContextClassLoader());
+        //System.out.println("Current ClassLoader: " + Thread.currentThread().getContextClassLoader());
         DriverManager.setLogWriter(new PrintWriter(System.out));
     }
 
@@ -331,6 +331,7 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
+                System.out.println("SQL client closed.");
             }
         } catch (SQLException e) {
             e.printStackTrace(); // Handle exceptions
