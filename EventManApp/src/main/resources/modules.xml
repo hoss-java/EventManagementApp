@@ -7,5 +7,7 @@
     </handlers>
     <interfaces>
         <interface name="com.EventManApp.interfaces.ConsoleInterface" runInBackground="false"/>
+        <interface name="com.EventManApp.interfaces.RemoteInterface" runInBackground="false"/>
+        <interface name="com.EventManApp.interfaces.RESTInterface" runInBackground="true"/>
     </interfaces>
 </configuration>

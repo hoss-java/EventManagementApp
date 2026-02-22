@@ -46,7 +46,6 @@ public class MongoDBKVSubjectStorage implements KVSubjectStorage {
         );
 
         // Create a new MongoClient
-        DebugUtil.debug(connectionString);
         mongoClient = MongoClients.create(connectionString);
         database = mongoClient.getDatabase(dbConfigFile.getMongoDatabase());
     }
@@ -85,7 +84,7 @@ public class MongoDBKVSubjectStorage implements KVSubjectStorage {
         }
 
         // Log the current thread's context class loader
-        System.out.println("Current ClassLoader: " + Thread.currentThread().getContextClassLoader());
+        //System.out.println("Current ClassLoader: " + Thread.currentThread().getContextClassLoader());
     }
 
     @Override
@@ -163,6 +162,7 @@ public class MongoDBKVSubjectStorage implements KVSubjectStorage {
     public void close() {
         if (mongoClient != null) {
             mongoClient.close();
+            System.out.println("MongoDBKVSubjectStorage connection closed.");
         }
     }
 
