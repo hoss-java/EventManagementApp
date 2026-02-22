@@ -1459,20 +1459,6 @@ gantt
 > *
 > </details>
 
-## 001-0023
-> **Auto generate commands json.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
 ## 001-0024
 > **Spike frameworks that can be applied to the app.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 > <details >
@@ -1500,4 +1486,20 @@ gantt
 > 
 > # Reports:
 > * 
+> </details>
+
+## 001-0023
+> **Auto generate commands json.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+> <details open>
+>     <summary>Details</summary>
+> The goal of this card is to generate commands.json automatically from subjects.xml
+> 
+> # DOD (definition of done):
+> `commands.json` is generated inside of the code automatically.
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> *
 > </details>
