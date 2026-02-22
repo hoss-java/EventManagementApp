@@ -22,11 +22,11 @@
 #else
 #    exitcode=1
 #fi
-COMMITCHECK_RUNNER=mavenrun
+COMMITCHECK_RUNNER=container-run
 echo "$GIT_ROOT/$COMMITCHECK_RUNNER"
 if [ -f "$GIT_ROOT/$COMMITCHECK_RUNNER" ]; then
     bash -c "source $GIT_ROOT/$COMMITCHECK_RUNNER \
-        && mrun --noit --quiet test" \
+        && mvn ---noit ---quiet test" \
     && exitcode=$?
 else
     exitcode=1

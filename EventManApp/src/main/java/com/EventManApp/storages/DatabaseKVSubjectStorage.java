@@ -40,7 +40,7 @@ public class DatabaseKVSubjectStorage implements KVSubjectStorage {
         String decryptedPassword = getDecryptedPassword(dbConfigFile);
 
         // Establish a connection to the database
-        this.connection = DriverManager.getConnection(dbConfigFile.getUrl(), dbConfigFile.getUsername(), decryptedPassword);
+        this.connection = DriverManager.getConnection(dbConfigFile.getSqlUrl(), dbConfigFile.getSqlUsername(), decryptedPassword);
 
         // Create the table for KVSubjects if it doesn't exist, including fieldTypeMap
         String createTableSQL = "CREATE TABLE IF NOT EXISTS KVSubjects (" +
@@ -63,7 +63,7 @@ public class DatabaseKVSubjectStorage implements KVSubjectStorage {
     private String getDecryptedPassword(DatabaseConfig dbConfigFile) {
         String decryptedPassword = "";
         try {
-            decryptedPassword = dbConfigFile.getDecryptedPassword();
+            decryptedPassword = dbConfigFile.getSqlDecryptedPassword();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -71,8 +71,8 @@ public class DatabaseKVSubjectStorage implements KVSubjectStorage {
     }
 
     private void printDefaultConnectionDetails() {
-        String jdbcUrl = dbConfigFile.getUrl();
-        String username = dbConfigFile.getUsername();
+        String jdbcUrl = dbConfigFile.getSqlUrl();
+        String username = dbConfigFile.getSqlUsername();
 
         Enumeration<Driver> drivers = DriverManager.getDrivers();
         while (drivers.hasMoreElements()) {
@@ -130,7 +130,7 @@ public class DatabaseKVSubjectStorage implements KVSubjectStorage {
                 checkTableSQL = "SELECT COUNT(*) FROM information_schema.tables "
                               + "WHERE table_schema = ? AND table_name = ?";
                 try (PreparedStatement pstmt = connection.prepareStatement(checkTableSQL)) {
-                    pstmt.setString(1, dbConfigFile.getDatabase());
+                    pstmt.setString(1, dbConfigFile.getSqlDatabase());
                     pstmt.setString(2, tableName);
                     ResultSet rs = pstmt.executeQuery();
 

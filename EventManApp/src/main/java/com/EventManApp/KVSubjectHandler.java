@@ -16,6 +16,7 @@ public class KVSubjectHandler implements KVSubjectHandlerInterface {
 
     public KVSubjectHandler(String xmlFilePath, KVSubjectStorage storage) {
         this.kvSubjectStorage = storage; // Initialize using injected storage
+        DebugUtil.debug(this.kvSubjectStorage.countKVSubjects());
         if (this.kvSubjectStorage.countKVSubjects() == 0) {
             loadDataFromXML(xmlFilePath);
         }
@@ -36,6 +37,7 @@ public class KVSubjectHandler implements KVSubjectHandlerInterface {
             for (int i = 0; i < subjectNodes.getLength(); i++) {
                 Element subjectElement = (Element) subjectNodes.item(i);
                 String identifier = subjectElement.getAttribute("identifier");
+                DebugUtil.debug(identifier, subjectElement);
                 addKVSubject(identifier, subjectElement);
             }
         } catch (Exception e) {

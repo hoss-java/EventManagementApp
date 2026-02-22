@@ -145,17 +145,19 @@ public class EventManApp {
 
         DatabaseConfig dbConfigFile = new DatabaseConfig("db.properties");
 
+        KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("mongodb", dbConfigFile);
         //KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("database", dbConfigFile);
         // Create a FileKVObjectStorage instance
         //File objectStorageFile = new File(".appdata");
         //KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("file", objectStorageFile);
-        KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("memory", null);
+        //KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("memory", null);
         kvObjectHandler = new KVObjectHandler(null,objectStorage);
 
+        KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("mongodb", dbConfigFile);
         //KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("database", dbConfigFile);
         //File subjectStorageFile = new File(".appdata/kvsubjects.txt");
         //KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("file", subjectStorageFile);
-        KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("memory", null);
+        //KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("memory", null);
         kvSubjectHandler = new KVSubjectHandler("subjects.xml",subjectStorage);
         payloadHandler = new PayloadHandler(kvObjectHandler,kvSubjectHandler);
 

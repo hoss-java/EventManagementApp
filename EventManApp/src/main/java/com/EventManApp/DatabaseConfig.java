@@ -9,11 +9,19 @@ import java.util.Base64;
 import com.EventManApp.EncryptionUtil;
 
 public class DatabaseConfig {
-    private String url;
-    private String database;
-    private String username;
-    private String encryptedPassword;
-    private SecretKey secretKey;
+    private String sqlUrl;
+    private String sqlDatabase;
+    private String sqlUsername;
+    private String sqlEncryptedPassword;
+    private SecretKey sqlSecretKey;
+
+    private String mongoAddress;
+    private String mongoPort;
+    private String mongoDatabase;
+    private String mongoUsername;
+    private String mongoEncryptedPassword;
+    private SecretKey mongoSecretKey;
+
 
     public DatabaseConfig(String configFile) {
         loadProperties(configFile);
@@ -31,14 +39,26 @@ public class DatabaseConfig {
             props.load(input);
 
             // Get the properties
-            this.url = props.getProperty("db.url");
-            this.database = props.getProperty("db.database");
-            this.username = props.getProperty("db.username");
-            this.encryptedPassword = props.getProperty("db.password");
+            this.sqlUrl = props.getProperty("db.sqlUrl");
+            this.sqlDatabase = props.getProperty("db.sqldatabase");
+            this.sqlUsername = props.getProperty("db.sqlusername");
+            this.sqlEncryptedPassword = props.getProperty("db.sqlpassword");
             
             // Decode the secret key
-            String keyString = props.getProperty("db.secretKey"); // Ensure to add this in your .properties file
-            this.secretKey = stringToKey(keyString);
+            String keyString = props.getProperty("db.sqlsecretKey"); // Ensure to add this in your .properties file
+            this.sqlSecretKey = stringToKey(keyString);
+
+            // Get the properties
+            this.mongoAddress = props.getProperty("db.mongoaddress");
+            this.mongoPort = props.getProperty("db.mongoport");
+            this.mongoDatabase = props.getProperty("db.mongodatabase");
+            this.mongoUsername = props.getProperty("db.mongousername");
+            this.mongoEncryptedPassword = props.getProperty("db.mongopassword");
+            
+            // Decode the secret key
+            keyString = props.getProperty("db.mongosecretKey"); // Ensure to add this in your .properties file
+            this.mongoSecretKey = stringToKey(keyString);
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -51,23 +71,48 @@ public class DatabaseConfig {
     }
 
     // Decrypt the stored encrypted password
-    public String getDecryptedPassword() throws Exception {
-        if (encryptedPassword == null || secretKey == null) {
+    public String getSqlDecryptedPassword() throws Exception {
+        if (sqlEncryptedPassword == null || sqlSecretKey == null) {
             return null;
         }
-        return EncryptionUtil.decrypt(encryptedPassword, secretKey);
+        return EncryptionUtil.decrypt(sqlEncryptedPassword, sqlSecretKey);
     }
     
     // Getter methods
-    public String getUrl() {
-        return url+"/"+database;
+    public String getSqlUrl() {
+        return sqlUrl+"/"+sqlDatabase;
     }
 
-    public String getDatabase() {
-        return database;
+    public String getSqlDatabase() {
+        return sqlDatabase;
     }
 
-    public String getUsername() {
-        return username;
+    public String getSqlUsername() {
+        return sqlUsername;
+    }
+
+    // Decrypt the stored encrypted password
+    public String getMongoDecryptedPassword() throws Exception {
+        if (mongoEncryptedPassword == null || mongoSecretKey == null) {
+            return null;
+        }
+        return EncryptionUtil.decrypt(mongoEncryptedPassword, mongoSecretKey);
+    }
+
+    // Getter methods
+    public String getMongoAddress() {
+        return mongoAddress;
+    }
+
+    public String getMongoPort() {
+        return mongoPort;
+    }
+
+    public String getMongoDatabase() {
+        return mongoDatabase;
+    }
+
+    public String getMongoUsername() {
+        return mongoUsername;
     }
 }

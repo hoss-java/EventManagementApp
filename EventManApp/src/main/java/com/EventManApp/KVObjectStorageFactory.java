@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import com.EventManApp.KVObjectStorage;
+import com.EventManApp.storages.MongoDBKVObjectStorage;
 import com.EventManApp.storages.DatabaseKVObjectStorage;
 import com.EventManApp.storages.FileKVObjectStorage;
 import com.EventManApp.storages.MemoryKVObjectStorage;
@@ -36,6 +37,18 @@ public class KVObjectStorageFactory {
                 } else {
                     throw new IllegalArgumentException("For 'database' storage, config must be of type String");
                 }
+
+            case "mongodb":
+                if (config instanceof DatabaseConfig) {
+                    try {
+                        return MongoDBKVObjectStorage.getInstance((DatabaseConfig) config);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Failed to create MongoDBKVObjectStorage: " + e.getMessage(), e);
+                    }
+                } else {
+                    throw new IllegalArgumentException("For 'database' storage, config must be of type String");
+                }
+
             default:
                 throw new IllegalArgumentException("Unknown storage type: " + type);
         }

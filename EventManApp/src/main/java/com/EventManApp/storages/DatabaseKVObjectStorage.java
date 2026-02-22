@@ -44,7 +44,7 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
         String decryptedPassword = getDecryptedPassword(dbConfigFile);
 
         // Establish a connection to the database
-        this.connection = DriverManager.getConnection(dbConfigFile.getUrl(), dbConfigFile.getUsername(), decryptedPassword);
+        this.connection = DriverManager.getConnection(dbConfigFile.getSqlUrl(), dbConfigFile.getSqlUsername(), decryptedPassword);
     }
 
     public static synchronized DatabaseKVObjectStorage getInstance(DatabaseConfig dbConfigFile) throws SQLException {
@@ -57,7 +57,7 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
     private String getDecryptedPassword(DatabaseConfig dbConfigFile) {
         String decryptedPassword = "";
         try {
-            decryptedPassword = dbConfigFile.getDecryptedPassword();
+            decryptedPassword = dbConfigFile.getSqlDecryptedPassword();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -65,8 +65,8 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
     }
 
     private void printDefaultConnectionDetails() {
-        String jdbcUrl = dbConfigFile.getUrl();
-        String username = dbConfigFile.getUsername();
+        String jdbcUrl = dbConfigFile.getSqlUrl();
+        String username = dbConfigFile.getSqlUsername();
 
         Enumeration<Driver> drivers = DriverManager.getDrivers();
         while (drivers.hasMoreElements()) {
@@ -125,7 +125,7 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
                 checkTableSQL = "SELECT COUNT(*) FROM information_schema.tables "
                               + "WHERE table_schema = ? AND table_name = ?";
                 try (PreparedStatement pstmt = connection.prepareStatement(checkTableSQL)) {
-                    pstmt.setString(1, dbConfigFile.getDatabase());
+                    pstmt.setString(1, dbConfigFile.getSqlDatabase());
                     pstmt.setString(2, tableName);
                     ResultSet rs = pstmt.executeQuery();
 
@@ -238,71 +238,71 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
         }
     }
 
-        @Override
-        public List<KVObject> getKVObjects(String identifier) {
-                // Get the instance of DatabaseKVSubjectStorage
-                DatabaseKVSubjectStorage subjectStorage;
+    @Override
+    public List<KVObject> getKVObjects(String identifier) {
+        // Get the instance of DatabaseKVSubjectStorage
+        DatabaseKVSubjectStorage subjectStorage;
 
-                try {
-                    subjectStorage = DatabaseKVSubjectStorage.getInstance(dbConfigFile);
-                } catch (SQLException e) {
-                    e.printStackTrace(); // or handle it in a way that makes sense for your application
-                    return null; // or you can throw a custom exception
-                }
-
-            // Check if the table with the given identifier exists
-            if (!tableExists(identifier)) {
-                System.out.println("Error: No table found for identifier " + identifier + ". Cannot retrieve KVObjects.");
-                return Collections.emptyList();
-            }
-
-            // Get the KVSubject associated with the identifier
-            KVSubject kvSubject = subjectStorage.getKVSubject(identifier);
-            if (kvSubject == null) {
-                System.out.println("Error: No KVSubject found for identifier " + identifier + ". Cannot retrieve KVObjects.");
-                return Collections.emptyList();
-            }
-
-            // Get the field type map from the KVSubject
-            Map<String, KVObjectField> fieldTypeMap = kvSubject.getFieldTypeMap();
-            if (fieldTypeMap == null || fieldTypeMap.isEmpty()) {
-                System.out.println("Error: FieldTypeMap is empty for identifier " + identifier + ". Cannot retrieve KVObjects.");
-                return Collections.emptyList();
-            }
-
-            // Prepare to read records from the specified table
-            List<KVObject> kvObjects = new ArrayList<>();
-            String selectSQL = "SELECT * FROM " + identifier; // Select all records from the table
-
-            try (Statement stmt = connection.createStatement();
-                 ResultSet rs = stmt.executeQuery(selectSQL)) {
-                while (rs.next()) {
-                    // Create a Map to hold field data
-                    Map<String, String> jsonFields = new HashMap<>();
-
-                    // Populate the Map based on the FieldTypeMap
-                    for (Map.Entry<String, KVObjectField> entry : fieldTypeMap.entrySet()) {
-                        String fieldName = entry.getKey();
-                        KVObjectField fieldType = entry.getValue();
-
-                        // Get the internal type and retrieve the value from ResultSet
-                        String internalType = fieldType.getType().toLowerCase();
-                        Object value = retrieveValueByInternalType(rs, fieldName, internalType);
-
-                        // Convert value to String and put it in the Map
-                        jsonFields.put(fieldName, value != null ? value.toString() : null);
-                    }
-
-                    // Create a new KVObject using the constructor
-                    KVObject kvObject = new KVObject(identifier, fieldTypeMap, jsonFields);
-                    kvObjects.add(kvObject); // Add the populated KVObject to the list
-                }
-            } catch (SQLException e) {
-                e.printStackTrace(); // Handle SQL exceptions
-            }
-
-            return kvObjects; // Return the list of KVObjects
+        try {
+            subjectStorage = DatabaseKVSubjectStorage.getInstance(dbConfigFile);
+        } catch (SQLException e) {
+            e.printStackTrace(); // or handle it in a way that makes sense for your application
+            return null; // or you can throw a custom exception
         }
+
+        // Check if the table with the given identifier exists
+        if (!tableExists(identifier)) {
+            System.out.println("Error: No table found for identifier " + identifier + ". Cannot retrieve KVObjects.");
+            return Collections.emptyList();
+        }
+
+        // Get the KVSubject associated with the identifier
+        KVSubject kvSubject = subjectStorage.getKVSubject(identifier);
+        if (kvSubject == null) {
+            System.out.println("Error: No KVSubject found for identifier " + identifier + ". Cannot retrieve KVObjects.");
+            return Collections.emptyList();
+        }
+
+        // Get the field type map from the KVSubject
+        Map<String, KVObjectField> fieldTypeMap = kvSubject.getFieldTypeMap();
+        if (fieldTypeMap == null || fieldTypeMap.isEmpty()) {
+            System.out.println("Error: FieldTypeMap is empty for identifier " + identifier + ". Cannot retrieve KVObjects.");
+            return Collections.emptyList();
+        }
+
+        // Prepare to read records from the specified table
+        List<KVObject> kvObjects = new ArrayList<>();
+        String selectSQL = "SELECT * FROM " + identifier; // Select all records from the table
+
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(selectSQL)) {
+            while (rs.next()) {
+                // Create a Map to hold field data
+                Map<String, String> jsonFields = new HashMap<>();
+
+                // Populate the Map based on the FieldTypeMap
+                for (Map.Entry<String, KVObjectField> entry : fieldTypeMap.entrySet()) {
+                    String fieldName = entry.getKey();
+                    KVObjectField fieldType = entry.getValue();
+
+                    // Get the internal type and retrieve the value from ResultSet
+                    String internalType = fieldType.getType().toLowerCase();
+                    Object value = retrieveValueByInternalType(rs, fieldName, internalType);
+
+                    // Convert value to String and put it in the Map
+                    jsonFields.put(fieldName, value != null ? value.toString() : null);
+                }
+
+                // Create a new KVObject using the constructor
+                KVObject kvObject = new KVObject(identifier, fieldTypeMap, jsonFields);
+                kvObjects.add(kvObject); // Add the populated KVObject to the list
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // Handle SQL exceptions
+        }
+
+        return kvObjects; // Return the list of KVObjects
+    }
 
 
     @Override

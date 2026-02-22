@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import com.EventManApp.KVSubjectStorage;
+import com.EventManApp.storages.MongoDBKVSubjectStorage;
 import com.EventManApp.storages.DatabaseKVSubjectStorage;
 import com.EventManApp.storages.FileKVSubjectStorage;
 import com.EventManApp.storages.MemoryKVSubjectStorage;
@@ -31,6 +32,16 @@ public class KVSubjectStorageFactory {
                         return DatabaseKVSubjectStorage.getInstance((DatabaseConfig) config); // Handle SQLException
                     } catch (SQLException e) {
                         throw new RuntimeException("Failed to create DatabaseKVSubjectStorage: " + e.getMessage(), e);
+                    }
+                } else {
+                    throw new IllegalArgumentException("For 'database' storage, config must be of type String");
+                }
+            case "mongodb":
+                if (config instanceof DatabaseConfig) {
+                    try {
+                        return MongoDBKVSubjectStorage.getInstance((DatabaseConfig) config);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Failed to create MongoDBKVSubjectStorage: " + e.getMessage(), e);
                     }
                 } else {
                     throw new IllegalArgumentException("For 'database' storage, config must be of type String");
