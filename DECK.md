@@ -1362,6 +1362,47 @@ gantt
 > >```
 > </details>
 
+## 001-0018
+> **Add a REST interface.** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to add a new interface for REST service.
+> 
+> # DOD (definition of done):
+> A REST service interface is added.
+> The main code is update to run the REST on background.
+> A simple terminal shell to connect with the REST is coded.
+> 
+> # TODO:
+> - [x] 1. Add an empty REST service interface
+> - [x] 2. Develop a script to connect to the REST interface
+> - [x] 3. Update the REST Interface with needed commands
+> - [x] 4. Document findings
+> 
+> # Reports:
+> * A new service called RESTInterface has been created.
+> * Thanks to the design used for the project, adding a new REST interface was incredibly easy!
+> * The Maven and CLI containers were updated to support external connections to the service provided by RESTInterface. The Maven container now exposes a range of ports for service setup, and the SSHD container includes Python and its modules for running REST clients.
+> * Two clients for remote interaction with RESTInterface from the SSHD container have been developed: EMClient.py and EMClient.sh.
+> * Both clients retrieve command JSON from the server and execute it, similar to the previously developed consoleInterface.
+> * Note that RESTInterface currently lacks security checks; it executes commands without verifying client credentials.
+> </details>
+
+## 001-0022
+> **Develop a remote interface to connect via REST.** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to develop a remote interface to connect via REST
+> 
+> # DOD (definition of done):
+> 
+> # TODO:
+> - [] 1.
+> 
+> # Reports:
+> * It has already done via 0018
+> </details>
+
 ## 001-0017
 > **Reorganize file according to Spring projects.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 > <details >
@@ -1418,20 +1459,6 @@ gantt
 > *
 > </details>
 
-## 001-0022
-> **Develop a remote interface to connect via REST.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
 ## 001-0023
 > **Auto generate commands json.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 > <details >
@@ -1473,30 +1500,4 @@ gantt
 > 
 > # Reports:
 > * 
-> </details>
-
-## 001-0018
-> **Add a REST interface.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
-> <details open>
->     <summary>Details</summary>
-> The goal of this card is to add a new interface for REST service.
-> 
-> # DOD (definition of done):
-> A REST service interface is added.
-> The main code is update to run the REST on background.
-> A simple terminal shell to connect with the REST is coded.
-> 
-> # TODO:
-> - [x] 1. Add an empty REST service interface
-> - [x] 2. Develop a script to connect to the REST interface
-> - [x] 3. Update the REST Interface with needed commands
-> - [x] 4. Document findings
-> 
-> # Reports:
-> * A new service called RESTInterface has been created.
-> * Thanks to the design used for the project, adding a new REST interface was incredibly easy!
-> * The Maven and CLI containers were updated to support external connections to the service provided by RESTInterface. The Maven container now exposes a range of ports for service setup, and the SSHD container includes Python and its modules for running REST clients.
-> * Two clients for remote interaction with RESTInterface from the SSHD container have been developed: EMClient.py and EMClient.sh.
-> * Both clients retrieve command JSON from the server and execute it, similar to the previously developed consoleInterface.
-> * Note that RESTInterface currently lacks security checks; it executes commands without verifying client credentials.
 > </details>
