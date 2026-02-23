@@ -1,5 +1,8 @@
 package com.EventManApp;
 
+import java.io.InputStream;
+import java.io.PrintStream;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -9,27 +12,69 @@ import java.util.Scanner;
 
 import com.EventManApp.lib.DebugUtil;
 
+import java.io.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.regex.Pattern;
+import org.json.JSONObject;
+import org.json.JSONArray;
+
 public class MenuUI {
-    private final Scanner scanner;
+    private final PrintStream out;
+    private final InputStream in;
+    private final BufferedReader reader;
+    private final boolean isNetworkStream;
     private String menuTitle = "Available Commands";
 
-    public MenuUI(String menuTitle) {
+    public MenuUI(String menuTitle, PrintStream out, InputStream in) {
         this.menuTitle = menuTitle;
-        this.scanner = new Scanner(System.in);
+        this.out = out;
+        this.in = in;
+        this.reader = new BufferedReader(
+            new InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8)
+        );
+        // Detect if this is a network stream (not System.in)
+        this.isNetworkStream = !(in == System.in);
+    }
+
+    public MenuUI(String menuTitle) {
+        this(menuTitle, System.out, System.in);
+    }
+
+    private void print(String message) {
+        this.out.print("\r" + message);
+        this.out.flush();
+    }
+
+    private void println(String message) {
+        if (this.isNetworkStream) {
+            this.out.print("\r" + message + "\r\n");
+        } else {
+            this.out.print(message + "\n");
+        }
+        this.out.flush();
+    }
+
+    private void println() {
+        if (this.isNetworkStream) {
+            this.out.print("\r\n");
+        } else {
+            this.out.print("\n");
+        }
+        this.out.flush();
     }
 
     private void showMessage(String message) {
-        System.out.println(message);
+        println(message);
     }
 
     private void clearConsole() {
-        // Clear the console depending on the operating system
         try {
             if (System.getProperty("os.name").contains("Windows")) {
                 new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
             } else {
-                System.out.print("\033[H\033[2J"); // For Unix/Linux/Mac
-                System.out.flush();
+                this.out.print("\033[H\033[2J");
+                this.out.flush();
             }
         } catch (Exception e) {
             // Handle exceptions accordingly
@@ -43,41 +88,96 @@ public class MenuUI {
                 return command;
             }
         }
-        return null; // Command not found
+        return null;
+    }
+
+    private String readLineFromStream() {
+        try {
+            StringBuilder inputBuffer = new StringBuilder();
+            int character;
+
+            while ((character = in.read()) != -1) {
+                if (character == '\n' || character == '\r') {
+                    // Line ending received
+                    if (this.isNetworkStream) {
+                        this.out.print("\r\n");
+                    } else {
+                        this.out.print("\n");
+                    }
+                    this.out.flush();
+                    break;
+                } else if (character == 8 || character == 127) {
+                    // Backspace handling
+                    if (inputBuffer.length() > 0) {
+                        inputBuffer.deleteCharAt(inputBuffer.length() - 1);
+                        this.out.print("\b \b");  // Backspace, space, backspace
+                        this.out.flush();
+                    }
+                } else if (character >= 32 && character < 127) {
+                    // Regular character - echo it immediately
+                    inputBuffer.append((char) character);
+                    this.out.print((char) character);
+                    this.out.flush();
+                }
+            }
+
+            if (character == -1) {
+                return null;  // EOF reached
+            }
+
+            return inputBuffer.toString();
+        } catch (IOException e) {
+            println("Error reading input: " + e.getMessage());
+            return null;
+        }
     }
 
     public String displayCommandsAndGetChoice(JSONArray commandsArray, String backCommand) {
-        clearConsole(); // Clear the console before displaying commands
-        System.out.println(this.menuTitle+":");
+        clearConsole();
+        
+        println(this.menuTitle + ":");
         int index = 1;
-        int commandCount = commandsArray.length() + (backCommand != null ? 1 : 0); // Add 1 for back command
+        int commandCount = commandsArray.length() + (backCommand != null ? 1 : 0);
         String[] commandKeys = new String[commandCount];
 
-        // Print each command with a corresponding number
         for (int i = 0; i < commandsArray.length(); i++) {
             JSONObject cmd = commandsArray.getJSONObject(i);
-            System.out.println("  "+index + ". " + cmd.getString("description")+" ("+cmd.getString("id")+")");
-            commandKeys[index - 1] = cmd.getString("id"); // Store command key
+            println("  " + index + ". " + cmd.getString("description") + " (" + cmd.getString("id") + ")");
+            commandKeys[index - 1] = cmd.getString("id");
             index++;
         }
 
-        // Add the back command as the last item
         if (backCommand != null) {
-            System.out.println("  "+index + ". " + backCommand);
-            commandKeys[index - 1] = backCommand; // Store back command
+            println("  " + index + ". " + backCommand);
+            commandKeys[index - 1] = backCommand;
         }
 
         String selectedCommand = null;
 
-        // Ask for a valid choice
         while (selectedCommand == null) {
-            System.out.print("\nPlease type the number of your choice: ");
+            println();
+            print("Please type the number of your choice: ");
+            
+            String input = readLineFromStream();
+            
+            if (input == null) {
+                return null;
+            }
+
+            input = input.trim();
+
+            if (input.isEmpty()) {
+                showMessage("Input is empty. Please enter a number.");
+                continue;
+            }
+
             int choice;
 
             try {
-                choice = Integer.parseInt(scanner.nextLine().trim());
+                choice = Integer.parseInt(input);
+                
                 if (choice >= 1 && choice <= commandCount) {
-                    selectedCommand = commandKeys[choice - 1]; // Convert number to command name
+                    selectedCommand = commandKeys[choice - 1];
                 } else {
                     showMessage("Invalid choice. Please choose a number between 1 and " + commandCount + ".");
                 }
@@ -89,38 +189,41 @@ public class MenuUI {
         return selectedCommand;
     }
 
-    private void navigateCommands(String rootID,JSONArray commandsArray, JSONObject peyload, String backCommand) {
+    private void navigateCommands(String rootID, JSONArray commandsArray, JSONObject payload, String backCommand) {
         while (true) {
             String commandName = displayCommandsAndGetChoice(commandsArray, backCommand);
-            if (commandName.equals(backCommand)) {
-                return; // Exit to the previous menu
+            
+            if (commandName == null) {
+                return;
             }
             
+            if (commandName.equals(backCommand)) {
+                return;
+            }
+
             JSONObject command = findCommandByName(commandsArray, commandName);
             if (command == null) {
                 showMessage("Invalid choice, please try again.");
                 continue;
             }
 
-            peyload.put("identifier", rootID);
-            peyload.put("command",command);
+            payload.put("identifier", rootID);
+            payload.put("command", command);
 
-            // Check for nested commands
-            // need to add try catch
             if (command.has("commands")) {
-                navigateCommands(command.getString("id"), command.getJSONArray("commands"), peyload, "Back");
-                if (!rootID.equals(peyload.getString("identifier"))){
+                navigateCommands(command.getString("id"), command.getJSONArray("commands"), payload, "Back");
+                if (!rootID.equals(payload.getString("identifier"))) {
                     return;
                 }
             } else {
-                break; // Exit the while loop if a valid command is processed
+                break;
             }
         }
     }
-    
+
     public JSONObject displayMenu(JSONObject commands) {
-        JSONObject peyload = new JSONObject();
-        navigateCommands("root",commands.getJSONArray("commands"), peyload, "Exit");
-        return peyload;
+        JSONObject payload = new JSONObject();
+        navigateCommands("root", commands.getJSONArray("commands"), payload, "Exit");
+        return payload;
     }
 }

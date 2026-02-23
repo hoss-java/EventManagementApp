@@ -45,10 +45,10 @@ def display_menu(commands, level=0, page=1):
     start_index = (page - 1) * COMMANDS_PER_PAGE
     end_index = start_index + COMMANDS_PER_PAGE
     paginated_commands = commands[start_index:end_index]
-    
+
     clear_screen()
     print("\n" + ("=" * (level + 1)) + " Menu " + ("=" * (level + 1)))
-    
+
     if not paginated_commands:
         print("No more commands to display.")
         return False
@@ -59,7 +59,7 @@ def display_menu(commands, level=0, page=1):
         print(f"{start_index + idx + 1}: {description} ({command_id})")
 
     print(f"{len(paginated_commands) + 1}: Next Page")
-    
+
     if level == 0:
         print(f"{len(paginated_commands) + 2}: Exit")
     else:
@@ -79,7 +79,7 @@ def is_valid(input_value, arg_type):
     """
     if '@' in arg_type:
         arg_type = arg_type.split('@')[-1]
-    
+
     if arg_type == "str":
         if input_value.strip() == "":
             print("Hint: Input should be a non-empty string.")
@@ -130,11 +130,11 @@ def get_user_input(field_info):
 
     while True:
         user_input = input(f"Enter {description} ({field_type}): ")
-        
+
         if mandatory and user_input.strip() == "":
             print(f"{description} is mandatory. Please provide a value.")
             continue
-        
+
         if not mandatory and user_input.strip() == "":
             return field_info.get('defaultValue', '')
 
@@ -153,11 +153,11 @@ def create_payload(args_info):
         dict: Dictionary representing the payload.
     """
     payload = {}
-    
+
     for field_key, field_info in args_info.items():
         user_input = get_user_input(field_info)
         payload[field_key] = user_input
-    
+
     return payload
 
 def run_command(selected_command, root_identifier):
@@ -207,7 +207,7 @@ def handle_selection(commands, level=0):
             break
 
         selection = input("Select a command by number: ")
-        
+
         try:
             selection = int(selection)
         except ValueError:
@@ -239,7 +239,7 @@ def main():
     commands = fetch_commands()
     if commands is None:
         return
-    
+
     while True:
         clear_screen()
         display_menu(commands)
@@ -262,4 +262,4 @@ if __name__ == "__main__":
     else:
         print("Exiting due to service unavailability.")
         exit(1)
-    
+

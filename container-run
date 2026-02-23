@@ -24,6 +24,7 @@ mysql@mysql:mysql -u root -pmypass
 cli@sshd:bash
 remotemysql@sshd:mysql -u eventman -peventmanpass -h 172.32.0.16
 mongosh@sshd:mongo 172.32.0.17:27017
+cssh@sshd:ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
 mongo@mongodb:mongo"
 
         input="$1"
@@ -221,6 +222,11 @@ mysql() {
 # @return The exit status of the container_run function
 cli() {
     container-run cli@sshd "$@"
+    return $?
+}
+
+cssh() {
+    container-run cssh@sshd "$@"
     return $?
 }
 

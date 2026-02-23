@@ -8,6 +8,8 @@
     <interfaces>
         <interface name="com.EventManApp.interfaces.ConsoleInterface" runInBackground="false"/>
         <interface name="com.EventManApp.interfaces.RemoteInterface" runInBackground="false"/>
+        <interface name="com.EventManApp.interfaces.SshClientInterface" runInBackground="false"/>
         <interface name="com.EventManApp.interfaces.RESTInterface" runInBackground="true"/>
+        <interface name="com.EventManApp.interfaces.SshdInterface" runInBackground="true"/>
     </interfaces>
 </configuration>

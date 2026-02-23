@@ -86,6 +86,23 @@
         <version>4.7.0</version> <!-- Check for the latest version -->
     </dependency>
 
+    <dependency>
+        <groupId>org.apache.sshd</groupId>
+        <artifactId>sshd-core</artifactId>
+        <version>2.16.0</version>  <!-- Ensure this is the latest version -->
+    </dependency>
+
+    <dependency>
+        <groupId>org.apache.sshd</groupId>
+        <artifactId>sshd-common</artifactId>
+        <version>2.16.0</version> <!-- Use the latest version available -->
+    </dependency>
+    <!-- Optional: To include SFTP functionality -->
+    <dependency>
+        <groupId>org.apache.sshd</groupId>
+        <artifactId>sshd-sftp</artifactId>
+        <version>2.16.0</version> <!-- Use the latest version available -->
+    </dependency>
   </dependencies>
   
   <build>
@@ -116,6 +133,7 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>3.1.0</version>
         <configuration>
+          <daemonThreadJoinTimeout>1000</daemonThreadJoinTimeout>
           <mainClass>com.EventManApp.EventManApp</mainClass>
         </configuration>
         <executions>

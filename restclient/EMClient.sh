@@ -13,7 +13,7 @@ clear_screen() {
 
 echostd() {
     echo "$@" 1>&2
-}    
+}
 
 debug() {
     echostd "$@"
@@ -121,7 +121,7 @@ create_payload() {
         payload=$(echo "$payload" | jq --argjson args_info "$args_info" '. + {args: $args_info}')
         # Initialize the data object
         payload=$(echo "$payload" | jq '. + {data: {}}')
-        
+
         for field_key in $(echo "$args_info" | jq -r 'keys[]'); do
             local field_info=$(echo "$args_info" | jq -r --arg key "$field_key" '.[$key]')
             local field_name=$(echo "$field_info" | jq -r '.field')
@@ -149,7 +149,7 @@ run_command() {
     local args_info=$(echo "$selected_command" | jq -c '.args // {}')
 
     local payload="{\"identifier\": \"$root_identifier\", \"commands\": [{\"args\": {}, \"data\": {}, \"id\": \"$command_id\"}]}"
-    
+
     if [[ "$args_info" != "null" ]]; then
         local args_payload=$(create_payload "$args_info")
         payload=$(echo "$payload" | jq --argjson args "$args_payload" '.commands[0].args = $args.args')
@@ -171,11 +171,11 @@ display_menu() {
     local total=${#commands[@]}
     local start=$(( (page - 1) * COMMANDS_PER_PAGE ))
     local end=$(( start + COMMANDS_PER_PAGE ))
-    
+
     clear_screen
     echo "Menu"
     echo "===="
-    
+
     for (( i=start; i<end && i<total; i++ )); do
         local command=$(decode_command "${commands[$i]}")
         local description=$(echo "$command" | jq -r '.description // "No description available."')
@@ -231,7 +231,7 @@ handle_selection() {
             echo "Failed to decode command."
             continue
         fi
-        
+
         # Check if the command has subcommands
         if echo "$command" | jq -e '.commands' &> /dev/null; then
             local command_id=$(echo "$command" | jq -r '.id // "subcommand"')  # Extract the command's ID

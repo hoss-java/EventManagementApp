@@ -6,6 +6,8 @@ import com.sun.net.httpserver.HttpExchange;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.io.InputStream;
@@ -16,6 +18,7 @@ import com.EventManApp.BaseInterface;
 import com.EventManApp.ResponseCallbackInterface;
 import com.EventManApp.lib.DebugUtil;
 import com.EventManApp.lib.TokenizedString;
+import com.EventManApp.lib.IPAddressHelper;
 
 public class RESTInterface extends BaseInterface {
     private HttpServer server;
@@ -30,7 +33,7 @@ public class RESTInterface extends BaseInterface {
         Properties props = new Properties();
         try (InputStream input = getClass().getClassLoader().getResourceAsStream(configFile)) {
             if (input == null) {
-                System.out.println("Sorry, unable to find "+ configFile);
+                System.out.println("Sorry, unable to find " + configFile);
                 return;
             }
 
@@ -46,9 +49,24 @@ public class RESTInterface extends BaseInterface {
         }
     }
 
-    public RESTInterface(ResponseCallbackInterface callback) {
-        super(callback);
+    public RESTInterface(ResponseCallbackInterface callback, PrintStream out, InputStream in) {
+        super(callback,out,in);
         loadProperties();
+        printServiceDetails();
+    }
+
+    public RESTInterface(ResponseCallbackInterface callback) {
+        this(callback, System.out, System.in);
+    }
+
+    private void printServiceDetails() {
+        // Print the connection details
+        out.println("RESTService Details:");
+        out.println(" RESTService Address: " + IPAddressHelper.getLocalIPAddress());
+        out.println(" RESTService Path: " + servicePath);
+        out.println(" RESTService Port: " + servicePort);
+        out.println(" RESTService API Path: " + "/" + this.servicePath + "/" + serviceApiPath);
+        out.println(" RESTService CMD Path: " + "/" + this.servicePath + "/" + serviceCmdPath);
     }
 
     @Override
@@ -64,11 +82,11 @@ public class RESTInterface extends BaseInterface {
         } catch (InterruptedException e) {
             // Log interruption and reset the interrupt status
             Thread.currentThread().interrupt();
-            System.out.println("Service thread was interrupted.");
+            out.println("Service thread was interrupted.");
         } finally {
             shutDown(); // Call shutdown method before exiting
         }
-        return new JSONObject().put("status", "stopped");
+        return new JSONObject().put("RESTInterface", "stopped");
     }
 
     private void start() {
@@ -76,8 +94,8 @@ public class RESTInterface extends BaseInterface {
             server = HttpServer.create(new InetSocketAddress(this.servicePort), 0);
 
             // Define your endpoints
-            server.createContext("/"+this.servicePath+"/"+serviceApiPath, this::handleGetAPI);
-            server.createContext("/"+this.servicePath+"/"+serviceCmdPath, this::handleCommand);
+            server.createContext("/" + this.servicePath + "/" + serviceApiPath, this::handleGetAPI);
+            server.createContext("/" + this.servicePath + "/" + serviceCmdPath, this::handleCommand);
 
             server.start(); // Start the server
         } catch (IOException e) {
@@ -88,20 +106,20 @@ public class RESTInterface extends BaseInterface {
     private void handleGetAPI(HttpExchange exchange) throws IOException {
         // Read the request body sent by the client
         InputStream inputStream = exchange.getRequestBody();
-        String payload = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8); // Convert input stream to string
+        String payload = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
 
         // Set response headers and send response
         String response = commands.toString();
         exchange.sendResponseHeaders(200, response.length());
         try (OutputStream os = exchange.getResponseBody()) {
-            os.write(response.getBytes(StandardCharsets.UTF_8)); // Send the response back to the client
+            os.write(response.getBytes(StandardCharsets.UTF_8));
         }
     }
 
     private void handleCommand(HttpExchange exchange) throws IOException {
         // Read the request body sent by the client
         InputStream inputStream = exchange.getRequestBody();
-        String payload = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8); // Convert input stream to string
+        String payload = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
 
         // Process the payload using your callback
         String response = callback.ResponseHandler("RESTInterface", payload);
@@ -109,7 +127,7 @@ public class RESTInterface extends BaseInterface {
         // Set response headers and send response
         exchange.sendResponseHeaders(200, response.length());
         try (OutputStream os = exchange.getResponseBody()) {
-            os.write(response.getBytes(StandardCharsets.UTF_8)); // Send the response back to the client
+            os.write(response.getBytes(StandardCharsets.UTF_8));
         }
     }
 
@@ -118,5 +136,4 @@ public class RESTInterface extends BaseInterface {
             server.stop(0); // Stop the HTTP server immediately
         }
     }
-
 }

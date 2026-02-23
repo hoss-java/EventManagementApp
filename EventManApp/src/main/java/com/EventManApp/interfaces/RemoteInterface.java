@@ -13,6 +13,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.InputStream;
+import java.io.PrintStream;
+import java.io.OutputStream;
 import java.util.Properties;
 
 import com.EventManApp.BaseInterface;
@@ -37,7 +39,7 @@ public class RemoteInterface extends BaseInterface {
         Properties props = new Properties();
         try (InputStream input = getClass().getClassLoader().getResourceAsStream(configFile)) {
             if (input == null) {
-                System.out.println("Sorry, unable to find "+ configFile);
+                out.println("Sorry, unable to find " + configFile);
                 return;
             }
 
@@ -48,25 +50,29 @@ public class RemoteInterface extends BaseInterface {
             this.servicePort = Integer.parseInt(props.getProperty("remoterest.port"));
             this.servicePath = props.getProperty("remoterest.path");
             this.serviceAddress = props.getProperty("remoterest.address");
-            this.serviceUrl = "http://"+this.serviceAddress+":"+this.servicePort+"/"+this.servicePath;
+            this.serviceUrl = "http://" + this.serviceAddress + ":" + this.servicePort + "/" + this.servicePath;
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public RemoteInterface(ResponseCallbackInterface callback) {
-        super(callback);
-        this.scanner = new Scanner(System.in);
+    public RemoteInterface(ResponseCallbackInterface callback, PrintStream out, InputStream in) {
+        super(callback, out, in);
+        this.scanner = new Scanner(in);
         loadProperties();
     }
 
-    private void runSelectedCommand(JSONObject selectedMenuObject){
-        InputUI inputUI = new InputUI();
+    public RemoteInterface(ResponseCallbackInterface callback) {
+        this(callback, System.out, System.in);
+    }
 
-        JSONObject peyload = new JSONObject();
+    private void runSelectedCommand(JSONObject selectedMenuObject) {
+        InputUI inputUI = new InputUI(this.out, this.in);
 
-        peyload.put("identifier",selectedMenuObject.getString("identifier") ); 
+        JSONObject payload = new JSONObject();
+
+        payload.put("identifier", selectedMenuObject.getString("identifier"));
 
         JSONObject command = selectedMenuObject.getJSONObject("command");
         if (command.has("args")) {
@@ -79,42 +85,39 @@ public class RemoteInterface extends BaseInterface {
                 String argField = argType.optString("field", argName);
                 args.put(argField, argValue);
             }
-            JSONObject peyloadCommand = new JSONObject();
-            peyloadCommand.put("id", command.getString("action"));
-            peyloadCommand.put("data", args);
-            peyloadCommand.put("args", arguments);
+            JSONObject payloadCommand = new JSONObject();
+            payloadCommand.put("id", command.getString("action"));
+            payloadCommand.put("data", args);
+            payloadCommand.put("args", arguments);
 
             JSONArray payloadCommandsArray = new JSONArray();
-            payloadCommandsArray.put(peyloadCommand);
+            payloadCommandsArray.put(payloadCommand);
             // Put the commands list into the JSON object
-            peyload.put("commands", payloadCommandsArray);                
+            payload.put("commands", payloadCommandsArray);
         }
 
-        String response = RestServiceUtil.callRestService(this.serviceUrl+"/"+this.serviceCmdPath, peyload.toString());
-        //System.out.println("Response: " + response); // Print the JSON response
+        String response = RestServiceUtil.callRestService(this.serviceUrl + "/" + this.serviceCmdPath, payload.toString());
         printJson(response);
         inputUI.waitForKeyPress();
-
     }
 
     @Override
     public JSONObject executeCommands(JSONObject commands) {
-        if (RestServiceUtil.isServiceAvailable(this.serviceUrl+"/"+this.serviceApiPath)) {
+        if (RestServiceUtil.isServiceAvailable(this.serviceUrl + "/" + this.serviceApiPath)) {
             //ignore commands passed by server and try to get command from the REST service
-            String response = RestServiceUtil.callRestService(this.serviceUrl+"/"+this.serviceApiPath, null);
+            String response = RestServiceUtil.callRestService(this.serviceUrl + "/" + this.serviceApiPath, null);
             JSONObject commandsJSONFromRemote = new JSONObject(response);
 
-            MenuUI menuUI = new MenuUI("Available Commands (RemoteInterface)");
+            MenuUI menuUI = new MenuUI("Available Commands (RemoteInterface)", this.out, this.in);
             while (true) {
                 JSONObject selectedMenuObject = menuUI.displayMenu(commandsJSONFromRemote);
-                if (selectedMenuObject.isEmpty() ){
+                if (selectedMenuObject.isEmpty()) {
                     return selectedMenuObject.put("RemoteInterface", "exit");
                 }
                 runSelectedCommand(selectedMenuObject);
             }
-        }
-        else {
-            System.out.println("Service is not available "+this.serviceUrl);
+        } else {
+            out.println("Service is not available " + this.serviceUrl);
             return null;
         }
     }

@@ -70,10 +70,10 @@ public class MongoDBKVSubjectStorage implements KVSubjectStorage {
     private void printMongoDBConnectionDetails() {
         // Print the connection details directly
         System.out.println("MongoDB Connection Details:");
-        System.out.println("MongoDB Address: " + dbConfigFile.getMongoAddress());
-        System.out.println("MongoDB Port: " + dbConfigFile.getMongoPort());
-        System.out.println("Database Name: " + dbConfigFile.getMongoDatabase()); // e.g., "myDatabase"
-        System.out.println("Username: " + dbConfigFile.getMongoUsername()); // e.g., "yourUsername"
+        System.out.println(" MongoDB Address: " + dbConfigFile.getMongoAddress());
+        System.out.println(" MongoDB Port: " + dbConfigFile.getMongoPort());
+        System.out.println(" Database Name: " + dbConfigFile.getMongoDatabase()); // e.g., "myDatabase"
+        System.out.println(" Username: " + dbConfigFile.getMongoUsername()); // e.g., "yourUsername"
 
         // Check if the MongoDB driver class can be loaded
         try {
