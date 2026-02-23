@@ -1,5 +1,9 @@
 package com.EventManApp.interfaces;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,17 +22,21 @@ import com.EventManApp.InputUI;
 public class ConsoleInterface extends BaseInterface {
     private final Scanner scanner;
 
-    public ConsoleInterface(ResponseCallbackInterface callback) {
-        super(callback);
-        this.scanner = new Scanner(System.in);
+    public ConsoleInterface(ResponseCallbackInterface callback, PrintStream out, InputStream in) {
+        super(callback,out,in);
+        this.scanner = new Scanner(this.in);
     }
 
-    private void runSelectedCommand(JSONObject selectedMenuObject){
-        InputUI inputUI = new InputUI();
+    public ConsoleInterface(ResponseCallbackInterface callback) {
+        this(callback, System.out, System.in);
+    }
 
-        JSONObject peyload = new JSONObject();
+    private void runSelectedCommand(JSONObject selectedMenuObject) {
+        InputUI inputUI = new InputUI(this.out, this.in);
 
-        peyload.put("identifier",selectedMenuObject.getString("identifier") ); 
+        JSONObject payload = new JSONObject();
+
+        payload.put("identifier", selectedMenuObject.getString("identifier"));
 
         JSONObject command = selectedMenuObject.getJSONObject("command");
         if (command.has("args")) {
@@ -41,34 +49,31 @@ public class ConsoleInterface extends BaseInterface {
                 String argField = argType.optString("field", argName);
                 args.put(argField, argValue);
             }
-            JSONObject peyloadCommand = new JSONObject();
-            peyloadCommand.put("id", command.getString("action"));
-            peyloadCommand.put("data", args);
-            peyloadCommand.put("args", arguments);
+            JSONObject payloadCommand = new JSONObject();
+            payloadCommand.put("id", command.getString("action"));
+            payloadCommand.put("data", args);
+            payloadCommand.put("args", arguments);
 
             JSONArray payloadCommandsArray = new JSONArray();
-            payloadCommandsArray.put(peyloadCommand);
+            payloadCommandsArray.put(payloadCommand);
             // Put the commands list into the JSON object
-            peyload.put("commands", payloadCommandsArray);                
+            payload.put("commands", payloadCommandsArray);
         }
 
-        String response = callback.ResponseHandler("ConsoleInterface",peyload.toString());
-        //System.out.println("Response: " + response); // Print the JSON response
+        String response = callback.ResponseHandler("ConsoleInterface", payload.toString());
         printJson(response);
         inputUI.waitForKeyPress();
-
     }
 
     @Override
     public JSONObject executeCommands(JSONObject commands) {
-        MenuUI menuUI = new MenuUI("Available Commands (ConsoleInterface)");
+        MenuUI menuUI = new MenuUI("Available Commands (ConsoleInterface)", this.out, this.in);
         while (true) {
             JSONObject selectedMenuObject = menuUI.displayMenu(commands);
-            if (selectedMenuObject.isEmpty() ){
+            if (selectedMenuObject.isEmpty()) {
                 return selectedMenuObject.put("ConsoleInterface", "exit");
             }
             runSelectedCommand(selectedMenuObject);
-        }        
+        }
     }
-
 }
