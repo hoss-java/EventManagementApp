@@ -1388,6 +1388,36 @@ gantt
 > * Note that RESTInterface currently lacks security checks; it executes commands without verifying client credentials.
 > </details>
 
+## 001-0019
+> **Spike how to add an ssh interface.** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to implement an SSH interface.
+> 
+> # DOD (definition of done):
+> All findings are documented.
+> A shell client can be run via ssh.
+> 
+> # TODO:
+> - [x] 1. Spike how to setup an SSH server on Java
+> - [x] 2. Use ConsoleInterface instead shell program
+> 
+> # Reports:
+> * A full ssh interface was implemented.
+> * The ssh shell can support multi commands, for now only `exit`, `help` and `evenman` have been added.
+> * All interfaces was updated to support networks out/in and local out/in
+> * several improvements were applied to the code.
+> * Some containers were updated according requirements.
+> * Instead using ConsoleInterface in ssh shell , a copy of the ConsoleInterface was added to SshInterface as a private class.
+> * A ssh client to test the ssh server was implemented.
+> * To connect to eventman ssh server :
+> >```
+> >docker exec -it sshd ssh -o StrictHostKeyChecking=no -o >UserKnownHostsFile=/dev/null testUser1@172.32.0.11 -p 32722
+> >
+> >cssh testUser1@172.32.0.11 -p 32722
+> >```
+> </details>
+
 ## 001-0022
 > **Develop a remote interface to connect via REST.** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 > <details >
@@ -1405,20 +1435,6 @@ gantt
 
 ## 001-0017
 > **Reorganize file according to Spring projects.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
-> <details >
->     <summary>Details</summary>
-> 
-> # DOD (definition of done):
-> 
-> # TODO:
-> - [] 1.
-> 
-> # Reports:
-> *
-> </details>
-
-## 001-0019
-> **Spike how to add an ssh interface.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 > <details >
 >     <summary>Details</summary>
 > 
@@ -1498,7 +1514,8 @@ gantt
 > `commands.json` is generated inside of the code automatically.
 > 
 > # TODO:
-> - [] 1.
+> - [ ] 1. List what need to be added to `subjects.xml`
+> - 
 > 
 > # Reports:
 > *
