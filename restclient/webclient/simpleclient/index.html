@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST Service Command Interface</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-wrapper">
+        <header class="app-header">
+            <div style="flex: 1;"></div>
+            <div style="flex: 1; text-align: center;">
+                <h1>REST Service Command Interface</h1>
+                <p class="app-subtitle">Interactive Command Menu</p>
+            </div>
+            <div style="flex: 1; text-align: right;">
+                <div class="theme-toggle" onclick="toggleTheme()">
+                    <span id="themeLabel">Dark</span>
+                    <div class="theme-toggle-switch" id="themeSwitch"></div>
+                </div>
+            </div>
+        </header>
+        
+        <main class="app-main">
+            <div id="menu-container" class="menu-container">
+                <div class="loading">
+                    <p>Initializing application...</p>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="app-footer">
+        </footer>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
