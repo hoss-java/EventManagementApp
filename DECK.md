@@ -1433,6 +1433,91 @@ gantt
 > * It has already done via 0018
 > </details>
 
+## 001-0025
+> **Add a web base client.** ![status](https://img.shields.io/badge/status-DONE-brightgreen)
+> <details >
+>     <summary>Details</summary>
+> The goal of this card is to add a simple web client.
+> 
+> # DOD (definition of done):
+> A web client is implemented.
+> 
+> # TODO:
+> - [x] 1. Investigate which tech is better to use for a simple web client.
+> 
+> # Reports:
+> * To get start, a JavaScript base client is developed,
+> * A simple js + HTML can talk with the rest service but there is problem here,
+> > * Both the web server and the rest service are inside of a container network they can see each others and talk via the container isolated network.
+> > * The web server has an external mapped port that can be accessed from the host, so web sites can be seen from the host
+> > * A JavaScript on a site works on host and tries to connect to the rest service from the host, which is not possible, the host has no access to the isolated network inside of the container network.
+> * To fix the issue above there are several solutions :
+> > * Adding a simple proxy to make connection between scripts on the host and services inside of the container network
+> >> * It was done by adding a simple php code, `proxy.php`
+> >> * `proxy.php` has to simple functions, `checkServiceStatus` and `forwardRequest`, to check server availability status
+> >> * Script on the host side do not know about the service port and address, the just sent request to the proxy and proxy talk with the service.
+> >> * It can be good because real APIs can be kept hidden from outside m but in the same time it can be easily found in HTML code or java script that it uses a proxy.
+> >> * However as a first step , a simple web client was developed in this way (`simpleclient`)
+> >> * A new web client with full functionality like other client was coded. The new client is the same as previous one, uses a script to manage connections to the REST service via proxy(`proxy.php`) and also a `styles.css` and its HTML file.
+> >> * However both the first edition and the full version do not use any known technology, they just use pure JavaScript code and HTML that can connect to the REST service via a proxy.
+> > * The second method or solution to connect a rest service in side a container is to use web server config, which was so intersecting
+> >> * To use this method it needs to add some configuration forward one or several sub-addresses to the rest service. It clears it need to a define domain and also define sub domain that is planned to use as the rest service, for example the config below (Nginx config) define `/api` as sub domain to use as proxy
+> >>>```
+> >>>server {
+> >>>    listen 80;
+> >>>    
+> >>>    # Your web pages
+> >>>    location / {
+> >>>        root /var/www/html;
+> >>>    }
+> >>>    
+> >>>    # Proxy to REST service (no port mapping needed!)
+> >>>    location /api/ {
+> >>>        proxy_pass http://rest-service:32768/api/;
+> >>>        proxy_set_header Host $host;
+> >>>        proxy_set_header X-Real-IP $remote_addr;
+> >>>        proxy_set_header X-Forwarded-For >$proxy_add_x_forwarded_for;
+> >>>    }
+> >>>}
+> >>>```
+> >>>> **OBS!** `rest-service` is `172.32.0.11` on the current seeting of containers
+> >>>> **OBS!** The port (`32768`) also points to the current port used by `maven` container
+> >> * For example not we can fetch data from the rest service via `/api/get` in the JavaScript code used by `index.html`
+> >> * It also can be configured on lighthttp, the web server 
+> >> that is used now to run code and tests, already has added to containers to run phpmyadmin.
+> >>>```
+> >>>server.modules = (
+> >>>    "mod_access",
+> >>>    "mod_alias",
+> >>>    "mod_proxy"
+> >>>)
+> >>>
+> >>>server.document-root = "/var/www/html"
+> >>>server.port = 80
+> >>>
+> >>># Serve your web pages
+> >>>url.rewrite-once = (
+> >>>    "^/api/(.*)" => "/api/$1"
+> >>>)
+> >>>
+> >>># Proxy to REST service
+> >>>$HTTP["url"] =~ "^/api/" {
+> >>>    proxy.server = (
+> >>>        "" => ( "rest-service:32768" )
+> >>>    )
+> >>>    proxy.kvserver = (
+> >>>        "X-Real-IP" => "$REMOTE_ADDR",
+> >>>        "X-Forwarded-For" => "$HTTP["REMOTE_ADDR"]"
+> >>>    )
+> >>>}
+> >>>```
+> >>>> **OBS!** `rest-service` is `172.32.0.11` on the current seeting of containers
+> >>>> **OBS!** The port (`32768`) also points to the current port used by `maven` container
+> > * It also possible to set up a vpn container to tunnel to the containers network. **No need to test, it has already tested before**
+> 
+> * Next step (not now) is to develop client with using a known technology such as React or Angular
+> </details>
+
 ## 001-0017
 > **Reorganize file according to Spring projects.** ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
 > <details >
@@ -1525,87 +1610,4 @@ gantt
 > > * Keep/read `commands.json` on the data folder
 > > * somehow track `subject.xml`
 > > * update tables when `subjects.xml` is changed
-> </details>
-
-## 001-0025
-> **Add a web base client.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
-> <details open>
->     <summary>Details</summary>
-> The goal of this card is to add a simple web client.
-> 
-> # DOD (definition of done):
-> A web client is implemented.
-> 
-> # TODO:
-> - [x] 1. Investigate which tech is better to use for a simple web client.
-> 
-> # Reports:
-> * To get start, a JavaScript base client is developed,
-> * A simple js + HTML can talk with the rest service but there is problem here,
-> > * Both the web server and the rest service are inside of a container network they can see each others and talk via the container isolated network.
-> > * The web server has an external mapped port that can be accessed from the host, so web sites can be seen from the host
-> > * A JavaScript on a site works on host and tries to connect to the rest service from the host, which is not possible, the host has no access to the isolated network inside of the container network.
-> * To fix the issue above there are several solutions :
-> > * Adding a simple proxy to make connection between scripts on the host and services inside of the container network
-> >> * It was done by adding a simple php code, `proxy.php`
-> >> * `proxy.php` has to simple functions, `checkServiceStatus` and `forwardRequest`, to check server availability status
-> >> * Script on the host side do not know about the service port and address, the just sent request to the proxy and proxy talk with the service.
-> >> * It can be good because real APIs can be kept hidden from outside m but in the same time it can be easily found in HTML code or java script that it uses a proxy.
-> >> * However as a first step , a simple web client was developed in this way (`simpleclient`)
-> >> * A new web client with full functionality like other client was coded. The new client is the same as previous one, uses a script to manage connections to the REST service via proxy(`proxy.php`) and also a `styles.css` and its HTML file.
-> >> * However both the first edition and the full version do not use any known technology, they just use pure JavaScript code and HTML that can connect to the REST service via a proxy.
-> > * The second method or solution to connect a rest service in side a container is to use web server config, which was so intersecting
-> >> * To use this method it needs to add some configuration forward one or several sub-addresses to the rest service. It clears it need to a define domain and also define sub domain that is planned to use as the rest service, for example the config below (Nginx config) define `/api` as sub domain to use as proxy
-> >>>```
-> >>>server {
-> >>>    listen 80;
-> >>>    
-> >>>    # Your web pages
-> >>>    location / {
-> >>>        root /var/www/html;
-> >>>    }
-> >>>    
-> >>>    # Proxy to REST service (no port mapping needed!)
-> >>>    location /api/ {
-> >>>        proxy_pass http://rest-service:32768/api/;
-> >>>        proxy_set_header Host $host;
-> >>>        proxy_set_header X-Real-IP $remote_addr;
-> >>>        proxy_set_header X-Forwarded-For >$proxy_add_x_forwarded_for;
-> >>>    }
-> >>>}
-> >>>```
-> >>>> **OBS!** `rest-service` is `172.32.0.11` on the current seeting of containers
-> >>>> **OBS!** The port (`32768`) also points to the current port used by `maven` container
-> >> * For example not we can fetch data from the rest service via `/api/get` in the JavaScript code used by `index.html`
-> >> * It also can be configured on lighthttp, the web server 
-> >> that is used now to run code and tests, already has added to containers to run phpmyadmin.
-> >>>```
-> >>>server.modules = (
-> >>>    "mod_access",
-> >>>    "mod_alias",
-> >>>    "mod_proxy"
-> >>>)
-> >>>
-> >>>server.document-root = "/var/www/html"
-> >>>server.port = 80
-> >>>
-> >>># Serve your web pages
-> >>>url.rewrite-once = (
-> >>>    "^/api/(.*)" => "/api/$1"
-> >>>)
-> >>>
-> >>># Proxy to REST service
-> >>>$HTTP["url"] =~ "^/api/" {
-> >>>    proxy.server = (
-> >>>        "" => ( "rest-service:32768" )
-> >>>    )
-> >>>    proxy.kvserver = (
-> >>>        "X-Real-IP" => "$REMOTE_ADDR",
-> >>>        "X-Forwarded-For" => "$HTTP["REMOTE_ADDR"]"
-> >>>    )
-> >>>}
-> >>>```
-> >>>> **OBS!** `rest-service` is `172.32.0.11` on the current seeting of containers
-> >>>> **OBS!** The port (`32768`) also points to the current port used by `maven` container
-> > * It also possible to set up a vpn container to tunnel to the containers network. **No need to test, it has already tested before**
 > </details>
