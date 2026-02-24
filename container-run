@@ -25,7 +25,8 @@ cli@sshd:bash
 remotemysql@sshd:mysql -u eventman -peventmanpass -h 172.32.0.16
 mongosh@sshd:mongo 172.32.0.17:27017
 cssh@sshd:ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
-mongo@mongodb:mongo"
+mongo@mongodb:mongo
+node@nodejs:node"
 
         input="$1"
         echo "$commands" | awk -F: -v key="$input" '$1 == key { print $2 }'
@@ -245,6 +246,11 @@ mongosh() {
 
 mongo() {
     container-run mongo@mongodb "$@"
+    return $?
+}
+
+node() {
+    container-run node@nodejs "$@"
     return $?
 }
 

@@ -1,2 +1,5 @@
 # Push files/folders from develop to main.
 EventManApp/
+restclient/
+sql/
+tools/

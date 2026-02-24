@@ -1,6 +1,7 @@
 package com.EventManApp;
 
 import com.EventManApp.ActionCallbackInterface;
+import com.EventManApp.AppConfig;
 import com.EventManApp.ConfigManager;
 import com.EventManApp.ResponseCallbackInterface;
 import com.EventManApp.KVObjectStorageFactory;
@@ -226,10 +227,19 @@ public class EventManApp {
      * @param args Command-line arguments (ignored by this application).
      */
     public static void main(String[] args) {
+        String appPropertiesFile = "app.properties";
+        String dbPropertiesFile = "db.properties";
+        String configFile = "config.json";
+        String commandsFile = "commands.json";
+        String modulesFile = "modules.xml";
+        String subjectsFile = "subjects.xml";
+
+        AppConfig appsConfigFile = new AppConfig(appPropertiesFile);
         InputUI inputUI = new InputUI();
 
         // Define the appdata folder path
-        String appDataFolder = ".appdata";
+        String appDataFolder = appsConfigFile.getDataPath();
+        DebugUtil.debug(appDataFolder);
 
         // Create the appdata folder if it doesn't exist
         File directory = new File(appDataFolder);
@@ -238,11 +248,11 @@ public class EventManApp {
             System.out.println("Created directory: " + appDataFolder);
         }
 
-        ConfigManager configManager = ConfigManager.getInstance(".appdata/config.json");
-        JSONObject commands= JSONHelper.loadJsonFromFile("commands.json");
-        loadModulesFromXML("modules.xml");
+        ConfigManager configManager = ConfigManager.getInstance(appDataFolder+ "/" + configFile);
+        JSONObject commands= JSONHelper.loadJsonFromFile(commandsFile);
+        loadModulesFromXML(modulesFile);
 
-        DatabaseConfig dbConfigFile = new DatabaseConfig("db.properties");
+        DatabaseConfig dbConfigFile = new DatabaseConfig(dbPropertiesFile);
 
         KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("mongodb", dbConfigFile);
         //KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("database", dbConfigFile);
@@ -257,7 +267,7 @@ public class EventManApp {
         //File subjectStorageFile = new File(".appdata/kvsubjects.txt");
         //KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("file", subjectStorageFile);
         //KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("memory", null);
-        kvSubjectHandler = new KVSubjectHandler("subjects.xml",subjectStorage);
+        kvSubjectHandler = new KVSubjectHandler(subjectsFile,subjectStorage);
         payloadHandler = new PayloadHandler(kvObjectHandler,kvSubjectHandler);
 
         startbackgroundInterface(commands);
@@ -273,3 +283,4 @@ public class EventManApp {
         logActiveThreads();
     }
 }
+

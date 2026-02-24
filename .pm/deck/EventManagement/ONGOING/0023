@@ -21,4 +21,10 @@ The goal of this card is to generate commands.json automatically from subjects.x
 - 
 
 # Reports:
-*
+* What need to do
+> * Keep a copy of `subjects.xml` outside of the package to make it possible to update subjects structures without compiling app
+> * Subject handler reads `subjects.xml` from data folder not from package resources
+> * Auto generate `commands.json` from `subjects.xml`
+> * Keep/read `commands.json` on the data folder
+> * somehow track `subject.xml`
+> * update tables when `subjects.xml` is changed

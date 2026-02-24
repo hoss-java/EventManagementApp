@@ -1,0 +1,24 @@
+---
+#...
+# Git-deck card header
+# OBS! DON'T REMOVE CARD HEADERS
+#...
+Title: Add a web base client.
+Tags:
+Creator:
+AssignedTo:
+# Time tracker settings
+tartAt:
+EndAt:
+---
+The goal of this card is to add a simple web client.
+
+# DOD (definition of done):
+A web client is implemented.
+
+# TODO:
+- [ ] 1. Investigate which tech is better to use for a simple web client.
+- [ ] 2.
+
+# Reports:
+*
