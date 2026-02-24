@@ -34,7 +34,7 @@ public class MenuUI {
             new InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8)
         );
         // Detect if this is a network stream (not System.in)
-        this.isNetworkStream = !(in == System.in);
+        this.isNetworkStream = !in.getClass().getName().equals("java.io.BufferedInputStream");
     }
 
     public MenuUI(String menuTitle) {
@@ -95,36 +95,31 @@ public class MenuUI {
         try {
             StringBuilder inputBuffer = new StringBuilder();
             int character;
-
             while ((character = in.read()) != -1) {
                 if (character == '\n' || character == '\r') {
                     // Line ending received
                     if (this.isNetworkStream) {
                         this.out.print("\r\n");
-                    } else {
-                        this.out.print("\n");
                     }
-                    this.out.flush();
                     break;
                 } else if (character == 8 || character == 127) {
                     // Backspace handling
                     if (inputBuffer.length() > 0) {
                         inputBuffer.deleteCharAt(inputBuffer.length() - 1);
                         this.out.print("\b \b");  // Backspace, space, backspace
-                        this.out.flush();
                     }
                 } else if (character >= 32 && character < 127) {
                     // Regular character - echo it immediately
                     inputBuffer.append((char) character);
-                    this.out.print((char) character);
-                    this.out.flush();
+                    if (this.isNetworkStream) {
+                        this.out.print((char) character);
+                    }
                 }
             }
 
             if (character == -1) {
                 return null;  // EOF reached
             }
-
             return inputBuffer.toString();
         } catch (IOException e) {
             println("Error reading input: " + e.getMessage());
@@ -192,7 +187,7 @@ public class MenuUI {
     private void navigateCommands(String rootID, JSONArray commandsArray, JSONObject payload, String backCommand) {
         while (true) {
             String commandName = displayCommandsAndGetChoice(commandsArray, backCommand);
-            
+
             if (commandName == null) {
                 return;
             }

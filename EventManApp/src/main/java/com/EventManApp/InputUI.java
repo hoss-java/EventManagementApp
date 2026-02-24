@@ -32,7 +32,8 @@ public class InputUI {
         this.reader = new BufferedReader(
             new InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8)
         );
-        this.isNetworkStream = !(in == System.in);
+        this.isNetworkStream = !in.getClass().getName().equals("java.io.BufferedInputStream");
+
     }
 
     public InputUI() {
@@ -50,7 +51,6 @@ public class InputUI {
         } else {
             this.out.print(message + "\n");
         }
-        this.out.flush();
     }
 
     private void println() {
@@ -59,7 +59,6 @@ public class InputUI {
         } else {
             this.out.print("\n");
         }
-        this.out.flush();
     }
 
     private String readLineFromStream() {
@@ -72,23 +71,20 @@ public class InputUI {
                     // Line ending received
                     if (this.isNetworkStream) {
                         this.out.print("\r\n");
-                    } else {
-                        this.out.print("\n");
                     }
-                    this.out.flush();
                     break;
                 } else if (character == 8 || character == 127) {
                     // Backspace handling
                     if (inputBuffer.length() > 0) {
                         inputBuffer.deleteCharAt(inputBuffer.length() - 1);
                         this.out.print("\b \b");  // Backspace, space, backspace
-                        this.out.flush();
                     }
                 } else if (character >= 32 && character < 127) {
                     // Regular character - echo it immediately
                     inputBuffer.append((char) character);
-                    this.out.print((char) character);
-                    this.out.flush();
+                    if (this.isNetworkStream) {
+                        this.out.print((char) character);
+                    }
                 }
             }
 

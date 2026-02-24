@@ -12,13 +12,13 @@ public abstract class BaseInterface {
     private boolean running = true;
     protected final PrintStream out;
     protected final InputStream in;
-    private final boolean isNetworkStream;
+    protected final boolean isNetworkStream;
 
     public BaseInterface(ResponseCallbackInterface callback, PrintStream out, InputStream in) {
         this.callback = callback;
         this.out = out;
         this.in = in;
-        this.isNetworkStream = !(in == System.in);
+        this.isNetworkStream = !in.getClass().getName().equals("java.io.BufferedInputStream");
     }
 
     public BaseInterface(ResponseCallbackInterface callback) {
