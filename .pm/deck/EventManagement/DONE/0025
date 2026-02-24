@@ -88,3 +88,5 @@ A web client is implemented.
 >>>> **OBS!** `rest-service` is `172.32.0.11` on the current seeting of containers
 >>>> **OBS!** The port (`32768`) also points to the current port used by `maven` container
 > * It also possible to set up a vpn container to tunnel to the containers network. **No need to test, it has already tested before**
+
+* Next step (not now) is to develop client with using a known technology such as React or Angular

@@ -75,9 +75,9 @@
 
 * Step 1: Implementing a git branch base workflow ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 * Step 2: Develop a basic code according the project scenario ![status](https://img.shields.io/badge/status-DONE-brightgreen)
-* Step 3: Implement tests for both unit and block levels. ![status](https://img.shields.io/badge/status-NOT--STARTED-lightgrey)
+* Step 3: Implement tests for both unit and block levels. ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 * Step 4: Automate testing and integrating it to GitHub workflows ![status](https://img.shields.io/badge/status-DONE-brightgreen)
-* Step 5: Add advanced/required futures according the project scenario ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+* Step 5: Add advanced/required futures according the project scenario ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 * Step 6: Documenting and summarizing findings, developments, and integrations. ![status](https://img.shields.io/badge/status-ONGOING-yellow)
 * Step 7: Touch a service implementation of the project ![status](https://img.shields.io/badge/status-DONE-brightgreen)
 
@@ -834,13 +834,16 @@ classDiagram
 
 ## What more to do
 1. Adding tests
-2. Adding a MongoSB or similar non-sql db
-3. Add new interfaces (ssh, REST)
+2. Adding a MongoSB or similar non-sql db ![status](https://img.shields.io/badge/status-DONE-brightgreen)
+3. Add new interfaces (ssh, REST) ![status](https://img.shields.io/badge/status-DONE-brightgreen)
+> * Several clients to connect via ssh and Rest were developed also. 
 4. Reorganize files in a correct way for example in a Spring way
-5. Try to implement a web base Frontend
+5. Try to implement a web base Frontend ![status](https://img.shields.io/badge/status-DONE-brightgreen)
+> * several cli-base clients on bash, pyhton and js were coded, all of them connect to the REST service
+> * Two web-base clients also were coded. They connect to the rest service via a proxy.
 
 ## Issues
-1. In the case of db it cant close db connections in a correct way
+1. In the case of db it cant close db connections in a correct way **FIXED**
 2. Secret keys are stored in a text file which is easy to read
 
 
