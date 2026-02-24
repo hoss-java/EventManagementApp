@@ -1518,5 +1518,28 @@ gantt
 > - 
 > 
 > # Reports:
+> * What need to do
+> > * Keep a copy of `subjects.xml` outside of the package to make it possible to update subjects structures without compiling app
+> > * Subject handler reads `subjects.xml` from data folder not from package resources
+> > * Auto generate `commands.json` from `subjects.xml`
+> > * Keep/read `commands.json` on the data folder
+> > * somehow track `subject.xml`
+> > * update tables when `subjects.xml` is changed
+> </details>
+
+## 001-0025
+> **Add a web base client.** ![status](https://img.shields.io/badge/status-ONGOING-yellow)
+> <details open>
+>     <summary>Details</summary>
+> The goal of this card is to add a simple web client.
+> 
+> # DOD (definition of done):
+> A web client is implemented.
+> 
+> # TODO:
+> - [ ] 1. Investigate which tech is better to use for a simple web client.
+> - [ ] 2.
+> 
+> # Reports:
 > *
 > </details>
