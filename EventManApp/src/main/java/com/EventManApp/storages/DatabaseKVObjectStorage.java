@@ -21,52 +21,67 @@ import java.util.*; // Import collections and other utilities
 
 import org.json.JSONObject;
 
-import com.EventManApp.KVObject;
-import com.EventManApp.KVSubject;
-import com.EventManApp.KVObjectField;
-import com.EventManApp.KVObjectStorage;
-import com.EventManApp.lib.DebugUtil;
-import com.EventManApp.lib.StringParserHelper;
-import com.EventManApp.DatabaseConfig;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
+
+import com.EventManApp.kvhandler.KVObject;
+import com.EventManApp.kvhandler.KVSubject;
+import com.EventManApp.kvhandler.KVObjectField;
+import com.EventManApp.kvhandler.KVObjectStorage;
+import com.EventManApp.kvhandler.KVSubjectStorage;
+import com.EventManApp.helper.DebugUtil;
+import com.EventManApp.helper.StringParserHelper;
+import com.EventManApp.helper.EncryptionUtil;
+import com.EventManApp.config.StorageConfig;
 import com.EventManApp.storages.DatabaseKVSubjectStorage;
+import com.EventManApp.storages.StorageSettings;
 
 public class DatabaseKVObjectStorage implements KVObjectStorage {
-    private static DatabaseKVObjectStorage instance;
-    private DatabaseConfig dbConfigFile; // Add this field
+    private StorageSettings dbSettings;
     // JDBC connection
     private Connection connection;
 
-    // Private constructor
-    private DatabaseKVObjectStorage(DatabaseConfig dbConfigFile) throws SQLException {
-        this.dbConfigFile = dbConfigFile; // Store the dbConfigFile in the instance
+    public DatabaseKVObjectStorage(StorageSettings dbSettings) throws SQLException {
+        this.dbSettings = dbSettings; // Store the dbSettings in the instance
         printDefaultConnectionDetails();
 
-        String decryptedPassword = getDecryptedPassword(dbConfigFile);
+        String decryptedPassword = getDecryptedPassword(dbSettings);
 
         // Establish a connection to the database
-        this.connection = DriverManager.getConnection(dbConfigFile.getSqlUrl(), dbConfigFile.getSqlUsername(), decryptedPassword);
+        this.connection = DriverManager.getConnection(dbSettings.get("url") + "/" + dbSettings.get("database"), dbSettings.get("username"), decryptedPassword);
     }
 
-    public static synchronized DatabaseKVObjectStorage getInstance(DatabaseConfig dbConfigFile) throws SQLException {
-        if (instance == null) {
-            instance = new DatabaseKVObjectStorage(dbConfigFile);
-        }
-        return instance;
-    }
-
-    private String getDecryptedPassword(DatabaseConfig dbConfigFile) {
+    private String getDecryptedPassword(StorageSettings dbSettings) {
         String decryptedPassword = "";
         try {
-            decryptedPassword = dbConfigFile.getSqlDecryptedPassword();
+            decryptedPassword = createDecryptedPassword();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return decryptedPassword;
     }
 
+    private SecretKey stringToKey(String keyStr) {
+        byte[] decodedKey = Base64.getDecoder().decode(keyStr);
+        return new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+    }
+
+    // Decrypt the stored encrypted password
+    public String createDecryptedPassword() throws Exception {
+        String keyString = dbSettings.get("secretKey");
+        SecretKey dbSecretKey = stringToKey(keyString);
+        String dbEncryptedPassword = dbSettings.get("password");
+        if (dbEncryptedPassword == null || dbSecretKey == null) {
+
+            return null;
+        }
+        return EncryptionUtil.decrypt(dbEncryptedPassword, dbSecretKey);
+    }
+
     private void printDefaultConnectionDetails() {
-        String jdbcUrl = dbConfigFile.getSqlUrl();
-        String username = dbConfigFile.getSqlUsername();
+        String jdbcUrl = dbSettings.get("url") + "/" + dbSettings.get("database");
+        String username = dbSettings.get("username");
 
         Enumeration<Driver> drivers = DriverManager.getDrivers();
         while (drivers.hasMoreElements()) {
@@ -125,7 +140,7 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
                 checkTableSQL = "SELECT COUNT(*) FROM information_schema.tables "
                               + "WHERE table_schema = ? AND table_name = ?";
                 try (PreparedStatement pstmt = connection.prepareStatement(checkTableSQL)) {
-                    pstmt.setString(1, dbConfigFile.getSqlDatabase());
+                    pstmt.setString(1, dbSettings.get("database"));
                     pstmt.setString(2, tableName);
                     ResultSet rs = pstmt.executeQuery();
 
@@ -197,6 +212,51 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
     }
 
     @Override
+    public void updateKVObject(KVObject kvObject) {
+        // Check if a table with the same identifier exists
+        if (!tableExists(kvObject.getIdentifier())) {
+            System.out.println("Error: No table found for identifier " + kvObject.getIdentifier() + ". Cannot update KVObject.");
+            return;
+        }
+
+        // Check if id field exists
+        Object idValue = kvObject.getFieldValue("id");
+        if (idValue == null) {
+            System.out.println("Error: No id field found. Cannot update KVObject.");
+            return;
+        }
+
+        // Prepare the update statement based on fieldTypeMap
+        StringBuilder updateSQL = new StringBuilder("UPDATE " + kvObject.getIdentifier() + " SET ");
+        List<Object> values = new ArrayList<>();
+
+        // Iterate through the fieldTypeMap to create the update query
+        for (Map.Entry<String, KVObjectField> entry : kvObject.getFieldTypeMap().entrySet()) {
+            String fieldName = entry.getKey();
+            if (!fieldName.equals("id")) { // Skip the id field in SET clause
+                Object fieldValue = kvObject.getFieldValue(fieldName);
+                updateSQL.append(fieldName).append(" = ?, ");
+                values.add(fieldValue);
+            }
+        }
+
+        // Remove the last comma and space
+        updateSQL.setLength(updateSQL.length() - 2);
+        updateSQL.append(" WHERE id = ?");
+        values.add(idValue); // Add id value for WHERE clause
+
+        // Execute the update statement
+        try (PreparedStatement pstmt = connection.prepareStatement(updateSQL.toString())) {
+            for (int i = 0; i < values.size(); i++) {
+                pstmt.setObject(i + 1, values.get(i));
+            }
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public boolean removeKVObject(KVObject kvObject) {
         String identifier = kvObject.getIdentifier(); // Get the identifier (table name)
 
@@ -240,14 +300,27 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
 
     @Override
     public List<KVObject> getKVObjects(String identifier) {
-        // Get the instance of DatabaseKVSubjectStorage
-        DatabaseKVSubjectStorage subjectStorage;
+        // Get the MultiNamespaceStorageManager instance
+        MultiNamespaceStorageManager manager = MultiNamespaceStorageManager.getInstance(null);
+        
+        // Get the namespace and storage type from dbSettings
+        String namespace = dbSettings.getNamespace();
+        String storageType = dbSettings.getStorageType();
 
+        // Get the subject storage from the manager
+        KVSubjectStorage subjectStorage;
         try {
-            subjectStorage = DatabaseKVSubjectStorage.getInstance(dbConfigFile);
-        } catch (SQLException e) {
-            e.printStackTrace(); // or handle it in a way that makes sense for your application
-            return null; // or you can throw a custom exception
+            subjectStorage = manager.getSubjectStorage(namespace, storageType);
+            
+            if (!(subjectStorage instanceof MongoDBKVSubjectStorage)) {
+                throw new IllegalArgumentException(
+                    "Subject storage '" + storageType + "' in namespace '" + namespace + 
+                    "' is not a MongoDBKVSubjectStorage instance"
+                );
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
 
         // Check if the table with the given identifier exists
@@ -294,7 +367,7 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
                 }
 
                 // Create a new KVObject using the constructor
-                KVObject kvObject = new KVObject(identifier, fieldTypeMap, jsonFields);
+                KVObject kvObject = new KVObject(namespace, identifier, fieldTypeMap, jsonFields);
                 kvObjects.add(kvObject); // Add the populated KVObject to the list
             }
         } catch (SQLException e) {
@@ -303,7 +376,6 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
 
         return kvObjects; // Return the list of KVObjects
     }
-
 
     @Override
     public int countKVObjects(String identifier) {

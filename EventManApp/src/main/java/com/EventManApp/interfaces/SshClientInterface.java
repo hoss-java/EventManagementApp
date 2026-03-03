@@ -25,11 +25,12 @@ import java.util.Collections;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.EventManApp.BaseInterface;
-import com.EventManApp.ResponseCallbackInterface;
-import com.EventManApp.lib.DebugUtil;
-import com.EventManApp.lib.TokenizedString;
-import com.EventManApp.lib.IPAddressHelper;
+import com.EventManApp.interfaces.BaseInterface;
+import com.EventManApp.callbacks.ActionCallbackInterface;
+import com.EventManApp.callbacks.ResponseCallbackInterface;
+import com.EventManApp.helper.DebugUtil;
+import com.EventManApp.helper.TokenizedString;
+import com.EventManApp.helper.IPAddressHelper;
 import com.EventManApp.interfaces.ssh.CustomCommandFactory;
 
 public class SshClientInterface extends BaseInterface {
@@ -38,13 +39,13 @@ public class SshClientInterface extends BaseInterface {
     private ChannelShell channel;
 
     private List<User> users = new ArrayList<>();
-    private String configFile = "sshinterface.properties";
+    private String configFile = "config/sshinterface.properties";
     private String serviceAddress = "172.32.0.11";
     private int servicePort = 32722;
 
-    private void loadProperties() {
+    private void loadProperties(String appDataFolder) {
         Properties props = new Properties();
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream(configFile)) {
+        try (InputStream input = getConfigInputStream(appDataFolder, configFile)) {
             if (input == null) {
                 System.out.println("Sorry, unable to find " + configFile);
                 return;
@@ -68,13 +69,20 @@ public class SshClientInterface extends BaseInterface {
         }
     }
 
+    public SshClientInterface(ResponseCallbackInterface callback, PrintStream out, InputStream in, String appDataFolder) {
+        super(callback, out, in, appDataFolder);
+        loadProperties(appDataFolder);
+    }
     public SshClientInterface(ResponseCallbackInterface callback, PrintStream out, InputStream in) {
-        super(callback,out,in);
-        loadProperties();
+        this(callback, out, in, null);
+    }
+
+    public SshClientInterface(ResponseCallbackInterface callback, String appDataFolder) {
+        this(callback, System.out, System.in, appDataFolder);
     }
 
     public SshClientInterface(ResponseCallbackInterface callback) {
-        this(callback, System.out, System.in);
+        this(callback, System.out, System.in, null);
     }
 
     @Override

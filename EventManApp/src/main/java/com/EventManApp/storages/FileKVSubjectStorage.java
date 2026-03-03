@@ -14,101 +14,203 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.EventManApp.KVObjectField;
-import com.EventManApp.KVSubject;
-import com.EventManApp.KVSubjectStorage;
-import com.EventManApp.lib.DebugUtil;
+import com.EventManApp.kvhandler.KVObjectField;
+import com.EventManApp.kvhandler.KVSubjectAttribute;
+import com.EventManApp.kvhandler.KVSubject;
+import com.EventManApp.kvhandler.KVSubjectStorage;
+import com.EventManApp.kvhandler.SerializationUtil;
+import com.EventManApp.helper.DebugUtil;
 
 public class FileKVSubjectStorage implements KVSubjectStorage {
-    private File file;
+    private StorageSettings dbSettings;
+    private File storageDirectory;
 
-    public FileKVSubjectStorage(File file) throws IOException {
-        this.file = file;
+    public FileKVSubjectStorage(StorageSettings dbSettings) throws IOException {
+        this.dbSettings = dbSettings;
 
-        // If the file does not exist, create a new one
-        if (!file.exists()) {
-            boolean created = file.createNewFile();
+        this.storageDirectory = new File(
+            dbSettings.getstorageFolder(), 
+            dbSettings.getNamespace()
+        );
+
+        if (!storageDirectory.exists()) {
+            boolean created = storageDirectory.mkdirs();
             if (!created) {
-                throw new IOException("Failed to create new file: " + file.getAbsolutePath());
+                throw new IOException("Failed to create directory: " + storageDirectory.getAbsolutePath());
             }
         }
+    }
+
+    private File getFileForIdentifier(String identifier) {
+        return new File(storageDirectory, identifier + ".sbj"); // Store each identifier in a separate JSON file
     }
 
     @Override
     public void addKVSubject(KVSubject kvSubject) {
-        JSONArray jsonArray = loadFromFile();
-
-        // Check if the subject already exists based on identifier
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject existingSubject = jsonArray.getJSONObject(i);
-            if (existingSubject.getString("identifier").equals(kvSubject.getIdentifier())) {
-                return; // Subject already exists, do nothing
+        File file = getFileForIdentifier(dbSettings.getNamespace());
+        String identifier = kvSubject.getIdentifier();
+        
+        // Check if identifier already exists
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                JSONObject jsonObject = new JSONObject(line);
+                if (jsonObject.getString("identifier").equals(identifier)) {
+                    System.out.println("Subject with identifier already exists: " + identifier);
+                    return;
+                }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        // Add the new subject
-        jsonArray.put(kvSubject.toJSON()); // Convert the KVSubject to JSON and add it
+        // Create new subject JSON
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("identifier", identifier);
+        jsonObject.put("subjectAttribute", SerializationUtil.serialize(kvSubject.getAttribute()));
+        jsonObject.put("fieldTypeMap", SerializationUtil.serializeMap(kvSubject.getFieldTypeMap()));
 
-        // Save all subjects back to the file
-        saveToFile(jsonArray);
+        // Append only the new subject to the file
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
+            writer.write(jsonObject.toString());
+            writer.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void updateKVSubject(KVSubject kvSubject) {
+        File file = getFileForIdentifier(dbSettings.getNamespace());
+        String identifier = kvSubject.getIdentifier();
+        List<String> lines = new ArrayList<>();
+        boolean idFound = false;
+
+        // Read all lines and update the matching identifier
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                JSONObject jsonObject = new JSONObject(line);
+                if (jsonObject.getString("identifier").equals(identifier)) {
+                    // Create updated subject JSON
+                    JSONObject updatedJson = new JSONObject();
+                    updatedJson.put("identifier", identifier);
+                    updatedJson.put("subjectAttribute", SerializationUtil.serialize(kvSubject.getAttribute()));
+                    updatedJson.put("fieldTypeMap", SerializationUtil.serializeMap(kvSubject.getFieldTypeMap()));
+                    lines.add(updatedJson.toString());
+                    idFound = true;
+                } else {
+                    lines.add(line);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Write back to file only if identifier found
+        if (idFound) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+                for (String line : lines) {
+                    writer.write(line);
+                    writer.newLine();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Subject with identifier not found: " + identifier);
+        }
     }
 
     @Override
     public boolean removeKVSubject(KVSubject kvSubject) {
-        JSONArray jsonArray = loadFromFile();
+        File file = getFileForIdentifier(dbSettings.getNamespace());
+        String identifier = kvSubject.getIdentifier();
+        List<String> lines = new ArrayList<>();
         boolean removed = false;
 
-        for (int i = 0; i < jsonArray.length(); i++) {
-            if (jsonArray.getJSONObject(i).getString("identifier").equals(kvSubject.getIdentifier())) {
-                jsonArray.remove(i); // Remove the specific subject
-                removed = true;
-                break;
+        // Read all lines and skip the matching identifier
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                JSONObject jsonObject = new JSONObject(line);
+                if (jsonObject.getString("identifier").equals(identifier)) {
+                    removed = true;
+                } else {
+                    lines.add(line);
+                }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
+        // Write back to file only if subject was removed
         if (removed) {
-            saveToFile(jsonArray); // Save updated list back to file
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+                for (String line : lines) {
+                    writer.write(line);
+                    writer.newLine();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         return removed;
     }
 
     @Override
     public KVSubject getKVSubject(String identifier) {
-        JSONArray jsonArray = loadFromFile();
+        File file = getFileForIdentifier(dbSettings.getNamespace());
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                JSONObject jsonObject = new JSONObject(line);
+                if (jsonObject.getString("identifier").equals(identifier)) {
+                    String subjectAttributeJson = jsonObject.getString("subjectAttribute");
+                    String fieldTypeMapJson = jsonObject.getString("fieldTypeMap");
+                    KVSubject kvSubject = new KVSubject(SerializationUtil.deserialize(subjectAttributeJson, KVSubjectAttribute.class));
 
-        if (jsonArray == null || jsonArray.length() == 0) {
-            // Handle the case where the JSON array is empty or null
-            return null; // Not found, as there are no records to search through
-        }
+                    if (fieldTypeMapJson != null) {
+                        kvSubject.setFieldTypeMap(SerializationUtil.deserializeMap(fieldTypeMapJson, KVObjectField.class));
+                    }
 
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject jsonObject = jsonArray.getJSONObject(i);
-            if (jsonObject.getString("identifier").equals(identifier)) {
-                return deserializeKVSubject(jsonObject); // Return the KVSubject from JSON
+                    return kvSubject;
+                }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return null; // Not found
     }
 
     @Override
     public List<KVSubject> getAllKVSubjects() {
+        File file = getFileForIdentifier(dbSettings.getNamespace());
         List<KVSubject> subjects = new ArrayList<>();
-        JSONArray jsonArray = loadFromFile();
-
-        if (jsonArray == null || jsonArray.length() == 0) {
-            // Handle the case where the JSON array is empty or null
-            return null; // Not found, as there are no records to search through
+        
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                JSONObject jsonObject = new JSONObject(line);
+                String subjectAttributeJson = jsonObject.getString("subjectAttribute");
+                String fieldTypeMapJson = jsonObject.getString("fieldTypeMap");
+                KVSubject kvSubject = new KVSubject(SerializationUtil.deserialize(subjectAttributeJson, KVSubjectAttribute.class));
+                
+                if (fieldTypeMapJson != null) {
+                    kvSubject.setFieldTypeMap(SerializationUtil.deserializeMap(fieldTypeMapJson, KVObjectField.class));
+                }
+                subjects.add(kvSubject);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject jsonObject = jsonArray.getJSONObject(i);
-            subjects.add(deserializeKVSubject(jsonObject)); // Deserialize and add to list
-        }
-        return subjects;
+        
+        return subjects.isEmpty() ? null : subjects;
     }
 
     @Override
     public int countKVSubjects() {
+        File file = getFileForIdentifier(dbSettings.getNamespace());
         if (!file.exists() || file.length() == 0) {
             return 0; // Return 0 if the file does not exist or is empty
         }
@@ -122,62 +224,6 @@ public class FileKVSubjectStorage implements KVSubjectStorage {
             e.printStackTrace(); // Handle exceptions
         }
         return lineCount; // Return the total line count
-    }
-
-    // Method to save subjects to a file
-    private void saveToFile(JSONArray jsonArray) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
-            writer.write(jsonArray.toString()); // Write the JSON array to the file
-        } catch (IOException e) {
-            e.printStackTrace(); // Handle exceptions
-        }
-    }
-
-    // Method to read subjects from the file
-    private JSONArray loadFromFile() {
-        StringBuilder jsonStringBuilder = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                jsonStringBuilder.append(line); // Read file content
-            }
-        } catch (IOException e) {
-            e.printStackTrace(); // Handle exceptions
-        }
-
-        // Return an empty JSONArray if the string is empty
-        if (jsonStringBuilder.length() == 0) {
-            return new JSONArray(); // Return empty array if no data is found
-        }
-
-        // Parse the loaded content to JSON format
-        return new JSONArray(jsonStringBuilder.toString());
-    }
-
-    // Method to deserialize a JSONObject to a KVSubject
-    private KVSubject deserializeKVSubject(JSONObject jsonObject) {
-        String identifier = jsonObject.getString("identifier");
-        String description = jsonObject.getString("description");
-        KVSubject kvSubject = new KVSubject(identifier, description);
-
-        // Restore the fieldTypeMap from JSON
-        JSONArray fieldsArray = jsonObject.getJSONArray("fieldTypeMap");
-        for (int j = 0; j < fieldsArray.length(); j++) {
-            JSONObject fieldObject = fieldsArray.getJSONObject(j);
-            KVObjectField field = new KVObjectField(
-                fieldObject.getString("field"),
-                fieldObject.getString("type"),
-                fieldObject.getBoolean("mandatory"),
-                fieldObject.getString("modifier"),
-                fieldObject.getString("defaultValue")
-            );
-            kvSubject.getFieldTypeMap().put(field.getField(), field); // Add to the fieldTypeMap
-        }
-
-        // Restore the nextId value
-        kvSubject.setNextId(jsonObject.getInt("nextId")); // Set the nextId
-
-        return kvSubject; // Return the fully constructed KVSubject
     }
 
     @Override

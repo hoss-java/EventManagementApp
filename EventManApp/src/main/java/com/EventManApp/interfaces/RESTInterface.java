@@ -14,24 +14,25 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.nio.charset.StandardCharsets;
 
-import com.EventManApp.BaseInterface;
-import com.EventManApp.ResponseCallbackInterface;
-import com.EventManApp.lib.DebugUtil;
-import com.EventManApp.lib.TokenizedString;
-import com.EventManApp.lib.IPAddressHelper;
+import com.EventManApp.interfaces.BaseInterface;
+import com.EventManApp.callbacks.ActionCallbackInterface;
+import com.EventManApp.callbacks.ResponseCallbackInterface;
+import com.EventManApp.helper.DebugUtil;
+import com.EventManApp.helper.TokenizedString;
+import com.EventManApp.helper.IPAddressHelper;
 
 public class RESTInterface extends BaseInterface {
     private HttpServer server;
-    private String configFile = "restinterface.properties";
+    private String configFile = "config/restinterface.properties";
     private int servicePort = 4567;
     private String servicePath = "api";
     private String serviceApiPath = "get";
     private String serviceCmdPath = "cmd";
     private JSONObject commands;
 
-    private void loadProperties() {
+    private void loadProperties(String appDataFolder) {
         Properties props = new Properties();
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream(configFile)) {
+        try (InputStream input = getConfigInputStream(appDataFolder, configFile)) {
             if (input == null) {
                 System.out.println("Sorry, unable to find " + configFile);
                 return;
@@ -49,14 +50,21 @@ public class RESTInterface extends BaseInterface {
         }
     }
 
-    public RESTInterface(ResponseCallbackInterface callback, PrintStream out, InputStream in) {
-        super(callback,out,in);
-        loadProperties();
+    public RESTInterface(ResponseCallbackInterface callback, PrintStream out, InputStream in, String appDataFolder) {
+        super(callback, out, in, appDataFolder);
+        loadProperties(appDataFolder);
         printServiceDetails();
+    }
+    public RESTInterface(ResponseCallbackInterface callback, PrintStream out, InputStream in) {
+        this(callback, out, in, null);
+    }
+
+    public RESTInterface(ResponseCallbackInterface callback, String appDataFolder) {
+        this(callback, System.out, System.in, appDataFolder);
     }
 
     public RESTInterface(ResponseCallbackInterface callback) {
-        this(callback, System.out, System.in);
+        this(callback, System.out, System.in, null);
     }
 
     private void printServiceDetails() {

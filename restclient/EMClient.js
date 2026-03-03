@@ -29,10 +29,10 @@ function clearScreen() {
   console.clear();
 }
 
-async function fetchCommands() {
+async function fetchJson() {
   /**
-   * Fetches the list of commands from the API.
-   * @returns {Promise<Array|null>} A list of command objects or null on error
+   * Fetches the entire JSON from the API.
+   * @returns {Promise<Object|null>} The JSON object or null on error
    */
   try {
     const response = await fetch(GET_COMMANDS_URL);
@@ -40,18 +40,35 @@ async function fetchCommands() {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    return data.commands || [];
+    return data;
   } catch (error) {
-    console.error(`Error fetching commands: ${error.message}`);
+    console.error(`Error fetching JSON: ${error.message}`);
     return null;
   }
 }
 
-function displayMenu(commands, level = 0, page = 1) {
+function displayAppMenu(apps) {
+  /**
+   * Displays the app selection menu.
+   * @param {Array} apps - List of app objects
+   */
+  clearScreen();
+  console.log("\n" + "=".repeat(5) + " Select an App " + "=".repeat(5));
+
+  apps.forEach((app, idx) => {
+    const appId = app.id || "Unknown";
+    const description = app.description || "No description available.";
+    console.log(`${idx + 1}: ${appId} - ${description}`);
+  });
+
+  console.log(`${apps.length + 1}: Exit`);
+}
+
+function displayCommandMenu(appId, commands, page = 1) {
   /**
    * Displays the command menu with pagination.
+   * @param {string} appId - The selected app ID
    * @param {Array} commands - List of command objects
-   * @param {number} level - Current menu level
    * @param {number} page - Current page number
    * @returns {Object} Object containing display info and paginated commands
    */
@@ -60,11 +77,15 @@ function displayMenu(commands, level = 0, page = 1) {
   const paginatedCommands = commands.slice(startIndex, endIndex);
 
   clearScreen();
-  console.log("\n" + "=".repeat(level + 1) + " Menu " + "=".repeat(level + 1));
+  console.log("\n" + "=".repeat(5) + ` Commands for: ${appId} ` + "=".repeat(5));
 
   if (paginatedCommands.length === 0) {
     console.log("No more commands to display.");
-    return { displayed: false, paginatedCommands: [], totalCommands: commands.length };
+    return { 
+      displayed: false, 
+      paginatedCommands: [], 
+      totalCommands: commands.length 
+    };
   }
 
   paginatedCommands.forEach((command, idx) => {
@@ -73,27 +94,17 @@ function displayMenu(commands, level = 0, page = 1) {
     console.log(`${startIndex + idx + 1}: ${description} (${commandId})`);
   });
 
-  // Calculate menu options based on level
-  let nextOptionNumber = paginatedCommands.length + 1;
+  const nextOptionNumber = paginatedCommands.length + 1;
+  console.log(`${nextOptionNumber}: Back`);
+  console.log(`${nextOptionNumber + 1}: Exit`);
 
-  // Show "Back" for level > 0
-  if (level > 0) {
-    console.log(`${nextOptionNumber}: Back`);
-    nextOptionNumber++;
-  }
-
-  // Show "Exit" for level 0
-  if (level === 0) {
-    console.log(`${nextOptionNumber}: Exit`);
-  }
-
-  return { 
-    displayed: true, 
-    paginatedCommands, 
+  return {
+    displayed: true,
+    paginatedCommands,
     totalCommands: commands.length,
     currentPage: page,
-    backOption: level > 0 ? paginatedCommands.length + 1 : null,
-    exitOption: level === 0 ? nextOptionNumber : null
+    backOption: nextOptionNumber,
+    exitOption: nextOptionNumber + 1,
   };
 }
 
@@ -144,10 +155,64 @@ function isValid(inputValue, argType) {
   return false;
 }
 
-async function getUserInput(fieldInfo) {
+function getActionType(selectedCommand) {
   /**
-   * Prompts user for input based on field information.
+   * Extracts the action type from the command.
+   * @param {Object} selectedCommand - The selected command object
+   * @returns {string} The action type (e.g., 'add' from 'event.add', or 'init' if no dot exists)
+   */
+  const action = selectedCommand.action;
+  if (action.includes(".")) {
+    return action.split(".")[1];
+  }
+  return "init";
+}
+
+function getDefaultValue(fieldInfo, action) {
+  /**
+   * Gets the default value for a field based on the action.
+   * @param {Object} fieldInfo - Field information including defaultValue
+   * @param {string} action - The current action type
+   * @returns {string} The default value for the action, or empty string if not found
+   */
+  const defaultValue = fieldInfo.defaultvalue || {};
+
+  // If defaultValue is a string (old format), return it
+  if (typeof defaultValue === "string") {
+    return defaultValue;
+  }
+
+  // If defaultValue is an object (new format), get value for the action
+  if (typeof defaultValue === "object") {
+    return defaultValue[action] || "";
+  }
+
+  return "";
+}
+
+function isFieldSupported(fieldInfo, action) {
+  /**
+   * Checks if the field supports the current action.
+   * @param {Object} fieldInfo - Field information including supports list
+   * @param {string} action - The current action type
+   * @returns {boolean} True if the field supports the action or has no supports restriction
+   */
+  const supports = fieldInfo.supports || [];
+
+  // If no supports list, field is supported for all actions
+  if (supports.length === 0) {
+    return true;
+  }
+
+  // Check if current action is in the supports list
+  return supports.includes(action);
+}
+
+async function getUserInput(fieldInfo, action) {
+  /**
+   * Prompts user for input based on field information and action.
    * @param {Object} fieldInfo - Field information including name, type, etc.
+   * @param {string} action - The current action type
    * @returns {Promise<string|number>} User input value or default value
    */
   const fieldName = fieldInfo.field;
@@ -155,9 +220,10 @@ async function getUserInput(fieldInfo) {
   const fieldType = fieldInfo.type;
   const mandatory = fieldInfo.mandatory || false;
   const modifier = fieldInfo.modifier;
+  const defaultValue = getDefaultValue(fieldInfo, action);
 
   if (modifier === "auto") {
-    return fieldInfo.defaultValue || "";
+    return defaultValue;
   }
 
   while (true) {
@@ -169,7 +235,7 @@ async function getUserInput(fieldInfo) {
     }
 
     if (!mandatory && userInput.trim() === "") {
-      return fieldInfo.defaultValue || "";
+      return defaultValue;
     }
 
     if (isValid(userInput, fieldType)) {
@@ -180,30 +246,60 @@ async function getUserInput(fieldInfo) {
   }
 }
 
-async function createPayload(argsInfo) {
+async function createPayload(argsInfo, action) {
   /**
    * Creates a JSON payload from user inputs.
    * @param {Object} argsInfo - Dictionary of field information
+   * @param {string} action - The current action type
    * @returns {Promise<Object>} Dictionary representing the payload
    */
   const payload = {};
 
   for (const [fieldKey, fieldInfo] of Object.entries(argsInfo)) {
-    const userInput = await getUserInput(fieldInfo);
+    // Check if field supports current action
+    if (!isFieldSupported(fieldInfo, action)) {
+      continue;
+    }
+
+    const userInput = await getUserInput(fieldInfo, action);
     payload[fieldKey] = userInput;
   }
 
   return payload;
 }
 
-async function runCommand(selectedCommand, rootIdentifier) {
+async function createPayload(argsInfo, action) {
   /**
-   * Executes the command with the provided identifier.
-   * @param {Object} selectedCommand - The selected command object
-   * @param {string} rootIdentifier - Identifier from the root
+   * Creates a JSON payload from user inputs.
+   * @param {Object} argsInfo - Dictionary of field information
+   * @param {string} action - The current action type
+   * @returns {Promise<Object>} Dictionary representing the payload
    */
+  const payload = {};
+
+  for (const [fieldKey, fieldInfo] of Object.entries(argsInfo)) {
+    // Check if field supports current action
+    if (!isFieldSupported(fieldInfo, action)) {
+      continue;
+    }
+
+    const userInput = await getUserInput(fieldInfo, action);
+    payload[fieldKey] = userInput;
+  }
+
+  return payload;
+}
+
+async function runCommand(selectedCommand, appId) {
+  /**
+   * Executes the command with the provided app identifier.
+   * @param {Object} selectedCommand - The selected command object
+   * @param {string} appId - The app ID
+   */
+  const action = getActionType(selectedCommand);
+
   const payload = {
-    identifier: rootIdentifier,
+    identifier: appId,
     commands: [
       {
         args: {},
@@ -215,8 +311,13 @@ async function runCommand(selectedCommand, rootIdentifier) {
 
   if (selectedCommand.args) {
     for (const [fieldKey, fieldInfo] of Object.entries(selectedCommand.args)) {
-      const userInput = await getUserInput(fieldInfo);
-      payload.commands[0].args[fieldKey] = fieldInfo;
+      // Check if field supports current action
+      if (!isFieldSupported(fieldInfo, action)) {
+        continue;
+      }
+
+      const userInput = await getUserInput(fieldInfo, action);
+      //payload.commands[0].args[fieldKey] = fieldInfo;
       if (userInput !== null) {
         payload.commands[0].data[fieldKey] = userInput;
       }
@@ -236,6 +337,8 @@ async function runCommand(selectedCommand, rootIdentifier) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
+    console.log("Payload Sent:");
+    console.log(JSON.stringify(payload, null, 2));
     const responseData = await response.json();
     console.log("Response from the server:");
     console.log(JSON.stringify(responseData, null, 2));
@@ -244,16 +347,68 @@ async function runCommand(selectedCommand, rootIdentifier) {
   }
 }
 
-async function handleSelection(commands, level = 0) {
+async function handleAppSelection(json) {
   /**
-   * Handles user selection from the menu.
+   * Handles app selection from the menu.
+   * @param {Object} json - The full JSON object containing apps
+   */
+  const apps = json.apps || [];
+
+  if (apps.length === 0) {
+    console.log("No apps available.");
+    return;
+  }
+
+  while (true) {
+    displayAppMenu(apps);
+
+    const selection = await prompt("Select an app by number: ");
+    let selectedNum;
+
+    try {
+      selectedNum = parseInt(selection);
+    } catch (error) {
+      console.log("Invalid selection, please enter a number.");
+      continue;
+    }
+
+    // Handle "Exit" option
+    if (selectedNum === apps.length + 1) {
+      console.log("Exiting the program.");
+      rl.close();
+      process.exit(0);
+    }
+
+    // Handle app selection
+    if (selectedNum >= 1 && selectedNum <= apps.length) {
+      const selectedApp = apps[selectedNum - 1];
+      const appId = selectedApp.id;
+      const commands = selectedApp.commands || [];
+
+      if (commands.length === 0) {
+        console.log("No commands available for this app.");
+        await prompt("Press Enter to continue...");
+        continue;
+      }
+
+      await handleCommandSelection(appId, commands);
+    } else {
+      console.log("Invalid selection, please try again.");
+    }
+  }
+}
+
+async function handleCommandSelection(appId, commands, level = 0) {
+  /**
+   * Handles command selection from the menu.
+   * @param {string} appId - The selected app ID
    * @param {Array} commands - List of command objects
-   * @param {number} level - Current menu level
+   * @param {number} level - Current menu level (for nested commands)
    */
   let page = 1;
 
   while (true) {
-    const menuInfo = displayMenu(commands, level, page);
+    const menuInfo = displayCommandMenu(appId, commands, page);
 
     if (!menuInfo.displayed) {
       break;
@@ -273,13 +428,13 @@ async function handleSelection(commands, level = 0) {
     const backOption = menuInfo.backOption;
     const exitOption = menuInfo.exitOption;
 
-    // Handle "Back" option (level > 0)
-    if (backOption !== null && selectedNum === backOption) {
+    // Handle "Back" option
+    if (selectedNum === backOption) {
       return;
     }
 
-    // Handle "Exit" option (level 0)
-    if (exitOption !== null && selectedNum === exitOption) {
+    // Handle "Exit" option
+    if (selectedNum === exitOption) {
       console.log("Exiting the program.");
       rl.close();
       process.exit(0);
@@ -289,13 +444,12 @@ async function handleSelection(commands, level = 0) {
     if (selectedNum >= 1 && selectedNum <= paginatedCommands.length) {
       const selectedCommand = paginatedCommands[selectedNum - 1];
 
-      if (selectedCommand.commands) {
+      if (selectedCommand.commands && selectedCommand.commands.length > 0) {
         // Nested menu
-        await handleSelection(selectedCommand.commands, level + 1);
+        await handleCommandSelection(selectedCommand.id || appId, selectedCommand.commands, level + 1);
       } else {
         // Execute command
-        const rootIdentifier = selectedCommand.id || "root";
-        await runCommand(selectedCommand, rootIdentifier);
+        await runCommand(selectedCommand, appId);
         await prompt("Press Enter to continue...");
       }
     } else {
@@ -308,12 +462,19 @@ async function main() {
   /**
    * Main function to execute the command-line interface.
    */
-  const commands = await fetchCommands();
-  if (commands === null) {
+  const json = await fetchJson();
+  if (json === null) {
     return;
   }
 
-  await handleSelection(commands);
+  // Check if apps exist in JSON
+  if (!json.apps || json.apps.length === 0) {
+    console.log("No apps available in the JSON response.");
+    rl.close();
+    process.exit(1);
+  }
+
+  await handleAppSelection(json);
 }
 
 async function checkServiceAvailability() {

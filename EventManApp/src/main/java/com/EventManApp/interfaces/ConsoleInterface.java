@@ -13,22 +13,31 @@ import java.util.Scanner;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.EventManApp.BaseInterface;
-import com.EventManApp.ResponseCallbackInterface;
-import com.EventManApp.lib.DebugUtil;
-import com.EventManApp.MenuUI;
-import com.EventManApp.InputUI;
+import com.EventManApp.interfaces.BaseInterface;
+import com.EventManApp.callbacks.ActionCallbackInterface;
+import com.EventManApp.callbacks.ResponseCallbackInterface;
+import com.EventManApp.helper.DebugUtil;
+import com.EventManApp.ui.MenuUI;
+import com.EventManApp.ui.InputUI;
 
 public class ConsoleInterface extends BaseInterface {
     private final Scanner scanner;
 
-    public ConsoleInterface(ResponseCallbackInterface callback, PrintStream out, InputStream in) {
-        super(callback,out,in);
+    public ConsoleInterface(ResponseCallbackInterface callback, PrintStream out, InputStream in, String appDataFolder) {
+        super(callback, out, in, appDataFolder);
         this.scanner = new Scanner(this.in);
     }
 
+    public ConsoleInterface(ResponseCallbackInterface callback, PrintStream out, InputStream in) {
+        this(callback, out, in, null);
+    }
+
+    public ConsoleInterface(ResponseCallbackInterface callback, String appDataFolder) {
+        this(callback, System.out, System.in, appDataFolder);
+    }
+
     public ConsoleInterface(ResponseCallbackInterface callback) {
-        this(callback, System.out, System.in);
+        this(callback, System.out, System.in, null);
     }
 
     private void runSelectedCommand(JSONObject selectedMenuObject) {
@@ -52,14 +61,14 @@ public class ConsoleInterface extends BaseInterface {
             JSONObject payloadCommand = new JSONObject();
             payloadCommand.put("id", command.getString("action"));
             payloadCommand.put("data", args);
-            payloadCommand.put("args", arguments);
+            //payloadCommand.put("args", arguments);
+            payloadCommand.put("args", new JSONObject());
 
             JSONArray payloadCommandsArray = new JSONArray();
             payloadCommandsArray.put(payloadCommand);
             // Put the commands list into the JSON object
             payload.put("commands", payloadCommandsArray);
         }
-
         String response = callback.ResponseHandler("ConsoleInterface", payload.toString());
         printJson(response);
         inputUI.waitForKeyPress();
@@ -67,13 +76,56 @@ public class ConsoleInterface extends BaseInterface {
 
     @Override
     public JSONObject executeCommands(JSONObject commands) {
+        return runCommandMenu(runAppsMenu(commands));
+    }
+
+    private JSONObject runCommandMenu(JSONObject appCommands) {
         MenuUI menuUI = new MenuUI("Available Commands (ConsoleInterface)", this.out, this.in);
         while (true) {
-            JSONObject selectedMenuObject = menuUI.displayMenu(commands);
-            if (selectedMenuObject.isEmpty()) {
+            JSONObject selectedMenuObject = menuUI.displayMenu(appCommands);
+            String identifier = selectedMenuObject.optString("identifier", "");
+            if (selectedMenuObject.isEmpty() || identifier.equals("root")) {
                 return selectedMenuObject.put("ConsoleInterface", "exit");
             }
             runSelectedCommand(selectedMenuObject);
         }
+    }
+
+    private JSONObject findAppCommands(JSONObject commands, String appId) {
+        JSONArray appsArray = commands.getJSONArray("apps");
+        for (int i = 0; i < appsArray.length(); i++) {
+            JSONObject app = appsArray.getJSONObject(i);
+            if (app.getString("id").equals(appId)) {
+                return app;
+            }
+        }
+        return new JSONObject();
+    }
+
+    private JSONObject runAppsMenu(JSONObject commands) {
+        if (!commands.has("apps") || commands.getJSONArray("apps").length() == 0) {
+            return commands.has("commands") ? commands : new JSONObject();
+        }
+        
+        MenuUI menuUI = new MenuUI("Available Application", this.out, this.in);
+        JSONObject appsList = new JSONObject();
+        JSONArray appsArray = new JSONArray();
+        commands.getJSONArray("apps").forEach(app -> {
+            JSONObject appObj = (JSONObject)app;
+            appsArray.put(new JSONObject().put("id", appObj.getString("id")).put("description", appObj.getString("description")));
+        });
+        appsList.put("commands", appsArray);
+
+        JSONObject selectedApp = menuUI.displayMenu(appsList);
+        
+        JSONObject commandObj = selectedApp.optJSONObject("command");
+        if (commandObj == null) {
+            return new JSONObject();
+        }
+        
+        String selectedAppId = commandObj.optString("id", "");
+        JSONObject selectedAppCommands = findAppCommands(commands, selectedAppId);
+        
+        return selectedAppCommands == null || selectedAppCommands.isEmpty() ? new JSONObject() : selectedAppCommands;
     }
 }

@@ -17,30 +17,36 @@ import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.EventManApp.KVObjectField;
-import com.EventManApp.KVSubject;
-import com.EventManApp.KVSubjectStorage;
-import com.EventManApp.lib.DebugUtil;
-import com.EventManApp.DatabaseConfig;
+import com.EventManApp.kvhandler.KVObjectField;
+import com.EventManApp.kvhandler.KVSubjectAttribute;
+import com.EventManApp.kvhandler.KVSubject;
+import com.EventManApp.kvhandler.KVSubjectStorage;
+import com.EventManApp.kvhandler.SerializationUtil;
+import com.EventManApp.helper.DebugUtil;
+import com.EventManApp.helper.EncryptionUtil;
+import com.EventManApp.config.StorageConfig;
+import com.EventManApp.storages.StorageSettings;
 
 public class DatabaseKVSubjectStorage implements KVSubjectStorage {
-    private static DatabaseKVSubjectStorage instance;
-    private DatabaseConfig dbConfigFile; // Add this field
+    private StorageSettings dbSettings; // Add this field
     // JDBC connection
     private Connection connection;
 
-    // Private constructor
-    private DatabaseKVSubjectStorage(DatabaseConfig dbConfigFile) throws SQLException {
-        this.dbConfigFile = dbConfigFile; // Store the dbConfigFile in the instance
+    public DatabaseKVSubjectStorage(StorageSettings dbSettings) throws SQLException {
+        this.dbSettings = dbSettings; // Store the dbSettings in the instance
         printDefaultConnectionDetails();
 
-        String decryptedPassword = getDecryptedPassword(dbConfigFile);
+        String decryptedPassword = getDecryptedPassword(dbSettings);
 
         // Establish a connection to the database
-        this.connection = DriverManager.getConnection(dbConfigFile.getSqlUrl(), dbConfigFile.getSqlUsername(), decryptedPassword);
+        this.connection = DriverManager.getConnection(dbSettings.get("url") + "/" + dbSettings.get("database"), dbSettings.get("username"), decryptedPassword);
 
         // Create the table for KVSubjects if it doesn't exist, including fieldTypeMap
         String createTableSQL = "CREATE TABLE IF NOT EXISTS KVSubjects (" +
@@ -53,26 +59,36 @@ public class DatabaseKVSubjectStorage implements KVSubjectStorage {
         }
     }
 
-    public static synchronized DatabaseKVSubjectStorage getInstance(DatabaseConfig dbConfigFile) throws SQLException {
-        if (instance == null) {
-            instance = new DatabaseKVSubjectStorage(dbConfigFile);
-        }
-        return instance;
-    }
-
-    private String getDecryptedPassword(DatabaseConfig dbConfigFile) {
+    private String getDecryptedPassword(StorageSettings dbSettings) {
         String decryptedPassword = "";
         try {
-            decryptedPassword = dbConfigFile.getSqlDecryptedPassword();
+            decryptedPassword = createDecryptedPassword();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return decryptedPassword;
     }
 
+    private SecretKey stringToKey(String keyStr) {
+        byte[] decodedKey = Base64.getDecoder().decode(keyStr);
+        return new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+    }
+
+    // Decrypt the stored encrypted password
+    public String createDecryptedPassword() throws Exception {
+        String keyString = dbSettings.get("secretKey");
+        SecretKey dbSecretKey = stringToKey(keyString);
+        String dbEncryptedPassword = dbSettings.get("password");
+        if (dbEncryptedPassword == null || dbSecretKey == null) {
+
+            return null;
+        }
+        return EncryptionUtil.decrypt(dbEncryptedPassword, dbSecretKey);
+    }
+
     private void printDefaultConnectionDetails() {
-        String jdbcUrl = dbConfigFile.getSqlUrl();
-        String username = dbConfigFile.getSqlUsername();
+        String jdbcUrl = dbSettings.get("url") + "/" + dbSettings.get("database");
+        String username = dbSettings.get("username");
 
         Enumeration<Driver> drivers = DriverManager.getDrivers();
         while (drivers.hasMoreElements()) {
@@ -130,7 +146,7 @@ public class DatabaseKVSubjectStorage implements KVSubjectStorage {
                 checkTableSQL = "SELECT COUNT(*) FROM information_schema.tables "
                               + "WHERE table_schema = ? AND table_name = ?";
                 try (PreparedStatement pstmt = connection.prepareStatement(checkTableSQL)) {
-                    pstmt.setString(1, dbConfigFile.getSqlDatabase());
+                    pstmt.setString(1,dbSettings.get("database"));
                     pstmt.setString(2, tableName);
                     ResultSet rs = pstmt.executeQuery();
 
@@ -184,28 +200,39 @@ public class DatabaseKVSubjectStorage implements KVSubjectStorage {
 
     @Override 
     public void addKVSubject(KVSubject kvSubject) {
-        // Check if table with the same name exists
         if (tableExists(kvSubject.getIdentifier())) {
             System.out.println("Error: A table with the name " + kvSubject.getIdentifier() + " already exists. Please delete the table to proceed.");
-            return; // Table exists, do not add the subject
+            return;
         }
 
-        // Insert new KVSubject and create a corresponding table
-        String insertSQL = "INSERT INTO KVSubjects (identifier, description, nextId, fieldTypeMap) VALUES (?, ?, ?, ?)";
+        String insertSQL = "INSERT INTO KVSubjects (identifier, subjectAttribute, fieldTypeMap) VALUES (?, ?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(insertSQL)) {
             pstmt.setString(1, kvSubject.getIdentifier());
-            pstmt.setString(2, kvSubject.getDescription());
-            pstmt.setInt(3, kvSubject.getNextId());
-
-            // Serialize fieldTypeMap to JSON
-            String fieldTypeMapJson = serializeFieldTypeMap(kvSubject.getFieldTypeMap());
-            pstmt.setString(4, fieldTypeMapJson); // Set the serialized fieldTypeMap
+            pstmt.setString(2, SerializationUtil.serialize(kvSubject.getAttribute()));
+            pstmt.setString(3, SerializationUtil.serializeMap(kvSubject.getFieldTypeMap()));
             pstmt.executeUpdate();
             
-            // Create a table with the name of the identifier based on fieldTypeMap
             createTableFromFieldTypeMap(kvSubject);
         } catch (SQLException e) {
-            e.printStackTrace(); // Handle exceptions
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void updateKVSubject(KVSubject kvSubject) {
+        if (!tableExists("KVSubjects")) {
+            System.out.println("Error: KVSubjects table does not exist. Cannot update KVSubject.");
+            return;
+        }
+
+        String updateSQL = "UPDATE KVSubjects SET subjectAttribute = ?, fieldTypeMap = ? WHERE identifier = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(updateSQL)) {
+            pstmt.setString(1, SerializationUtil.serialize(kvSubject.getAttribute()));
+            pstmt.setString(2, SerializationUtil.serializeMap(kvSubject.getFieldTypeMap()));
+            pstmt.setString(3, kvSubject.getIdentifier());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
@@ -245,90 +272,51 @@ public class DatabaseKVSubjectStorage implements KVSubjectStorage {
 
     @Override
     public KVSubject getKVSubject(String identifier) {
-        String selectSQL = "SELECT description, nextId, fieldTypeMap FROM KVSubjects WHERE identifier = ?";
+        String selectSQL = "SELECT subjectAttribute, fieldTypeMap FROM KVSubjects WHERE identifier = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(selectSQL)) {
             pstmt.setString(1, identifier);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                String description = rs.getString("description");
-                int nextId = rs.getInt("nextId");
+                String subjectAttributeJson = rs.getString("subjectAttribute");
                 String fieldTypeMapJson = rs.getString("fieldTypeMap");
 
-                KVSubject kvSubject = new KVSubject(identifier, description);
-                kvSubject.setNextId(nextId); // Set nextId
+                KVSubject kvSubject = new KVSubject(SerializationUtil.deserialize(subjectAttributeJson, KVSubjectAttribute.class));
 
-                // Deserialize fieldTypeMap from JSON
                 if (fieldTypeMapJson != null) {
-                    kvSubject.setFieldTypeMap(deserializeFieldTypeMap(fieldTypeMapJson));
+                    kvSubject.setFieldTypeMap(SerializationUtil.deserializeMap(fieldTypeMapJson, KVObjectField.class));
                 }
 
                 return kvSubject;
             }
         } catch (SQLException e) {
-            e.printStackTrace(); // Handle exceptions
+            e.printStackTrace();
         }
-        return null; // Not found
+        return null;
     }
 
     @Override
     public List<KVSubject> getAllKVSubjects() {
         List<KVSubject> subjects = new ArrayList<>();
-        String selectAllSQL = "SELECT identifier, description, nextId, fieldTypeMap FROM KVSubjects";
+        String selectAllSQL = "SELECT identifier, subjectAttribute, fieldTypeMap FROM KVSubjects";
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(selectAllSQL)) {
             while (rs.next()) {
                 String identifier = rs.getString("identifier");
-                String description = rs.getString("description");
-                int nextId = rs.getInt("nextId");
+                String subjectAttributeJson = rs.getString("subjectAttribute");
                 String fieldTypeMapJson = rs.getString("fieldTypeMap");
 
-                KVSubject kvSubject = new KVSubject(identifier, description);
-                kvSubject.setNextId(nextId); // Set nextId
+                KVSubject kvSubject = new KVSubject(SerializationUtil.deserialize(subjectAttributeJson, KVSubjectAttribute.class));
 
-                // Deserialize fieldTypeMap from JSON
                 if (fieldTypeMapJson != null) {
-                    kvSubject.setFieldTypeMap(deserializeFieldTypeMap(fieldTypeMapJson));
+                    kvSubject.setFieldTypeMap(SerializationUtil.deserializeMap(fieldTypeMapJson, KVObjectField.class));
                 }
 
                 subjects.add(kvSubject);
             }
         } catch (SQLException e) {
-            e.printStackTrace(); // Handle exceptions
+            e.printStackTrace();
         }
-        return subjects; // Return list of KVSubjects
-    }
-
-    // Method to serialize fieldTypeMap to JSON string
-    private String serializeFieldTypeMap(Map<String, KVObjectField> fieldTypeMap) {
-        JSONObject jsonObject = new JSONObject();
-        for (KVObjectField field : fieldTypeMap.values()) {
-            JSONObject fieldObject = new JSONObject();
-            fieldObject.put("field", field.getField());
-            fieldObject.put("type", field.getType());
-            fieldObject.put("mandatory", field.isMandatory());
-            fieldObject.put("modifier", field.getModifier());
-            fieldObject.put("defaultValue", field.getDefaultValue());
-            jsonObject.put(field.getField(), fieldObject);
-        }
-        return jsonObject.toString();
-    }
-
-    // Method to deserialize fieldTypeMap from JSON string
-    private Map<String, KVObjectField> deserializeFieldTypeMap(String jsonString) {
-        Map<String, KVObjectField> fieldTypeMap = new HashMap<>();
-        JSONObject jsonObject = new JSONObject(jsonString);
-        for (String key : jsonObject.keySet()) {
-            JSONObject fieldObject = jsonObject.getJSONObject(key);
-            KVObjectField field = new KVObjectField(
-                fieldObject.getString("field"),
-                fieldObject.getString("type"),
-                fieldObject.getBoolean("mandatory"),
-                fieldObject.getString("modifier"),
-                fieldObject.getString("defaultValue")
-            );
-            fieldTypeMap.put(field.getField(), field);
-        }
-        return fieldTypeMap;
+        return subjects;
     }
 
     @Override

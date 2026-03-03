@@ -23,8 +23,8 @@ import org.json.JSONObject;
 
 import com.EventManApp.BaseInterface;
 import com.EventManApp.ResponseCallbackInterface;
-import com.EventManApp.lib.DebugUtil;
-import com.EventManApp.lib.TokenizedString;
+import com.EventManApp.helper.DebugUtil;
+import com.EventManApp.helper.TokenizedString;
 
 public class SshInterface extends BaseInterface {
     private final Scanner scanner;

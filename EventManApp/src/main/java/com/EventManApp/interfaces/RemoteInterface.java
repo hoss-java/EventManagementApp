@@ -12,22 +12,24 @@ import java.util.regex.Pattern;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.OutputStream;
 import java.util.Properties;
 
-import com.EventManApp.BaseInterface;
-import com.EventManApp.ResponseCallbackInterface;
-import com.EventManApp.lib.DebugUtil;
-import com.EventManApp.lib.TokenizedString;
-import com.EventManApp.lib.RestServiceUtil;
-import com.EventManApp.MenuUI;
-import com.EventManApp.InputUI;
+import com.EventManApp.interfaces.BaseInterface;
+import com.EventManApp.callbacks.ActionCallbackInterface;
+import com.EventManApp.callbacks.ResponseCallbackInterface;
+import com.EventManApp.helper.DebugUtil;
+import com.EventManApp.helper.TokenizedString;
+import com.EventManApp.helper.RestServiceUtil;
+import com.EventManApp.ui.MenuUI;
+import com.EventManApp.ui.InputUI;
 
 public class RemoteInterface extends BaseInterface {
     private final Scanner scanner;
-    private String configFile = "remoteinterface.properties";
+    private String configFile = "config/remoteinterface.properties";
     private String serviceAddress = "172.32.0.11";
     private int servicePort = 32768;
     private String servicePath = "api";
@@ -35,9 +37,9 @@ public class RemoteInterface extends BaseInterface {
     private String serviceApiPath = "get";
     private String serviceCmdPath = "cmd";
 
-    private void loadProperties() {
+    private void loadProperties(String appDataFolder) {
         Properties props = new Properties();
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream(configFile)) {
+        try (InputStream input = getConfigInputStream(appDataFolder, configFile)) {
             if (input == null) {
                 out.println("Sorry, unable to find " + configFile);
                 return;
@@ -57,14 +59,22 @@ public class RemoteInterface extends BaseInterface {
         }
     }
 
-    public RemoteInterface(ResponseCallbackInterface callback, PrintStream out, InputStream in) {
-        super(callback, out, in);
+    public RemoteInterface(ResponseCallbackInterface callback, PrintStream out, InputStream in, String appDataFolder) {
+        super(callback, out, in, appDataFolder);
         this.scanner = new Scanner(in);
-        loadProperties();
+        loadProperties(appDataFolder);
+    }
+
+    public RemoteInterface(ResponseCallbackInterface callback, PrintStream out, InputStream in) {
+        this(callback, out, in, null);
+    }
+
+    public RemoteInterface(ResponseCallbackInterface callback, String appDataFolder) {
+        this(callback, System.out, System.in, appDataFolder);
     }
 
     public RemoteInterface(ResponseCallbackInterface callback) {
-        this(callback, System.out, System.in);
+        this(callback, System.out, System.in, null);
     }
 
     private void runSelectedCommand(JSONObject selectedMenuObject) {
@@ -88,7 +98,8 @@ public class RemoteInterface extends BaseInterface {
             JSONObject payloadCommand = new JSONObject();
             payloadCommand.put("id", command.getString("action"));
             payloadCommand.put("data", args);
-            payloadCommand.put("args", arguments);
+            //payloadCommand.put("args", arguments);
+            payloadCommand.put("args", new JSONObject());
 
             JSONArray payloadCommandsArray = new JSONArray();
             payloadCommandsArray.put(payloadCommand);
@@ -103,22 +114,63 @@ public class RemoteInterface extends BaseInterface {
 
     @Override
     public JSONObject executeCommands(JSONObject commands) {
-        if (RestServiceUtil.isServiceAvailable(this.serviceUrl + "/" + this.serviceApiPath)) {
-            //ignore commands passed by server and try to get command from the REST service
-            String response = RestServiceUtil.callRestService(this.serviceUrl + "/" + this.serviceApiPath, null);
-            JSONObject commandsJSONFromRemote = new JSONObject(response);
-
-            MenuUI menuUI = new MenuUI("Available Commands (RemoteInterface)", this.out, this.in);
-            while (true) {
-                JSONObject selectedMenuObject = menuUI.displayMenu(commandsJSONFromRemote);
-                if (selectedMenuObject.isEmpty()) {
-                    return selectedMenuObject.put("RemoteInterface", "exit");
-                }
-                runSelectedCommand(selectedMenuObject);
-            }
-        } else {
+        if (!RestServiceUtil.isServiceAvailable(this.serviceUrl + "/" + this.serviceApiPath)) {
             out.println("Service is not available " + this.serviceUrl);
             return null;
         }
+        
+        // Step 1: Fetch commands from remote service
+        String response = RestServiceUtil.callRestService(this.serviceUrl + "/" + this.serviceApiPath, null);
+        JSONObject commandsJSONFromRemote = new JSONObject(response);
+        
+        JSONObject commandsToUse = commandsJSONFromRemote;
+        
+        // Step 2: Select app if apps exist
+        if (commandsJSONFromRemote.has("apps")) {
+            JSONObject selectedApp = selectApp(commandsJSONFromRemote.getJSONArray("apps"));
+            if (selectedApp == null) {
+                return new JSONObject().put("RemoteInterface", "exit");
+            }
+            commandsToUse = selectedApp;
+        }
+        
+        // Step 3: Run command menu with selected app (or root commands if no apps)
+        return runCommandMenu(commandsToUse);
+    }
+
+    private JSONObject selectApp(JSONArray appsArray) {
+        if (appsArray.length() == 1) {
+            return appsArray.getJSONObject(0);
+        }
+        
+        MenuUI menuUI = new MenuUI("Select Application", this.out, this.in);
+        String selectedAppId = menuUI.displayCommandsAndGetChoice(appsArray, "Exit");
+        
+        if (selectedAppId == null || selectedAppId.equals("Exit")) {
+            return null;
+        }
+        
+        return appsArray.getJSONObject(findAppIndex(appsArray, selectedAppId));
+    }
+
+    private JSONObject runCommandMenu(JSONObject commands) {
+        MenuUI menuUI = new MenuUI("Available Commands (RemoteInterface)", this.out, this.in);
+        
+        while (true) {
+            JSONObject selectedMenuObject = menuUI.displayMenu(commands);
+            if (selectedMenuObject.isEmpty()) {
+                return selectedMenuObject.put("RemoteInterface", "exit");
+            }
+            runSelectedCommand(selectedMenuObject);
+        }
+    }
+
+    private int findAppIndex(JSONArray appsArray, String appId) {
+        for (int i = 0; i < appsArray.length(); i++) {
+            if (appsArray.getJSONObject(i).getString("id").equals(appId)) {
+                return i;
+            }
+        }
+        return 0;
     }
 }

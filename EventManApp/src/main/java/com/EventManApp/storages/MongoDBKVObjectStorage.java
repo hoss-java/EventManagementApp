@@ -8,65 +8,80 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.EventManApp.KVObject;
-import com.EventManApp.KVSubject;
-import com.EventManApp.KVObjectField;
-import com.EventManApp.KVObjectStorage;
-import com.EventManApp.lib.DebugUtil;
-import com.EventManApp.lib.StringParserHelper;
-import com.EventManApp.DatabaseConfig;
+import com.EventManApp.kvhandler.KVObject;
+import com.EventManApp.kvhandler.KVSubject;
+import com.EventManApp.kvhandler.KVObjectField;
+import com.EventManApp.kvhandler.KVObjectStorage;
+import com.EventManApp.kvhandler.KVSubjectStorage;
+import com.EventManApp.helper.DebugUtil;
+import com.EventManApp.helper.StringParserHelper;
+import com.EventManApp.helper.EncryptionUtil;
+import com.EventManApp.config.StorageConfig;
 import com.EventManApp.storages.MongoDBKVSubjectStorage;
+import com.EventManApp.storages.StorageSettings;
 
 public class MongoDBKVObjectStorage implements KVObjectStorage {
-    private static MongoDBKVObjectStorage instance;
-    private DatabaseConfig dbConfigFile; 
+    private StorageSettings dbSettings; 
 
     private MongoClient mongoClient;
     private MongoDatabase database;
 
-    // Private constructor
-    private MongoDBKVObjectStorage(DatabaseConfig dbConfigFile) {
-        this.dbConfigFile = dbConfigFile; // Store the dbConfigFile in the instance
+    public MongoDBKVObjectStorage(StorageSettings dbSettings) {
+        this.dbSettings = dbSettings; // Store the dbSettings in the instance
 
-        String decryptedPassword = getDecryptedPassword(this.dbConfigFile);
+        String decryptedPassword = getDecryptedPassword(dbSettings);
 
         // Create credentials
-        MongoCredential credential = MongoCredential.createCredential(dbConfigFile.getMongoUsername(), dbConfigFile.getMongoDatabase(), decryptedPassword.toCharArray());
+        MongoCredential credential = MongoCredential.createCredential(dbSettings.get("username"), dbSettings.get("database"), decryptedPassword.toCharArray());
 
         // Create a new MongoClient with corrected formatting
         String connectionString = String.format("mongodb://%s:%s@%s:%d/?authSource=%s",
             credential.getUserName(),
             new String(credential.getPassword()),
-            dbConfigFile.getMongoAddress(),
-            Integer.parseInt(dbConfigFile.getMongoPort()),
-            dbConfigFile.getMongoDatabase() // Ensure the auth source is set to your db
+            dbSettings.get("address"),
+            Integer.parseInt(dbSettings.get("port")),
+            dbSettings.get("database") // Ensure the auth source is set to your db
         );
 
         // Create a new MongoClient
         mongoClient = MongoClients.create(connectionString);
-        database = mongoClient.getDatabase(dbConfigFile.getMongoDatabase());
+        database = mongoClient.getDatabase(dbSettings.get("database"));
     }
 
-    public static synchronized MongoDBKVObjectStorage getInstance(DatabaseConfig dbConfigFile) {
-        if (instance == null) {
-            instance = new MongoDBKVObjectStorage(dbConfigFile);
-        }
-        return instance;
-    }
-
-    private String getDecryptedPassword(DatabaseConfig dbConfigFile) {
+    private String getDecryptedPassword(StorageSettings dbSettings) {
         String decryptedPassword = "";
         try {
-            decryptedPassword = dbConfigFile.getMongoDecryptedPassword();
+            decryptedPassword = createDecryptedPassword();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return decryptedPassword;
+    }
+
+    private SecretKey stringToKey(String keyStr) {
+        byte[] decodedKey = Base64.getDecoder().decode(keyStr);
+        return new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+    }
+
+    // Decrypt the stored encrypted password
+    public String createDecryptedPassword() throws Exception {
+        String keyString = dbSettings.get("secretKey");
+        SecretKey dbSecretKey = stringToKey(keyString);
+        String dbEncryptedPassword = dbSettings.get("password");
+        if (dbEncryptedPassword == null || dbSecretKey == null) {
+
+            return null;
+        }
+        return EncryptionUtil.decrypt(dbEncryptedPassword, dbSecretKey);
     }
 
     @Override
@@ -81,6 +96,21 @@ public class MongoDBKVObjectStorage implements KVObjectStorage {
 
         collection.insertOne(document);
         System.out.println("KVObject added to collection: " + collectionName);
+    }
+
+    @Override
+    public void updateKVObject(KVObject kvObject) {
+        String collectionName = kvObject.getIdentifier();
+        MongoCollection<Document> collection = database.getCollection(collectionName);
+
+        Document document = new Document();
+        kvObject.getFieldTypeMap().forEach((fieldName, fieldType) -> {
+            document.append(fieldName, kvObject.getFieldValue(fieldName).toString());
+        });
+
+        String id = document.getString("id");
+        collection.replaceOne(Filters.eq("id", id), document);
+        System.out.println("KVObject updated in collection: " + collectionName);
     }
 
     @Override
@@ -118,37 +148,61 @@ public class MongoDBKVObjectStorage implements KVObjectStorage {
 
     @Override
     public List<KVObject> getKVObjects(String identifier) {
-        // Get the instance of DatabaseKVSubjectStorage
-        MongoDBKVSubjectStorage subjectStorage;
+        // Get the MultiNamespaceStorageManager instance
+        MultiNamespaceStorageManager manager = MultiNamespaceStorageManager.getInstance(null);
+        
+        // Get the namespace and storage type from dbSettings
+        String namespace = dbSettings.getNamespace();
+        String storageType = dbSettings.getStorageType();
 
+        // Get the subject storage from the manager
+        KVSubjectStorage subjectStorage;
         try {
-            subjectStorage = MongoDBKVSubjectStorage.getInstance(dbConfigFile);
+            subjectStorage = manager.getSubjectStorage(namespace, storageType);
+            
+            if (!(subjectStorage instanceof MongoDBKVSubjectStorage)) {
+                throw new IllegalArgumentException(
+                    "Subject storage '" + storageType + "' in namespace '" + namespace + 
+                    "' is not a MongoDBKVSubjectStorage instance"
+                );
+            }
         } catch (Exception e) {
-            e.printStackTrace(); // or handle it in a way that makes sense for your application
-            return null; // or you can throw a custom exception
+            e.printStackTrace();
+            return null;
         }
         
-        // Check if the table with the given identifier exists
+        // Check if the collection with the given identifier exists
         if (!collectionExists(identifier)) {
-            System.out.println("Error: No table found for identifier " + identifier + ". Cannot retrieve KVObjects.");
-            return new ArrayList<>(); // Use ArrayList as the equivalent for empty collection
+            System.out.println("Error: No collection found for identifier " + identifier + 
+                             ". Cannot retrieve KVObjects.");
+            return new ArrayList<>();
         }
 
         // Get the KVSubject associated with the identifier
         KVSubject kvSubject = subjectStorage.getKVSubject(identifier);
         if (kvSubject == null) {
-            System.out.println("Error: No KVSubject found for identifier " + identifier + ". Cannot retrieve KVObjects.");
-            return new ArrayList<>(); // Use ArrayList as the equivalent for empty collection
+            System.out.println("Error: No KVSubject found for identifier " + identifier + 
+                             ". Cannot retrieve KVObjects.");
+            return new ArrayList<>();
+        }
+
+        String nameSpace = kvSubject.getNamespace();
+        
+        // Verify namespace consistency
+        if (!nameSpace.equals(namespace)) {
+            System.out.println("Warning: KVSubject namespace '" + nameSpace + 
+                             "' does not match StorageSettings namespace '" + namespace + "'");
         }
 
         // Get the field type map from the KVSubject
         Map<String, KVObjectField> fieldTypeMap = kvSubject.getFieldTypeMap();
         if (fieldTypeMap == null || fieldTypeMap.isEmpty()) {
-            System.out.println("Error: FieldTypeMap is empty for identifier " + identifier + ". Cannot retrieve KVObjects.");
-            return new ArrayList<>(); // Use ArrayList as the equivalent for empty collection
+            System.out.println("Error: FieldTypeMap is empty for identifier " + identifier + 
+                             ". Cannot retrieve KVObjects.");
+            return new ArrayList<>();
         }
 
-        // Prepare to read records from the specified table
+        // Prepare to read records from the specified collection
         MongoCollection<Document> collection = database.getCollection(identifier);
         List<KVObject> kvObjects = new ArrayList<>();
 
@@ -157,7 +211,7 @@ public class MongoDBKVObjectStorage implements KVObjectStorage {
             for (String fieldName : doc.keySet()) {
                 jsonFields.put(fieldName, doc.get(fieldName).toString());
             }
-            KVObject kvObject = new KVObject(identifier, fieldTypeMap, jsonFields); // FieldTypeMap handling can be improved based on your requirements
+            KVObject kvObject = new KVObject(nameSpace, identifier, fieldTypeMap, jsonFields);
             kvObjects.add(kvObject);
         }
         return kvObjects;

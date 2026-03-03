@@ -16,11 +16,12 @@ import java.io.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.EventManApp.BaseInterface;
-import com.EventManApp.ResponseCallbackInterface;
-import com.EventManApp.lib.DebugUtil;
-import com.EventManApp.MenuUI;
-import com.EventManApp.InputUI;
+import com.EventManApp.interfaces.BaseInterface;
+import com.EventManApp.callbacks.ActionCallbackInterface;
+import com.EventManApp.callbacks.ResponseCallbackInterface;
+import com.EventManApp.helper.DebugUtil;
+import com.EventManApp.ui.MenuUI;
+import com.EventManApp.ui.InputUI;
 
 public class CustomCommandFactory implements CommandFactory {
     private JSONObject commandsFork;
@@ -34,7 +35,7 @@ public class CustomCommandFactory implements CommandFactory {
     public ResponseCallbackInterface getCallback() {
         return callbackFork;
     }
-    
+
     public JSONObject getCommands() {
         if (commandsFork == null) {
             System.err.println("ERROR: commandsFork is null in getCommands()");
@@ -76,7 +77,8 @@ public class CustomCommandFactory implements CommandFactory {
                 JSONObject payloadCommand = new JSONObject();
                 payloadCommand.put("id", command.getString("action"));
                 payloadCommand.put("data", args);
-                payloadCommand.put("args", arguments);
+                //payloadCommand.put("args", arguments);
+                payloadCommand.put("args", new JSONObject());
 
                 JSONArray payloadCommandsArray = new JSONArray();
                 payloadCommandsArray.put(payloadCommand);
@@ -245,22 +247,47 @@ public class CustomCommandFactory implements CommandFactory {
             }
         }
 
+        private JSONObject getAvailableApps(JSONObject commands) {
+            JSONObject appsList = new JSONObject();
+            JSONArray appsArray = new JSONArray();
+            commands.getJSONArray("apps").forEach(app -> {
+                JSONObject appObj = (JSONObject) app;
+                appsArray.put(new JSONObject()
+                    .put("id", appObj.getString("id"))
+                    .put("description", appObj.getString("description")));
+            });
+            appsList.put("apps", appsArray);
+            return appsList;
+        }
+
         private String executeJavaCommand(String input) {
+            JSONObject commands = factory.getCommands();
             String[] parts = input.split("\\s+", 2);
             String command = parts[0].toLowerCase();
             String args = parts.length > 1 ? parts[1] : "";
             
             switch (command) {
-                case "eventman":
-                    return executeEventmanCommand(args);
                 case "help":
                     return executeHelpCommand();
+                case "exit":
+                    return "exit";
                 default:
+                    // Check if command matches any app id
+                    JSONObject appsList = getAvailableApps(commands);
+                    JSONArray appsArray = appsList.getJSONArray("apps");
+                    
+                    for (int i = 0; i < appsArray.length(); i++) {
+                        JSONObject app = appsArray.getJSONObject(i);
+                        if (command.equals(app.getString("id").toLowerCase())) {
+                            return executeAppCommand(command, args);
+                        }
+                    }
+                    
                     return "Unknown command: " + command + ". Type 'help' for available commands.\r\n";
             }
         }
 
-        private String executeEventmanCommand(String args) {
+        private String executeAppCommand(String appId, String args) {
             JSONObject commands = factory.getCommands();
             ResponseCallbackInterface callback = factory.getCallback();
 
@@ -271,23 +298,51 @@ public class CustomCommandFactory implements CommandFactory {
             if (commands == null || commands.length() == 0) {
                 return "Error: No commands available!\r\n";
             }
-            
+
+            JSONObject appCommands = getAppById(commands, appId);
+            if (appCommands == null) {
+                return "Error: App '" + appId + "' not found!\r\n";
+            }            
+
             try {
                 SshConsoleInterface sshConsoleInterface = new SshConsoleInterface(callback, out, in);
-                JSONObject result = sshConsoleInterface.executeCommands(commands);
-                return "EventMan execution completed.\r\n";
+                DebugUtil.debug(commands.toString());
+                JSONObject result = sshConsoleInterface.executeCommands(appCommands);
+                return appId + " execution completed.\r\n";
             } catch (Exception e) {
-                System.err.println("Exception in executeEventmanCommand: " + e.getMessage());
+                System.err.println("Exception in executeAppCommand: " + e.getMessage());
                 e.printStackTrace();
-                return "Error executing EventMan: " + e.getMessage() + "\r\n";
+                return "Error executing " + appId + ": " + e.getMessage() + "\r\n";
             }
         }
 
+        private JSONObject getAppById(JSONObject commands, String appId) {
+            JSONArray appsArray = commands.getJSONArray("apps");
+            for (int i = 0; i < appsArray.length(); i++) {
+                JSONObject app = appsArray.getJSONObject(i);
+                if (appId.equals(app.getString("id"))) {
+                    return app;
+                }
+            }
+            return null;
+        }
+
         private String executeHelpCommand() {
-            return "Available commands:\r\n" +
-                   "  eventman         - Run EventManApp console\r\n" +
-                   "  help             - Show this help message\r\n" +
-                   "  exit             - Exit the console\r\n";
+            JSONObject commands = factory.getCommands();
+            JSONObject appsList = getAvailableApps(commands);
+            StringBuilder help = new StringBuilder("Available commands:\r\n");
+            
+            appsList.getJSONArray("apps").forEach(app -> {
+                JSONObject appObj = (JSONObject) app;
+                String id = appObj.getString("id");
+                String description = appObj.getString("description");
+                help.append(String.format("  %-17s - %s\r\n", id, description));
+            });
+            
+            help.append("  help             - Show this help message\r\n");
+            help.append("  exit             - Exit the console\r\n");
+            
+            return help.toString();
         }
 
         @Override

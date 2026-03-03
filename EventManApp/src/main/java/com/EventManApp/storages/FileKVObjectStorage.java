@@ -12,18 +12,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.EventManApp.KVObject;
-import com.EventManApp.KVObjectField;
-import com.EventManApp.KVObjectStorage;
-import com.EventManApp.lib.DebugUtil;
+import com.EventManApp.kvhandler.KVObject;
+import com.EventManApp.kvhandler.KVObjectField;
+import com.EventManApp.kvhandler.KVObjectStorage;
+import com.EventManApp.kvhandler.KVSubject;
+import com.EventManApp.kvhandler.KVSubjectStorage;
+import com.EventManApp.helper.DebugUtil;
+import com.EventManApp.storages.StorageSettings;
+import com.EventManApp.storages.FileKVSubjectStorage;
 
 public class FileKVObjectStorage implements KVObjectStorage {
+    private StorageSettings dbSettings;
     private File storageDirectory;
 
-    public FileKVObjectStorage(File storageDirectory) throws IOException {
-        this.storageDirectory = storageDirectory;
+    public FileKVObjectStorage(StorageSettings dbSettings) throws IOException {
+        this.dbSettings = dbSettings;
 
-        // Create the directory if it doesn't exist
+        this.storageDirectory = new File(
+            dbSettings.getstorageFolder(), 
+            dbSettings.getNamespace()
+        );
+
         if (!storageDirectory.exists()) {
             boolean created = storageDirectory.mkdirs();
             if (!created) {
@@ -56,23 +65,98 @@ public class FileKVObjectStorage implements KVObjectStorage {
         return true; // Both directory and file already exist
     }
 
+    private File getFileForIdentifier(String identifier) {
+        return new File(storageDirectory, identifier + ".obj"); // Store each identifier in a separate JSON file
+    }
+    
     @Override
     public void addKVObject(KVObject kvObject) {
         File file = getFileForIdentifier(kvObject.getIdentifier());
 
-        // Ensure the file exists before proceeding
+        JSONObject jsonObject = new JSONObject();
+        kvObject.getFieldTypeMap().forEach((fieldName, fieldType) -> {
+            jsonObject.put(fieldName, kvObject.getFieldValue(fieldName).toString());
+        });
+
         if (!ensureFileAndDirectoryExists(file)) {
             System.err.println("Error: Could not create file: " + file.getAbsolutePath());
-            return; // Stop execution if the file can't be created
+            return;
         }
 
-        // Proceed to write the KVObject to the file
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
-            writer.write(kvObject.toString());
-            writer.newLine();
+        // Check if id already exists
+        boolean idExists = false;
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            String currentId = jsonObject.getString("id");
+            while ((line = reader.readLine()) != null) {
+                if (new JSONObject(line).getString("id").equals(currentId)) {
+                    idExists = true;
+                    break;
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
-            // Handle additional errors if needed
+        }
+
+        // Write only if id doesn't exist
+        if (!idExists) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
+                writer.write(jsonObject.toString());
+                writer.newLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Duplicate id: " + jsonObject.getString("id"));
+        }
+    }
+
+    @Override
+    public void updateKVObject(KVObject kvObject) {
+        File file = getFileForIdentifier(kvObject.getIdentifier());
+
+        JSONObject jsonObject = new JSONObject();
+        kvObject.getFieldTypeMap().forEach((fieldName, fieldType) -> {
+            jsonObject.put(fieldName, kvObject.getFieldValue(fieldName).toString());
+        });
+
+        if (!ensureFileAndDirectoryExists(file)) {
+            System.err.println("Error: Could not create file: " + file.getAbsolutePath());
+            return;
+        }
+
+        // Read all lines and update the matching id
+        List<String> lines = new ArrayList<>();
+        boolean idFound = false;
+        String currentId = jsonObject.getString("id");
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                JSONObject existingJson = new JSONObject(line);
+                if (existingJson.getString("id").equals(currentId)) {
+                    lines.add(jsonObject.toString());
+                    idFound = true;
+                } else {
+                    lines.add(line);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Write back to file
+        if (idFound) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+                for (String line : lines) {
+                    writer.write(line);
+                    writer.newLine();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Id not found: " + currentId);
         }
     }
 
@@ -98,6 +182,53 @@ public class FileKVObjectStorage implements KVObjectStorage {
 
     @Override
     public List<KVObject> getKVObjects(String identifier) {
+        // Get the MultiNamespaceStorageManager instance
+        MultiNamespaceStorageManager manager = MultiNamespaceStorageManager.getInstance(null);
+
+        // Get the namespace and storage type from dbSettings
+        String namespace = dbSettings.getNamespace();
+        String storageType = dbSettings.getStorageType();
+
+        // Get the subject storage from the manager
+        KVSubjectStorage subjectStorage;
+        try {
+            subjectStorage = manager.getSubjectStorage(namespace, storageType);
+            
+            if (!(subjectStorage instanceof FileKVSubjectStorage)) {
+                throw new IllegalArgumentException(
+                    "Subject storage '" + storageType + "' in namespace '" + namespace + 
+                    "' is not a FileDBKVSubjectStorage instance"
+                );
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        // Get the KVSubject associated with the identifier
+        KVSubject kvSubject = subjectStorage.getKVSubject(identifier);
+        if (kvSubject == null) {
+            System.out.println("Error: No KVSubject found for identifier " + identifier + 
+                             ". Cannot retrieve KVObjects.");
+            return new ArrayList<>();
+        }
+
+       String nameSpace = kvSubject.getNamespace();
+        
+        // Verify namespace consistency
+        if (!nameSpace.equals(namespace)) {
+            System.out.println("Warning: KVSubject namespace '" + nameSpace + 
+                             "' does not match StorageSettings namespace '" + namespace + "'");
+        }
+
+        // Get the field type map from the KVSubject
+        Map<String, KVObjectField> fieldTypeMap = kvSubject.getFieldTypeMap();
+        if (fieldTypeMap == null || fieldTypeMap.isEmpty()) {
+            System.out.println("Error: FieldTypeMap is empty for identifier " + identifier + 
+                             ". Cannot retrieve KVObjects.");
+            return new ArrayList<>();
+        }
+
         File file = getFileForIdentifier(identifier);
 
         // Ensure the file exists before proceeding
@@ -106,16 +237,23 @@ public class FileKVObjectStorage implements KVObjectStorage {
         }
 
         List<KVObject> kvObjects = new ArrayList<>();
+
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                // Deserialize line into KVObject
-                KVObject kvObject = deserialize(line);
+                JSONObject jsonObject = new JSONObject(line);
+                Map<String, String> jsonFields = new HashMap<>();        
+                for (String fieldName : jsonObject.keySet()) {
+                    jsonFields.put(fieldName, jsonObject.get(fieldName).toString());
+                }
+                
+                KVObject kvObject = new KVObject(nameSpace, identifier, fieldTypeMap, jsonFields);
                 kvObjects.add(kvObject);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         return kvObjects;
     }
 
@@ -136,38 +274,6 @@ public class FileKVObjectStorage implements KVObjectStorage {
             e.printStackTrace(); // Handle exceptions
         }
         return lineCount; // Return the total line count
-    }
-
-    private File getFileForIdentifier(String identifier) {
-        return new File(storageDirectory, identifier + ".json"); // Store each identifier in a separate JSON file
-    }
-
-    private KVObject deserialize(String line) {
-        JSONObject jsonObject = new JSONObject(line);
-        String identifier = jsonObject.getString("identifier");
-        JSONObject fieldTypeMapJSON = jsonObject.getJSONObject("fieldTypeMap");
-        Map<String, KVObjectField> fieldTypeMap = new HashMap<>();
-
-        // Assuming fieldTypeMapJSON is structured properly
-        for (String key : fieldTypeMapJSON.keySet()) {
-            KVObjectField field = new KVObjectField(
-                fieldTypeMapJSON.getJSONObject(key).getString("field"),
-                fieldTypeMapJSON.getJSONObject(key).getString("type"),
-                fieldTypeMapJSON.getJSONObject(key).getBoolean("mandatory"),
-                fieldTypeMapJSON.getJSONObject(key).getString("modifier"),
-                fieldTypeMapJSON.getJSONObject(key).getString("defaultValue")
-            );
-            fieldTypeMap.put(key, field);
-        }
-
-        Map<String, String> jsonFields = new HashMap<>();
-        for (String key : jsonObject.keySet()) {
-            if (!key.equals("identifier") && !key.equals("fieldTypeMap")) {
-                Object value = jsonObject.get(key);
-                jsonFields.put(key, value != null ? value.toString() : null); // Convert to String
-            }
-        }
-        return new KVObject(identifier, fieldTypeMap, jsonFields);
     }
 
     @Override

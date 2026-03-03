@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>REST Service Command Interface</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="console.css">
 </head>
 <body>
     <div class="app-wrapper">
@@ -29,11 +30,37 @@
                 </div>
             </div>
         </main>
-        
+
+        <!-- Console Window -->
+        <div class="console-window" id="console-window">
+            <div class="console-header">
+                <span class="console-title">Console</span>
+                <div class="console-controls">
+                    <button class="console-btn" id="clear-btn">Clear</button>
+                </div>
+            </div>
+            <div class="console-output"></div>
+        </div>        
+
         <footer class="app-footer">
         </footer>
     </div>
     
+    <!-- Console Toggle Icon Button -->
+    <button class="console-toggle-btn">✕</button>
+    
+
+    
+    <!-- Load scripts in order -->
+    <script src="console.js"></script>
+    <script src="consoleLogger.js"></script>
     <script src="script.js"></script>
+
+    <script>
+        // Clear button functionality
+        document.getElementById('clear-btn')?.addEventListener('click', () => {
+            window.consoleWindowInstance?.clear();
+        });
+    </script>
 </body>
 </html>

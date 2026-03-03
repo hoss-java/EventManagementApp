@@ -8,72 +8,88 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.EventManApp.KVObjectField;
-import com.EventManApp.KVSubject;
-import com.EventManApp.KVSubjectStorage;
-import com.EventManApp.DatabaseConfig;
-import com.EventManApp.lib.DebugUtil;
+import com.EventManApp.kvhandler.KVObjectField;
+import com.EventManApp.kvhandler.KVSubjectAttribute;
+import com.EventManApp.kvhandler.KVSubject;
+import com.EventManApp.kvhandler.KVSubjectStorage;
+import com.EventManApp.kvhandler.SerializationUtil;
+import com.EventManApp.config.StorageConfig;
+import com.EventManApp.helper.DebugUtil;
+import com.EventManApp.helper.EncryptionUtil;
+import com.EventManApp.storages.StorageSettings;
 
 public class MongoDBKVSubjectStorage implements KVSubjectStorage {
-    private static MongoDBKVSubjectStorage instance;
-    private DatabaseConfig dbConfigFile; // Add this field
+    private StorageSettings dbSettings;
 
     private MongoClient mongoClient;
     private MongoDatabase database;
 
-    // Private constructor
-    private MongoDBKVSubjectStorage(DatabaseConfig dbConfigFile) {
-        this.dbConfigFile = dbConfigFile; // Store the dbConfigFile in the instance
+    public MongoDBKVSubjectStorage(StorageSettings dbSettings) {
+        this.dbSettings = dbSettings; // Store the dbSettings in the instance
         printMongoDBConnectionDetails();
 
-        String decryptedPassword = getDecryptedPassword(this.dbConfigFile);
+        String decryptedPassword = getDecryptedPassword(dbSettings);
 
         // Create credentials
-        MongoCredential credential = MongoCredential.createCredential(dbConfigFile.getMongoUsername(), dbConfigFile.getMongoDatabase(), decryptedPassword.toCharArray());
+        MongoCredential credential = MongoCredential.createCredential(dbSettings.get("username"), dbSettings.get("database"), decryptedPassword.toCharArray());
 
         // Create a new MongoClient with corrected formatting
         String connectionString = String.format("mongodb://%s:%s@%s:%d/?authSource=%s",
             credential.getUserName(),
             new String(credential.getPassword()),
-            dbConfigFile.getMongoAddress(),
-            Integer.parseInt(dbConfigFile.getMongoPort()),
-            dbConfigFile.getMongoDatabase() // Ensure the auth source is set to your db
+            dbSettings.get("address"),
+            Integer.parseInt(dbSettings.get("port")),
+            dbSettings.get("database") // Ensure the auth source is set to your db
         );
 
         // Create a new MongoClient
         mongoClient = MongoClients.create(connectionString);
-        database = mongoClient.getDatabase(dbConfigFile.getMongoDatabase());
+        database = mongoClient.getDatabase(dbSettings.get("database"));
     }
 
-    public static synchronized MongoDBKVSubjectStorage getInstance(DatabaseConfig dbConfigFile) {
-        if (instance == null) {
-            instance = new MongoDBKVSubjectStorage(dbConfigFile);
-        }
-        return instance;
-    }
-
-    private String getDecryptedPassword(DatabaseConfig dbConfigFile) {
+    private String getDecryptedPassword(StorageSettings dbSettings) {
         String decryptedPassword = "";
         try {
-            decryptedPassword = dbConfigFile.getMongoDecryptedPassword();
+            decryptedPassword = createDecryptedPassword();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return decryptedPassword;
     }
 
+    private SecretKey stringToKey(String keyStr) {
+        byte[] decodedKey = Base64.getDecoder().decode(keyStr);
+        return new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+    }
+
+    // Decrypt the stored encrypted password
+    public String createDecryptedPassword() throws Exception {
+        String keyString = dbSettings.get("secretKey");
+        SecretKey dbSecretKey = stringToKey(keyString);
+        String dbEncryptedPassword = dbSettings.get("password");
+        if (dbEncryptedPassword == null || dbSecretKey == null) {
+
+            return null;
+        }
+        return EncryptionUtil.decrypt(dbEncryptedPassword, dbSecretKey);
+    }
+
     private void printMongoDBConnectionDetails() {
         // Print the connection details directly
         System.out.println("MongoDB Connection Details:");
-        System.out.println(" MongoDB Address: " + dbConfigFile.getMongoAddress());
-        System.out.println(" MongoDB Port: " + dbConfigFile.getMongoPort());
-        System.out.println(" Database Name: " + dbConfigFile.getMongoDatabase()); // e.g., "myDatabase"
-        System.out.println(" Username: " + dbConfigFile.getMongoUsername()); // e.g., "yourUsername"
+        System.out.println(" MongoDB Address: " + dbSettings.get("address"));
+        System.out.println(" MongoDB Port: " + dbSettings.get("port"));
+        System.out.println(" Database Name: " + dbSettings.get("database")); // e.g., "myDatabase"
+        System.out.println(" Username: " + dbSettings.get("username")); // e.g., "yourUsername"
 
         // Check if the MongoDB driver class can be loaded
         try {
@@ -89,23 +105,31 @@ public class MongoDBKVSubjectStorage implements KVSubjectStorage {
 
     @Override
     public void addKVSubject(KVSubject kvSubject) {
-        // Retrieve the database
-        MongoCollection<Document> collection = database.getCollection("KVSubjects"); // Name of the collection
+        MongoCollection<Document> collection = database.getCollection("KVSubjects");
 
         Document doc = new Document("identifier", kvSubject.getIdentifier())
-                .append("description", kvSubject.getDescription())
-                .append("nextId", kvSubject.getNextId())
-                .append("fieldTypeMap", serializeFieldTypeMap(kvSubject.getFieldTypeMap()));
+                .append("attribute", SerializationUtil.serialize(kvSubject.getAttribute()))
+                .append("fieldTypeMap", SerializationUtil.serializeMap(kvSubject.getFieldTypeMap()));
 
         collection.insertOne(doc);
     }
 
     @Override
+    public void updateKVSubject(KVSubject kvSubject) {
+        MongoCollection<Document> collection = database.getCollection("KVSubjects");
+
+        Document doc = new Document("attribute", SerializationUtil.serialize(kvSubject.getAttribute()))
+                .append("fieldTypeMap", SerializationUtil.serializeMap(kvSubject.getFieldTypeMap()));
+
+        collection.updateOne(Filters.eq("identifier", kvSubject.getIdentifier()), new Document("$set", doc));
+    }
+
+    @Override
     public boolean removeKVSubject(KVSubject kvSubject) {
         // Retrieve the database
-        MongoCollection<Document> collection = database.getCollection("KVSubjects"); // Name of the collection
+        MongoCollection<Document> collection = database.getCollection("KVSubjects");
 
-        // Remove the document from the collection
+        // Remove the document from the collection using the identifier from attributes
         long deletedCount = collection.deleteOne(Filters.eq("identifier", kvSubject.getIdentifier())).getDeletedCount();
         return deletedCount > 0;
     }
@@ -113,15 +137,17 @@ public class MongoDBKVSubjectStorage implements KVSubjectStorage {
     @Override
     public KVSubject getKVSubject(String identifier) {
         // Retrieve the database
-        MongoCollection<Document> collection = database.getCollection("KVSubjects"); // Name of the collection
+        MongoCollection<Document> collection = database.getCollection("KVSubjects");
 
         Document doc = collection.find(Filters.eq("identifier", identifier)).first();
         if (doc != null) {
-            KVSubject kvSubject = new KVSubject(identifier, doc.getString("description"));
-            kvSubject.setNextId(doc.getInteger("nextId"));
+            // Deserialize the subjectAttribute
+            KVSubjectAttribute subjectAttribute = SerializationUtil.deserialize(doc.getString("subjectAttribute"), KVSubjectAttribute.class);
+            
+            KVSubject kvSubject = new KVSubject(subjectAttribute);
 
             // Deserialize the fieldTypeMap from JSON
-            kvSubject.setFieldTypeMap(deserializeFieldTypeMap(doc.getString("fieldTypeMap")));
+            kvSubject.setFieldTypeMap(SerializationUtil.deserializeMap(doc.getString("fieldTypeMap"), KVObjectField.class));
 
             return kvSubject;
         }
@@ -133,17 +159,16 @@ public class MongoDBKVSubjectStorage implements KVSubjectStorage {
         List<KVSubject> subjects = new ArrayList<>();
 
         // Retrieve the database
-        MongoCollection<Document> collection = database.getCollection("KVSubjects"); // Name of the collection
+        MongoCollection<Document> collection = database.getCollection("KVSubjects");
 
         for (Document doc : collection.find()) {
-            String identifier = doc.getString("identifier");
-            String description = doc.getString("description");
-            int nextId = doc.getInteger("nextId");
-            KVSubject kvSubject = new KVSubject(identifier, description);
-            kvSubject.setNextId(nextId);
+            // Deserialize the subjectAttribute
+            KVSubjectAttribute subjectAttribute = SerializationUtil.deserialize(doc.getString("subjectAttribute"), KVSubjectAttribute.class);
+            
+            KVSubject kvSubject = new KVSubject(subjectAttribute);
 
             // Deserialize fieldTypeMap
-            kvSubject.setFieldTypeMap(deserializeFieldTypeMap(doc.getString("fieldTypeMap")));
+            kvSubject.setFieldTypeMap(SerializationUtil.deserializeMap(doc.getString("fieldTypeMap"), KVObjectField.class));
 
             subjects.add(kvSubject);
         }
@@ -166,35 +191,4 @@ public class MongoDBKVSubjectStorage implements KVSubjectStorage {
         }
     }
 
-    // Serialize fieldTypeMap to JSON string
-    private String serializeFieldTypeMap(Map<String, KVObjectField> fieldTypeMap) {
-        Document jsonObject = new Document();
-        for (KVObjectField field : fieldTypeMap.values()) {
-            Document fieldObject = new Document("field", field.getField())
-                    .append("type", field.getType())
-                    .append("mandatory", field.isMandatory())
-                    .append("modifier", field.getModifier())
-                    .append("defaultValue", field.getDefaultValue());
-            jsonObject.append(field.getField(), fieldObject);
-        }
-        return jsonObject.toJson();
-    }
-
-    // Deserialize fieldTypeMap from JSON string
-    private Map<String, KVObjectField> deserializeFieldTypeMap(String jsonString) {
-        Map<String, KVObjectField> fieldTypeMap = new HashMap<>();
-        Document jsonObject = Document.parse(jsonString);
-        for (String key : jsonObject.keySet()) {
-            Document fieldObject = jsonObject.get(key, Document.class);
-            KVObjectField field = new KVObjectField(
-                    fieldObject.getString("field"),
-                    fieldObject.getString("type"),
-                    fieldObject.getBoolean("mandatory"),
-                    fieldObject.getString("modifier"),
-                    fieldObject.getString("defaultValue")
-            );
-            fieldTypeMap.put(field.getField(), field);
-        }
-        return fieldTypeMap;
-    }
 }

@@ -1,21 +1,21 @@
 package com.EventManApp.storages;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.EventManApp.KVObject;
-import com.EventManApp.KVObjectStorage;
-import com.EventManApp.lib.DebugUtil;
-
+import org.json.JSONObject;
+import org.json.JSONArray;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.EventManApp.kvhandler.KVObject;
+import com.EventManApp.kvhandler.KVObjectStorage;
+import com.EventManApp.helper.DebugUtil;
+import com.EventManApp.storages.StorageSettings;
+
 public class MemoryKVObjectStorage implements KVObjectStorage {
     private Map<String, List<KVObject>> kvObjectMap;
 
-    public MemoryKVObjectStorage() {
+    public MemoryKVObjectStorage(StorageSettings dbSettings) {
         this.kvObjectMap = new HashMap<>();
     }
 
@@ -23,6 +23,21 @@ public class MemoryKVObjectStorage implements KVObjectStorage {
     public void addKVObject(KVObject kvObject) {
         String identifier = kvObject.getIdentifier();
         kvObjectMap.computeIfAbsent(identifier, k -> new ArrayList<>()).add(kvObject);
+    }
+
+    @Override
+    public void updateKVObject(KVObject kvObject) {
+        String identifier = kvObject.getIdentifier();
+        List<KVObject> objects = kvObjectMap.get(identifier);
+        
+        if (objects != null) {
+            for (int i = 0; i < objects.size(); i++) {
+                if (objects.get(i).getFieldValue("id").equals(kvObject.getFieldValue("id"))) {
+                    objects.set(i, kvObject);
+                    return;
+                }
+            }
+        }
     }
 
     @Override
@@ -47,6 +62,34 @@ public class MemoryKVObjectStorage implements KVObjectStorage {
 
     @Override
     public void close() {
+    }
+
+
+    /**
+     * Converts the storage to a JSON object
+     */
+    public JSONObject toJSON() {
+        JSONObject jsonObject = new JSONObject();
+        
+        for (Map.Entry<String, List<KVObject>> entry : kvObjectMap.entrySet()) {
+            JSONArray jsonArray = new JSONArray();
+            
+            for (KVObject kvObject : entry.getValue()) {
+                jsonArray.put(kvObject.toJSON());
+            }
+            
+            jsonObject.put(entry.getKey(), jsonArray);
+        }
+        
+        return jsonObject;
+    }
+
+    /**
+     * Returns a string representation of the storage using JSON format
+     */
+    @Override
+    public String toString() {
+        return toJSON().toString(2); // 2 for pretty printing with 2-space indentation
     }
 }
 

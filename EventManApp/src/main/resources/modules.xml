@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration>
-    <handlers>
-        <handler>com.EventManApp.handlers.EventObjectHandler</handler>
-        <handler>com.EventManApp.handlers.ParticipantObjectHandler</handler>
-        <handler>com.EventManApp.handlers.OrganizeObjectHandler</handler>
-    </handlers>
-    <interfaces>
-        <interface name="com.EventManApp.interfaces.ConsoleInterface" runInBackground="false"/>
-        <interface name="com.EventManApp.interfaces.RemoteInterface" runInBackground="false"/>
-        <interface name="com.EventManApp.interfaces.SshClientInterface" runInBackground="false"/>
-        <interface name="com.EventManApp.interfaces.RESTInterface" runInBackground="true"/>
-        <interface name="com.EventManApp.interfaces.SshdInterface" runInBackground="true"/>
-    </interfaces>
-</configuration>
+<root>
+    <configuration>
+        <handlers>
+            <handler>com.EventManApp.handlers.EventObjectHandler</handler>
+            <handler>com.EventManApp.handlers.ParticipantObjectHandler</handler>
+            <handler>com.EventManApp.handlers.OrganizeObjectHandler</handler>
+        </handlers>
+        <interfaces>
+            <interface name="com.EventManApp.interfaces.ConsoleInterface" runInBackground="false"/>
+            <interface name="com.EventManApp.interfaces.RemoteInterface" runInBackground="false"/>
+            <interface name="com.EventManApp.interfaces.SshClientInterface" runInBackground="false"/>
+            <interface name="com.EventManApp.interfaces.RESTInterface" runInBackground="true"/>
+            <interface name="com.EventManApp.interfaces.SshdInterface" runInBackground="true"/>
+        </interfaces>
+    </configuration>
+</root>

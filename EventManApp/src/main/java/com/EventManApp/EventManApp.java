@@ -1,24 +1,5 @@
 package com.EventManApp;
 
-import com.EventManApp.ActionCallbackInterface;
-import com.EventManApp.AppConfig;
-import com.EventManApp.ConfigManager;
-import com.EventManApp.ResponseCallbackInterface;
-import com.EventManApp.KVObjectStorageFactory;
-import com.EventManApp.lib.JSONHelper;
-import com.EventManApp.lib.ResponseHelper;
-import com.EventManApp.LogHandler;
-import com.EventManApp.storages.DatabaseKVObjectStorage;
-import com.EventManApp.storages.FileKVObjectStorage;
-import com.EventManApp.storages.MemoryKVObjectStorage;
-import com.EventManApp.storages.DatabaseKVSubjectStorage;
-import com.EventManApp.storages.FileKVSubjectStorage;
-import com.EventManApp.storages.MemoryKVSubjectStorage;
-import com.EventManApp.DatabaseConfig;
-import com.EventManApp.MenuUI;
-import com.EventManApp.InputUI;
-import com.EventManApp.lib.DebugUtil;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -26,6 +7,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -41,6 +23,37 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import com.EventManApp.config.AppConfig;
+import com.EventManApp.config.ConfigManager;
+import com.EventManApp.kvhandler.KVSubjectHandler;
+import com.EventManApp.kvhandler.KVObjectHandler;
+import com.EventManApp.kvhandler.KVObjectStorage;
+import com.EventManApp.kvhandler.KVSubjectStorage;
+
+import com.EventManApp.interfaces.BaseInterface;
+import com.EventManApp.callbacks.ActionCallbackInterface;
+import com.EventManApp.callbacks.ResponseCallbackInterface;
+import com.EventManApp.payload.PayloadHandler;
+import com.EventManApp.payload.CommandBuilder;
+import com.EventManApp.payload.CommandManager;
+import com.EventManApp.helper.JSONHelper;
+import com.EventManApp.helper.ResponseHelper;
+import com.EventManApp.loghandler.LogHandler;
+import com.EventManApp.storages.DatabaseKVObjectStorage;
+import com.EventManApp.storages.FileKVObjectStorage;
+import com.EventManApp.storages.MemoryKVObjectStorage;
+import com.EventManApp.storages.DatabaseKVSubjectStorage;
+import com.EventManApp.storages.FileKVSubjectStorage;
+import com.EventManApp.storages.MemoryKVSubjectStorage;
+import com.EventManApp.storages.NamespaceStorage;
+import com.EventManApp.storages.NamespaceStorageConfig;
+import com.EventManApp.storages.MultiNamespaceStorageManager;
+import com.EventManApp.config.StorageConfig;
+import com.EventManApp.ui.MenuUI;
+import com.EventManApp.ui.InputUI;
+import com.EventManApp.helper.DebugUtil;
+import com.EventManApp.CommandLineParser;
+
 /**
  * @file EventManApp.java
  * @brief Interactive console event managment application.
@@ -51,6 +64,17 @@ import javax.xml.parsers.DocumentBuilderFactory;
  * -
  */
 public class EventManApp {
+    private static final String appDefaultPropertiesFile = "default/app.properties";
+    private static final String storageDefaultPropertiesFile = "default/storage.properties";
+        
+    private static final String defaultCommandsFile = "commands.json";
+    private static final String defaultModulesFile = "modules.xml";
+    private static final String defaultSubjectsFile = "subjects.xml";
+
+    private static final String configFile = "config/config.json";
+    private static final String appPropertiesFile = "config/app.properties";
+    private static final String storagePropertiesFile = "config/storage.properties";
+
     private static final StringBuilder logBuffer = new StringBuilder();
     private boolean running = true;
     private static List<BaseInterface> interfaceInstances = new ArrayList<>();
@@ -60,7 +84,6 @@ public class EventManApp {
     private static PayloadHandler payloadHandler;
     // List to keep track of background threads
     private static List<Thread> backgroundThreads = new ArrayList<>();
-
 
     public static ResponseCallbackInterface responseHandler = (callerID, menuItem) -> {
         //logHandler.addLog(callerID,"responseHandler",menuItem);
@@ -91,7 +114,7 @@ public class EventManApp {
        return jsonResponse;
     };
 
-    private static void loadModulesFromXML(String fileName) {
+    private static void loadModulesFromXML(String fileName, String appDataFolder) {
         try (InputStream inputStream = EventManApp.class.getClassLoader().getResourceAsStream(fileName)) {
             if (inputStream == null) {
                 throw new RuntimeException("File not found: " + fileName);
@@ -102,8 +125,10 @@ public class EventManApp {
             Document doc = dBuilder.parse(inputStream);
             doc.getDocumentElement().normalize();
 
-            // Load interfaces
-            NodeList interfaceList = doc.getElementsByTagName("interface");
+            Element rootElement = doc.getDocumentElement();
+            
+            // Load interfaces from root element
+            NodeList interfaceList = rootElement.getElementsByTagName("interface");
             for (int i = 0; i < interfaceList.getLength(); i++) {
                 Element element = (Element) interfaceList.item(i);
                 String interfaceName = element.getAttribute("name");
@@ -111,7 +136,7 @@ public class EventManApp {
 
                 try {
                     Class<?> clazz = Class.forName(interfaceName);
-                    BaseInterface interfaceInstance = (BaseInterface) clazz.getDeclaredConstructor(ResponseCallbackInterface.class).newInstance(responseHandler);
+                    BaseInterface interfaceInstance = (BaseInterface) clazz.getDeclaredConstructor(ResponseCallbackInterface.class, String.class).newInstance(responseHandler, appDataFolder);
                     // Set the runInBackground attribute
                     interfaceInstance.setRunInBackground(runInBackground);
 
@@ -205,7 +230,7 @@ public class EventManApp {
                     if (!interfaceInstance.isRunInBackground() && id.equals(interfaceInstance.getClass().getSimpleName())) {
                         // Execute foreground interfaces one by one
                         JSONObject result = interfaceInstance.executeCommands(commands);
-                        System.out.println("Foreground Execution result from " + interfaceInstance.getClass().getSimpleName() + ": " + result);
+                        //System.out.println("Foreground Execution result from " + interfaceInstance.getClass().getSimpleName() + ": " + result);
                     }
                 }
 
@@ -221,66 +246,110 @@ public class EventManApp {
         }
     }
 
+    private static void initAppDataFolders(String appDataFolder) throws IOException {
+        // Create the appdata folder if it doesn't exist
+        File directory = new File(appDataFolder);
+        if (!directory.exists()) {
+            directory.mkdirs();
+            System.out.println("Created directory: " + directory.getAbsolutePath());
+        }
+
+        // Get the resource appdata folder (template)
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        URL resourceUrl = classLoader.getResource("appdata");
+
+        if (resourceUrl != null) {
+            File resourceAppDataFolder = new File(resourceUrl.getPath());
+            
+            // Get all subfolders from template
+            File[] resourceFolders = resourceAppDataFolder.listFiles(File::isDirectory);
+            
+            if (resourceFolders != null) {
+                for (File resourceSubfolder : resourceFolders) {
+                    String folderName = resourceSubfolder.getName();
+                    File targetSubfolder = new File(directory, folderName);
+                    
+                    // Create subfolder if it doesn't exist
+                    if (!targetSubfolder.exists()) {
+                        targetSubfolder.mkdirs();
+                        System.out.println("Created directory: " + targetSubfolder.getAbsolutePath());
+                    }
+                    
+                    // Copy files from template folder
+                    File[] files = resourceSubfolder.listFiles(File::isFile);
+                    if (files != null) {
+                        for (File file : files) {
+                            File targetFile = new File(targetSubfolder, file.getName());
+                            if (!targetFile.exists()) {
+                                copyFile(file, targetFile);
+                                System.out.println("Copied file: " + targetFile.getAbsolutePath());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static void copyFile(File source, File destination) throws IOException {
+        Files.copy(source.toPath(), destination.toPath());
+    }
+
     /**
      * @brief Program entry point.
      *
      * @param args Command-line arguments (ignored by this application).
      */
     public static void main(String[] args) {
-        String appPropertiesFile = "app.properties";
-        String dbPropertiesFile = "db.properties";
-        String configFile = "config.json";
-        String commandsFile = "commands.json";
-        String modulesFile = "modules.xml";
-        String subjectsFile = "subjects.xml";
-
-        AppConfig appsConfigFile = new AppConfig(appPropertiesFile);
         InputUI inputUI = new InputUI();
 
-        // Define the appdata folder path
-        String appDataFolder = appsConfigFile.getDataPath();
-        DebugUtil.debug(appDataFolder);
+        CommandLineParser parserArgs = new CommandLineParser(args);
+        String appDataFolder = parserArgs.getParameter("datapath", ".appdata");
+        String appDataStorageFolder = appDataFolder + "/data/";
 
-        // Create the appdata folder if it doesn't exist
-        File directory = new File(appDataFolder);
-        if (!directory.exists()) {
-            directory.mkdirs(); // Create the folder
-            System.out.println("Created directory: " + appDataFolder);
+        try {
+            initAppDataFolders(appDataFolder);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        ConfigManager configManager = ConfigManager.getInstance(appDataFolder+ "/" + configFile);
-        JSONObject commands= JSONHelper.loadJsonFromFile(commandsFile);
-        loadModulesFromXML(modulesFile);
+        // Load config and initialize data folders
+        AppConfig appsConfigFile = new AppConfig(appDataFolder);
 
-        DatabaseConfig dbConfigFile = new DatabaseConfig(dbPropertiesFile);
+        ConfigManager configManager = ConfigManager.getInstance(appDataFolder, configFile);
+        DebugUtil.debugAndWait();
 
-        KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("mongodb", dbConfigFile);
-        //KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("database", dbConfigFile);
-        // Create a FileKVObjectStorage instance
-        //File objectStorageFile = new File(".appdata");
-        //KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("file", objectStorageFile);
-        //KVObjectStorage objectStorage = KVObjectStorageFactory.createKVObjectStorage("memory", null);
-        kvObjectHandler = new KVObjectHandler(null,objectStorage);
 
-        KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("mongodb", dbConfigFile);
-        //KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("database", dbConfigFile);
-        //File subjectStorageFile = new File(".appdata/kvsubjects.txt");
-        //KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("file", subjectStorageFile);
-        //KVSubjectStorage subjectStorage = KVSubjectStorageFactory.createKVSubjectStorage("memory", null);
-        kvSubjectHandler = new KVSubjectHandler(subjectsFile,subjectStorage);
-        payloadHandler = new PayloadHandler(kvObjectHandler,kvSubjectHandler);
+        CommandBuilder commandBuilder = new CommandBuilder(appDataFolder);
+        commandBuilder.generateCommands(appsConfigFile.getFiles("subjects","xml"));
+        commandBuilder.updateCommands(appsConfigFile.getFiles("commands","json"));
+        commandBuilder.saveToFile();
 
-        startbackgroundInterface(commands);
+        CommandManager commandManager = new CommandManager(commandBuilder.getCommandsJson());
+        commandManager.testCommandManager();
+        DebugUtil.debugAndWait();
+
+        loadModulesFromXML(defaultModulesFile, appDataFolder);
+
+        StorageConfig storageConfigFile = new StorageConfig(appDataFolder, storagePropertiesFile);
+
+        MultiNamespaceStorageManager namespaceManager = MultiNamespaceStorageManager.getInstance(storageConfigFile);
+
+        kvSubjectHandler = new KVSubjectHandler(appsConfigFile.getFiles("subjects","xml") ,namespaceManager);
+        kvObjectHandler = new KVObjectHandler(null,namespaceManager);
+
+        payloadHandler = new PayloadHandler(kvObjectHandler, kvSubjectHandler, commandManager);
+
+        startbackgroundInterface(commandBuilder.getCommandsJson());
         inputUI.waitForKeyPress();
 
-        runForegroundInterface(commands);
+        runForegroundInterface(commandBuilder.getCommandsJson());
         stopbackgroundInterface();
 
-        objectStorage.close();
-        subjectStorage.close();
-        logHandler.displayLogs();
+//        logHandler.displayLogs();
+        namespaceManager.closeAll();
         configManager.saveConfig();
-        logActiveThreads();
+//        logActiveThreads();
     }
 }
 

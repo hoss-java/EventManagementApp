@@ -13,8 +13,8 @@ async function fetchCommands() {
         });
         const result = await response.json();
         
-        if (result.success && result.data && result.data.commands) {
-            return result.data.commands;
+        if (result.success && result.data && result.data.apps) {
+            return result.data.apps; // Return the apps with their commands
         } else {
             console.error('Error fetching commands:', result.error);
             return null;
@@ -133,16 +133,22 @@ function isValid(inputValue, argType) {
     return false;
 }
 
-function createFieldInputHTML(fieldKey, fieldInfo) {
+function createFieldInputHTML(action, fieldKey, fieldInfo) {
+    // Check if action is supported
+    if (fieldInfo.supports && !fieldInfo.supports.includes(action)) {
+        return '';
+    }
+    
     const fieldName = fieldInfo.field;
     const description = fieldInfo.description || fieldName;
     const fieldType = fieldInfo.type;
     const mandatory = fieldInfo.mandatory || false;
-    const defaultValue = fieldInfo.defaultValue || '';
     const modifier = fieldInfo.modifier;
     
+    // Extract default value for the specific action
+    const defaultValue = getDefaultValueForAction(fieldInfo.defaultvalue, action);
+    
     if (modifier === 'auto') {
-        // Return only hidden input for auto fields
         return `<input type="hidden" id="${fieldKey}" name="${fieldKey}" value="${defaultValue}" data-field-key="${fieldKey}" data-field-type="${fieldType}" data-mandatory="${mandatory}">`;
     }
     
@@ -172,7 +178,18 @@ function createFieldInputHTML(fieldKey, fieldInfo) {
     return inputHTML;
 }
 
-function displayCommandForm(selectedCommand, rootIdentifier) {
+/**
+ * Extracts the default value for a specific action from the defaultvalue object.
+ */
+function getDefaultValueForAction(defaultvalueObj, action) {
+    if (!defaultvalueObj || typeof defaultvalueObj !== 'object') {
+        return '';
+    }
+    
+    return defaultvalueObj[action] || '';
+}
+
+function displayCommandForm(selectedCommand, rootIdentifier, appId) {  // Add appId as a parameter
     console.log('🔍 displayCommandForm called');
     console.log('📋 Stack trace:', new Error().stack);
     console.log('📋 selectedCommand:', selectedCommand);
@@ -182,15 +199,19 @@ function displayCommandForm(selectedCommand, rootIdentifier) {
     formHTML += `<div class="form-header">`;
     formHTML += `<h2>${selectedCommand.description}</h2>`;
     formHTML += `</div>`;
-    
+
     if (selectedCommand.args && Object.keys(selectedCommand.args).length > 0) {
         console.log('✅ Form has arguments, creating form fields');
         formHTML += `<form id="command-form">`;
         
         for (const [fieldKey, fieldInfo] of Object.entries(selectedCommand.args)) {
             console.log(`  Creating field: ${fieldKey}`, fieldInfo);
-            const fieldHTML = createFieldInputHTML(fieldKey, fieldInfo);
-            console.log(`  Generated HTML:`, fieldHTML);
+
+            // Extract action: if it has two parts (e.g., "event.remove"), use the second part, otherwise use "init"
+            const actionParts = selectedCommand.action.split('.');
+            const action = actionParts.length > 1 ? actionParts[1] : 'init';
+            
+            const fieldHTML = createFieldInputHTML(action, fieldKey, fieldInfo);
             formHTML += fieldHTML;
         }
         
@@ -209,7 +230,7 @@ function displayCommandForm(selectedCommand, rootIdentifier) {
         formHTML += `<button class="btn-cancel" data-action="back">Cancel</button>`;
         formHTML += `</div>`;
     }
-    
+
     formHTML += `</div>`;
     
     const container = document.getElementById('menu-container');
@@ -239,14 +260,14 @@ function displayCommandForm(selectedCommand, rootIdentifier) {
     
     const form = document.getElementById('command-form');
     console.log('📋 Form element found:', !!form);
-    
+
     if (form) {
         console.log('✅ Attaching submit listener to form');
         form.addEventListener('submit', (e) => {
             console.log('🎯 Form submit event triggered!');
             e.preventDefault();
             console.log('🛑 preventDefault called, now calling runCommand');
-            runCommand(selectedCommand, rootIdentifier);
+            runCommand(selectedCommand, rootIdentifier, appId); // Pass appId here
         });
     } else {
         console.warn('⚠️ Form element NOT found');
@@ -257,7 +278,7 @@ function displayCommandForm(selectedCommand, rootIdentifier) {
         console.log('✅ Attaching click listener to execute button');
         executeBtn.addEventListener('click', () => {
             console.log('🎯 Execute button clicked!');
-            runCommand(selectedCommand, rootIdentifier);
+            runCommand(selectedCommand, rootIdentifier, appId); // Pass appId here
         });
     }
     
@@ -277,13 +298,9 @@ function displayCommandForm(selectedCommand, rootIdentifier) {
     }
 }
 
-
-
-async function runCommand(selectedCommand, rootIdentifier) {
-    console.log('🚀 runCommand started');
-    
+async function runCommand(selectedCommand, rootIdentifier, appId) {  // Add appId as parameter
     const payload = {
-        identifier: rootIdentifier,
+        identifier: `${appId}`, // Updated to include appId
         commands: [{
             args: {},
             data: {},
@@ -308,7 +325,7 @@ async function runCommand(selectedCommand, rootIdentifier) {
             console.log(`✏️ Validating field: ${fieldKey} = "${value}" (type: ${fieldType}, mandatory: ${mandatory})`);
             
             const fieldInfo = selectedCommand.args[fieldKey];
-            payload.commands[0].args[fieldKey] = fieldInfo;
+            //payload.commands[0].args[fieldKey] = fieldInfo;
             
             // Check if mandatory field is empty
             if (value === '' && mandatory) {
@@ -359,10 +376,22 @@ async function runCommand(selectedCommand, rootIdentifier) {
             
             const fieldInfo = selectedCommand.args[fieldKey];
             
+            // Extract action: if it has two parts (e.g., "event.remove"), use the second part, otherwise use "init"
+            const actionParts = selectedCommand.action.split('.');
+            const action = actionParts.length > 1 ? actionParts[1] : 'init';
+            
+            // Check if action is supported
+            if (fieldInfo.supports && !fieldInfo.supports.includes(action)) {
+                console.log(`  ⏭️ Field "${fieldKey}" does not support action "${action}", skipping`);
+                return;
+            }
+            
             // Check if field is empty and has a default
             if (value === '') {
-                if (fieldInfo.defaultValue !== undefined && fieldInfo.defaultValue !== null) {
-                    value = String(fieldInfo.defaultValue).trim();
+                console.log('📝 action:', fieldInfo.defaultvalue, action);
+                const defaultValue = getDefaultValueForAction(fieldInfo.defaultvalue, action);
+                if (defaultValue !== undefined && defaultValue !== null && defaultValue !== '') {
+                    value = String(defaultValue).trim();
                     input.value = value;
                     console.log(`  ✅ Applied default for "${fieldKey}": "${value}"`);
                 } else {
@@ -491,57 +520,63 @@ function displayCommandResponse(response, payload) {
 
 
 function renderMenu() {
-    let currentCommands = allCommands;
-    
-    for (let i = 0; i < currentLevel; i++) {
-        if (commandsStack[i] && commandsStack[i].commands) {
-            currentCommands = commandsStack[i].commands;
-        }
+    let currentCommands = commandsStack[currentLevel - 1] || []; // Adjust as per the stack
+
+    if (currentLevel > 1) {
+        currentCommands = commandsStack[currentLevel - 1].commands || []; // Access subcommands
     }
-    
+
     const menuHTML = displayMenu(currentCommands, currentLevel, currentPage);
     const container = document.getElementById('menu-container');
     container.innerHTML = menuHTML;
-    
+
+    setupCommandItemListeners(currentCommands); // Set up event listeners for the current level commands
+}
+
+function setupCommandItemListeners(currentCommands) {
     const commandItems = document.querySelectorAll('.command-item');
     commandItems.forEach(item => {
         item.addEventListener('click', () => {
             const index = parseInt(item.dataset.index);
             const paginatedCommands = getPaginatedCommands(currentCommands, currentPage);
             const selectedCommand = paginatedCommands[index];
-            
+            const appId = commandsStack[currentLevel - 1].id; // Get appId from the command's stack
+
             if (selectedCommand.commands) {
-                commandsStack[currentLevel] = selectedCommand;
+                // If the selected command has its own commands (sub-menu)
+                commandsStack.push(selectedCommand); // Push command onto the stack
                 currentLevel++;
                 currentPage = 1;
-                renderMenu();
+                renderMenu(); // Render next level
             } else {
-                const rootIdentifier = selectedCommand.id || 'root';
-                displayCommandForm(selectedCommand, rootIdentifier);
+                // Ensure we're fetching the correct command from the app structure
+                const commandFromApp = commandsStack[currentLevel - 1].commands.find(cmd => cmd.id === selectedCommand.id);
+
+                // If it's a terminal command, show the command form
+                const rootIdentifier = currentCommands.id || 'root';
+                displayCommandForm(commandFromApp, rootIdentifier, appId); // Pass the correct command
             }
         });
     });
-    
-    const nextPageBtn = document.querySelector('.next-page-btn');
-    if (nextPageBtn) {
-        nextPageBtn.addEventListener('click', () => {
-            currentPage++;
-            renderMenu();
-        });
-    }
+}
 
-    const backBtn = document.querySelector('.back-btn');
-    if (backBtn) {
-        backBtn.addEventListener('click', () => {
-            currentLevel--;
-            if (currentLevel < 0) currentLevel = 0;
-            if (commandsStack.length > 0) {
-                commandsStack.pop();
-            }
+
+function renderAppMenu() {
+    const menuHTML = displayMenu(allApps, currentLevel, currentPage); // Using apps instead of commands
+    const container = document.getElementById('menu-container');
+    container.innerHTML = menuHTML;
+
+    const appItems = document.querySelectorAll('.command-item');
+    appItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const index = parseInt(item.dataset.index);
+            const selectedApp = allApps[index];
+            commandsStack.push(selectedApp.commands); // Push commands of the selected app
+            currentLevel++;
             currentPage = 1;
-            renderMenu();
+            renderMenu(); // Render commands for the selected app
         });
-    }
+    });
 }
 
 async function initializeApp() {
@@ -556,12 +591,12 @@ async function initializeApp() {
         return;
     }
     
-    container.innerHTML = '<div class="loading"><p>Loading commands...</p></div>';
+    container.innerHTML = '<div class="loading"><p>Loading applications...</p></div>';
     
-    allCommands = await fetchCommands();
+    allApps = await fetchCommands();  // Fetch apps instead of commands
     
-    if (allCommands === null) {
-        container.innerHTML = '<div class="error"><p>Error loading commands. Please try again later.</p></div>';
+    if (allApps === null) {
+        container.innerHTML = '<div class="error"><p>Error loading applications. Please try again later.</p></div>';
         return;
     }
     
@@ -569,7 +604,7 @@ async function initializeApp() {
     currentPage = 1;
     commandsStack = [];
     
-    renderMenu();
+    renderAppMenu(); // Render app menu instead of command menu
 }
 
 /**
