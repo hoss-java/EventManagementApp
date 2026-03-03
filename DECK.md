@@ -1610,4 +1610,6 @@ gantt
 > > * Keep/read `commands.json` on the data folder
 > > * somehow track `subject.xml`
 > > * update tables when `subjects.xml` is changed
+> 
+> mvn exec:java -Dexec.args="--datapath .appdata2"
 > </details>
