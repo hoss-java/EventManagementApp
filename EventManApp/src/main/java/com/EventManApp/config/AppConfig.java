@@ -12,7 +12,6 @@ public class AppConfig {
     private String appDataFolder;
 
     public AppConfig(String appDataFolder) {
-        DebugUtil.debug(appDataFolder);
         this.appDataFolder = appDataFolder;
     }
 

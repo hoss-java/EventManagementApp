@@ -217,7 +217,8 @@ async function getUserInput(fieldInfo, action) {
    */
   const fieldName = fieldInfo.field;
   const description = fieldInfo.description || fieldName;
-  const fieldType = fieldInfo.type;
+  // Check if referencedfield exists and has a type, otherwise use the main type
+  const fieldType = fieldInfo.referencedfield?.type || fieldInfo.type;
   const mandatory = fieldInfo.mandatory || false;
   const modifier = fieldInfo.modifier;
   const defaultValue = getDefaultValue(fieldInfo, action);
@@ -226,8 +227,11 @@ async function getUserInput(fieldInfo, action) {
     return defaultValue;
   }
 
+  // Add * to description if mandatory
+  const promptDescription = mandatory ? `${description}*` : description;
+
   while (true) {
-    const userInput = await prompt(`Enter ${description} (${fieldType}): `);
+    const userInput = await prompt(`Enter ${promptDescription} (${fieldType}): `);
 
     if (mandatory && userInput.trim() === "") {
       console.log(`${description} is mandatory. Please provide a value.`);
@@ -261,25 +265,8 @@ async function createPayload(argsInfo, action) {
       continue;
     }
 
-    const userInput = await getUserInput(fieldInfo, action);
-    payload[fieldKey] = userInput;
-  }
-
-  return payload;
-}
-
-async function createPayload(argsInfo, action) {
-  /**
-   * Creates a JSON payload from user inputs.
-   * @param {Object} argsInfo - Dictionary of field information
-   * @param {string} action - The current action type
-   * @returns {Promise<Object>} Dictionary representing the payload
-   */
-  const payload = {};
-
-  for (const [fieldKey, fieldInfo] of Object.entries(argsInfo)) {
-    // Check if field supports current action
-    if (!isFieldSupported(fieldInfo, action)) {
+    // Skip fields with modifier "auto"
+    if (fieldInfo.modifier === "auto") {
       continue;
     }
 
@@ -313,6 +300,11 @@ async function runCommand(selectedCommand, appId) {
     for (const [fieldKey, fieldInfo] of Object.entries(selectedCommand.args)) {
       // Check if field supports current action
       if (!isFieldSupported(fieldInfo, action)) {
+        continue;
+      }
+
+      // Skip fields with modifier "auto"
+      if (fieldInfo.modifier === "auto") {
         continue;
       }
 

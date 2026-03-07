@@ -13,6 +13,7 @@ import com.EventManApp.helper.DebugUtil;
 import com.EventManApp.storages.StorageSettings;
 
 public class MemoryKVObjectStorage implements KVObjectStorage {
+    private static final String storageId = "Memory";
     private Map<String, List<KVObject>> kvObjectMap;
 
     public MemoryKVObjectStorage(StorageSettings dbSettings) {
@@ -89,7 +90,12 @@ public class MemoryKVObjectStorage implements KVObjectStorage {
      */
     @Override
     public String toString() {
-        return toJSON().toString(2); // 2 for pretty printing with 2-space indentation
+        return toString(0);
+    }
+
+    public String toString(int... indentation) {
+        int indent = indentation.length > 0 ? indentation[0] : 0;
+        return toJSON().toString(indent);
     }
 }
 

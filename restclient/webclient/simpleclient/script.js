@@ -142,6 +142,8 @@ function createFieldInputHTML(action, fieldKey, fieldInfo) {
     const fieldName = fieldInfo.field;
     const description = fieldInfo.description || fieldName;
     const fieldType = fieldInfo.type;
+    console.log('📋 fieldInfo.type:', fieldInfo.type);
+    console.log('📋 fieldInfo.referencedfield.type:', fieldInfo.referencedfield);
     const mandatory = fieldInfo.mandatory || false;
     const modifier = fieldInfo.modifier;
     
@@ -210,7 +212,12 @@ function displayCommandForm(selectedCommand, rootIdentifier, appId) {  // Add ap
             // Extract action: if it has two parts (e.g., "event.remove"), use the second part, otherwise use "init"
             const actionParts = selectedCommand.action.split('.');
             const action = actionParts.length > 1 ? actionParts[1] : 'init';
-            
+
+            // Check if referencedfield exists and has a type, otherwise use the main type
+            if (fieldInfo.referencedfield?.type) {
+                fieldInfo.type = fieldInfo.referencedfield.type;
+            }
+
             const fieldHTML = createFieldInputHTML(action, fieldKey, fieldInfo);
             formHTML += fieldHTML;
         }
@@ -531,6 +538,23 @@ function renderMenu() {
     container.innerHTML = menuHTML;
 
     setupCommandItemListeners(currentCommands); // Set up event listeners for the current level commands
+
+    const backBtn = document.querySelector('.back-btn');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            currentLevel--;
+            if (currentLevel < 0) currentLevel = 0;
+            if (commandsStack.length > 0) {
+                commandsStack.pop();
+            }
+            if (currentLevel > 0 ){
+                renderMenu();
+            }
+            else{
+                renderAppMenu();
+            }
+        });
+    }
 }
 
 function setupCommandItemListeners(currentCommands) {

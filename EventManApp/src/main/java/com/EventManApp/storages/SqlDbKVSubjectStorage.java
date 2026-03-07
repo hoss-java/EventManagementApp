@@ -7,6 +7,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.DatabaseMetaData;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,28 +36,82 @@ import com.EventManApp.helper.EncryptionUtil;
 import com.EventManApp.config.StorageConfig;
 import com.EventManApp.storages.StorageSettings;
 
-public class DatabaseKVSubjectStorage implements KVSubjectStorage {
+public class SqlDbKVSubjectStorage implements KVSubjectStorage {
+    private static final String storageId = "sqldb";
     private StorageSettings dbSettings; // Add this field
     // JDBC connection
     private Connection connection;
 
-    public DatabaseKVSubjectStorage(StorageSettings dbSettings) throws SQLException {
-        this.dbSettings = dbSettings; // Store the dbSettings in the instance
+    public SqlDbKVSubjectStorage(StorageSettings dbSettings) throws SQLException {
+        this.dbSettings = dbSettings;
         printDefaultConnectionDetails();
 
-        String decryptedPassword = getDecryptedPassword(dbSettings);
+        try {
+            String decryptedPassword = getDecryptedPassword(dbSettings);
 
-        // Establish a connection to the database
-        this.connection = DriverManager.getConnection(dbSettings.get("url") + "/" + dbSettings.get("database"), dbSettings.get("username"), decryptedPassword);
+            // Establish a connection to the database
+            this.connection = DriverManager.getConnection(
+                dbSettings.get("url") + "/" + dbSettings.get("database"), 
+                dbSettings.get("username"), 
+                decryptedPassword
+            );
 
-        // Create the table for KVSubjects if it doesn't exist, including fieldTypeMap
-        String createTableSQL = "CREATE TABLE IF NOT EXISTS KVSubjects (" +
-                "identifier VARCHAR(255) PRIMARY KEY, " +
-                "description TEXT, " +
-                "nextId INT, " +
-                "fieldTypeMap TEXT)";
-        try (Statement stmt = connection.createStatement()) {
-            stmt.execute(createTableSQL);
+            if (!verifyDatabaseConnection()) {
+                System.err.println("Error: Connection error");
+                return;
+            }
+            
+            //if (!verifyTableCreationPermission()) {
+            //    System.err.println("Error: Permission denied");
+            //    return;
+            //}
+
+            // Create the table for KVSubjects if it doesn't exist
+            String createTableSQL = "CREATE TABLE IF NOT EXISTS KVSubjects (" +
+                    "identifier VARCHAR(255) PRIMARY KEY, " +
+                    "subjectAttribute TEXT, " +
+                    "fieldTypeMap TEXT)";
+            try (Statement stmt = connection.createStatement()) {
+                stmt.execute(createTableSQL);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error: " + e.getMessage());
+            //throw e;
+        }
+    }
+
+    private boolean verifyDatabaseConnection() {
+        try {
+            DatabaseMetaData metaData = connection.getMetaData();
+            metaData.getDatabaseProductName();
+            return true;
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    private boolean verifyTableCreationPermission() {
+        try {
+            DatabaseMetaData metaData = connection.getMetaData();
+            String username = dbSettings.get("username");
+            
+            // Check if user has CREATE permission
+            ResultSet privileges = metaData.getTablePrivileges(null, null, "%");
+            
+            while (privileges.next()) {
+                String grantee = privileges.getString("GRANTEE");
+                String privilege = privileges.getString("PRIVILEGE");
+                
+                if (grantee.contains(username) && privilege.equals("CREATE")) {
+                    return true;
+                }
+            }
+            privileges.close();
+            
+            return false;
+        } catch (SQLException e) {
+            return false;
         }
     }
 
@@ -122,7 +178,7 @@ public class DatabaseKVSubjectStorage implements KVSubjectStorage {
                 url = connection.getMetaData().getURL();
             }
         } catch (SQLException e) {
-            e.printStackTrace(); // Handle exception appropriately
+            //e.printStackTrace(); // Handle exception appropriately
         }
 
         if (url.contains("sqlserver")) {
@@ -168,7 +224,8 @@ public class DatabaseKVSubjectStorage implements KVSubjectStorage {
                 throw new UnsupportedOperationException("Unsupported database type: " + dbType);
             }
         } catch (SQLException e) {
-            e.printStackTrace(); // Handle exceptions appropriately
+            //System.err.println("Error: Failed to get tableExists - ");
+            //e.printStackTrace(); // Handle exceptions
         }
 
         return exists; // Return whether the table exists
@@ -194,7 +251,8 @@ public class DatabaseKVSubjectStorage implements KVSubjectStorage {
         try (Statement stmt = connection.createStatement()) {
             stmt.execute(createTableSQL.toString());
         } catch (SQLException e) {
-            e.printStackTrace(); // Handle exceptions
+            //System.err.println("Error: Failed to get createTableFromFieldTypeMap - ");
+            //e.printStackTrace(); // Handle exceptions
         }
     }
 
@@ -214,7 +272,8 @@ public class DatabaseKVSubjectStorage implements KVSubjectStorage {
             
             createTableFromFieldTypeMap(kvSubject);
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error: Failed to get addKVSubject - ");
+            //e.printStackTrace(); // Handle exceptions
         }
     }
 
@@ -232,7 +291,8 @@ public class DatabaseKVSubjectStorage implements KVSubjectStorage {
             pstmt.setString(3, kvSubject.getIdentifier());
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error: Failed to get updateKVSubject - ");
+            //e.printStackTrace(); // Handle exceptions
         }
     }
 
@@ -265,7 +325,8 @@ public class DatabaseKVSubjectStorage implements KVSubjectStorage {
             pstmt.setString(1, kvSubject.getIdentifier());
             return pstmt.executeUpdate() > 0; // Return true if a row was deleted
         } catch (SQLException e) {
-            e.printStackTrace(); // Handle exceptions
+            System.err.println("Error: Failed to get removeKVSubject - ");
+            //e.printStackTrace(); // Handle exceptions
             return false; // Return false in case of exception
         }
     }
@@ -275,21 +336,23 @@ public class DatabaseKVSubjectStorage implements KVSubjectStorage {
         String selectSQL = "SELECT subjectAttribute, fieldTypeMap FROM KVSubjects WHERE identifier = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(selectSQL)) {
             pstmt.setString(1, identifier);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                String subjectAttributeJson = rs.getString("subjectAttribute");
-                String fieldTypeMapJson = rs.getString("fieldTypeMap");
+            try(ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    String subjectAttributeJson = rs.getString("subjectAttribute");
+                    String fieldTypeMapJson = rs.getString("fieldTypeMap");
 
-                KVSubject kvSubject = new KVSubject(SerializationUtil.deserialize(subjectAttributeJson, KVSubjectAttribute.class));
+                    KVSubject kvSubject = new KVSubject(SerializationUtil.deserialize(subjectAttributeJson, KVSubjectAttribute.class));
 
-                if (fieldTypeMapJson != null) {
-                    kvSubject.setFieldTypeMap(SerializationUtil.deserializeMap(fieldTypeMapJson, KVObjectField.class));
+                    if (fieldTypeMapJson != null) {
+                        kvSubject.setFieldTypeMap(SerializationUtil.deserializeMap(fieldTypeMapJson, KVObjectField.class));
+                    }
+
+                    return kvSubject;
                 }
-
-                return kvSubject;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error: Failed to get getKVSubject - ");
+            //e.printStackTrace(); // Handle exceptions
         }
         return null;
     }
@@ -314,7 +377,8 @@ public class DatabaseKVSubjectStorage implements KVSubjectStorage {
                 subjects.add(kvSubject);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error: Failed to get getAllKVSubjects - ");
+            //e.printStackTrace(); // Handle exceptions
         }
         return subjects;
     }
@@ -328,7 +392,8 @@ public class DatabaseKVSubjectStorage implements KVSubjectStorage {
                 return rs.getInt("total"); // Return the count of records
             }
         } catch (SQLException e) {
-            e.printStackTrace(); // Handle exceptions
+            System.err.println("Error: Failed to get countKVSubjects - ");
+            //e.printStackTrace(); // Handle exceptions
         }
         return 0; // Return 0 if count fails or no records found
     }

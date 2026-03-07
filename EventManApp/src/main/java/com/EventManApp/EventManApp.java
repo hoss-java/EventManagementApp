@@ -39,12 +39,6 @@ import com.EventManApp.payload.CommandManager;
 import com.EventManApp.helper.JSONHelper;
 import com.EventManApp.helper.ResponseHelper;
 import com.EventManApp.loghandler.LogHandler;
-import com.EventManApp.storages.DatabaseKVObjectStorage;
-import com.EventManApp.storages.FileKVObjectStorage;
-import com.EventManApp.storages.MemoryKVObjectStorage;
-import com.EventManApp.storages.DatabaseKVSubjectStorage;
-import com.EventManApp.storages.FileKVSubjectStorage;
-import com.EventManApp.storages.MemoryKVSubjectStorage;
 import com.EventManApp.storages.NamespaceStorage;
 import com.EventManApp.storages.NamespaceStorageConfig;
 import com.EventManApp.storages.MultiNamespaceStorageManager;
@@ -66,7 +60,7 @@ import com.EventManApp.CommandLineParser;
 public class EventManApp {
     private static final String appDefaultPropertiesFile = "default/app.properties";
     private static final String storageDefaultPropertiesFile = "default/storage.properties";
-        
+
     private static final String defaultCommandsFile = "commands.json";
     private static final String defaultModulesFile = "modules.xml";
     private static final String defaultSubjectsFile = "subjects.xml";
@@ -317,21 +311,21 @@ public class EventManApp {
         AppConfig appsConfigFile = new AppConfig(appDataFolder);
 
         ConfigManager configManager = ConfigManager.getInstance(appDataFolder, configFile);
-        DebugUtil.debugAndWait();
-
 
         CommandBuilder commandBuilder = new CommandBuilder(appDataFolder);
         commandBuilder.generateCommands(appsConfigFile.getFiles("subjects","xml"));
         commandBuilder.updateCommands(appsConfigFile.getFiles("commands","json"));
-        commandBuilder.saveToFile();
 
-        CommandManager commandManager = new CommandManager(commandBuilder.getCommandsJson());
-        commandManager.testCommandManager();
-        DebugUtil.debugAndWait();
+        CommandManager commandManager = new CommandManager(appDataFolder,commandBuilder.getCommandsJson());
+        commandManager.saveToFile();
+        //commandManager.testCommandManager();
+
+        //DebugUtil.debugAndWait();
 
         loadModulesFromXML(defaultModulesFile, appDataFolder);
 
         StorageConfig storageConfigFile = new StorageConfig(appDataFolder, storagePropertiesFile);
+        DebugUtil.debugAndWait(storageConfigFile.toString(2));
 
         MultiNamespaceStorageManager namespaceManager = MultiNamespaceStorageManager.getInstance(storageConfigFile);
 
@@ -347,9 +341,12 @@ public class EventManApp {
         stopbackgroundInterface();
 
 //        logHandler.displayLogs();
+//        DebugUtil.debugAndWait();
         namespaceManager.closeAll();
         configManager.saveConfig();
 //        logActiveThreads();
+
+        System.exit(0);
     }
 }
 

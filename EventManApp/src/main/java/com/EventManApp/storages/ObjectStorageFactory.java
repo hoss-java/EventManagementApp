@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 import com.EventManApp.kvhandler.KVObjectStorage;
 import com.EventManApp.storages.MongoDBKVObjectStorage;
-import com.EventManApp.storages.DatabaseKVObjectStorage;
+import com.EventManApp.storages.SqlDbKVObjectStorage;
 import com.EventManApp.storages.FileKVObjectStorage;
 import com.EventManApp.storages.MemoryKVObjectStorage;
 
@@ -21,9 +21,9 @@ public class ObjectStorageFactory {
                 } catch (IOException e) {
                     throw new RuntimeException("Failed to create FileKVObjectStorage: " + e.getMessage(), e);
                 }
-            case "database":
+            case "sqldb":
                 try {
-                    return new DatabaseKVObjectStorage(storageSettings); // Handle SQLException
+                    return new SqlDbKVObjectStorage(storageSettings); // Handle SQLException
                 } catch (SQLException e) {
                     throw new RuntimeException("Failed to create DatabaseKVObjectStorage: " + e.getMessage(), e);
                 }

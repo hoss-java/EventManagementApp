@@ -48,13 +48,30 @@ public class StringParserHelper {
 
     public static Duration parseDuration(String durationString) {
         String[] parts = durationString.split(":");
-        if (parts.length != 2) {
-            throw new IllegalArgumentException("Invalid format. Expecting mm:ss");
+        
+        if (parts.length < 2 || parts.length > 3) {
+            throw new IllegalArgumentException("Invalid duration format");
         }
 
-        long minutes = Long.parseLong(parts[0].trim());
-        long seconds = Long.parseLong(parts[1].trim()); // Assume no overflow check
+        try {
+            long hours = 0;
+            long minutes;
+            long seconds;
 
-        return Duration.ofMinutes(minutes).plusSeconds(seconds);
+            if (parts.length == 2) {
+                minutes = Long.parseLong(parts[0].trim());
+                seconds = Long.parseLong(parts[1].trim());
+            } else {
+                hours = Long.parseLong(parts[0].trim());
+                minutes = Long.parseLong(parts[1].trim());
+                seconds = Long.parseLong(parts[2].trim());
+            }
+
+            return Duration.ofHours(hours)
+                .plusMinutes(minutes)
+                .plusSeconds(seconds);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid duration format", e);
+        }
     }
 }

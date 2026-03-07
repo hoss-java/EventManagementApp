@@ -29,4 +29,23 @@ The goal of this card is to generate commands.json automatically from subjects.x
 > * somehow track `subject.xml`
 > * update tables when `subjects.xml` is changed
 
+```
 mvn exec:java -Dexec.args="--datapath .appdata2"
+
+mongosh -u "admin" -p "mypass" --authenticationDatabase "admin"
+use eventmanapp;
+db.updateUser(
+  "eventman",
+  {
+    roles: [
+      { role: "readWrite", db: "eventmanapp" },
+      { role: "dbAdmin", db: "eventmanapp" }  // Add new role
+    ]
+  }
+)
+
+mongosh -u "eventman" -p "eventmanpass" --authenticationDatabase "eventmanapp"
+
+
+mysql -u root -pmypass -h 172.32.0.16 < add-eventman.sql
+```

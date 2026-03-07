@@ -34,15 +34,16 @@ import com.EventManApp.helper.DebugUtil;
 import com.EventManApp.helper.StringParserHelper;
 import com.EventManApp.helper.EncryptionUtil;
 import com.EventManApp.config.StorageConfig;
-import com.EventManApp.storages.DatabaseKVSubjectStorage;
+import com.EventManApp.storages.SqlDbKVSubjectStorage;
 import com.EventManApp.storages.StorageSettings;
 
-public class DatabaseKVObjectStorage implements KVObjectStorage {
+public class SqlDbKVObjectStorage implements KVObjectStorage {
+    private static final String storageId = "sqldb";
     private StorageSettings dbSettings;
     // JDBC connection
     private Connection connection;
 
-    public DatabaseKVObjectStorage(StorageSettings dbSettings) throws SQLException {
+    public SqlDbKVObjectStorage(StorageSettings dbSettings) throws SQLException {
         this.dbSettings = dbSettings; // Store the dbSettings in the instance
         printDefaultConnectionDetails();
 
@@ -115,7 +116,7 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
                 url = connection.getMetaData().getURL();
             }
         } catch (SQLException e) {
-            e.printStackTrace(); // Handle exception appropriately
+            //e.printStackTrace(); // Handle exception appropriately
         }
 
         if (url.contains("sqlserver")) {
@@ -162,7 +163,8 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
                 throw new UnsupportedOperationException("Unsupported database type: " + dbType);
             }
         } catch (SQLException e) {
-            e.printStackTrace(); // Handle exceptions appropriately
+            //System.err.println("Error: Failed to get tableExists - ");
+            //e.printStackTrace(); // Handle exceptions
         }
 
         return exists; // Return whether the table exists
@@ -172,7 +174,7 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
     public void addKVObject(KVObject kvObject) {
         // Check if a table with the same identifier exists
         if (!tableExists(kvObject.getIdentifier())) {
-            System.out.println("Error: No table found for identifier " + kvObject.getIdentifier() + ". Cannot insert KVObject.");
+            System.out.println("Error (" + storageId + "): No table found for identifier " + kvObject.getIdentifier() + ". Cannot insert KVObject.");
             return; // Exit the method if the table does not exist
         }
 
@@ -207,7 +209,8 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
             }
             pstmt.executeUpdate(); // Execute the insert
         } catch (SQLException e) {
-            e.printStackTrace(); // Handle exceptions
+            System.err.println("Error: Failed to get addKVObject - ");
+            //e.printStackTrace(); // Handle exceptions
         }
     }
 
@@ -215,14 +218,14 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
     public void updateKVObject(KVObject kvObject) {
         // Check if a table with the same identifier exists
         if (!tableExists(kvObject.getIdentifier())) {
-            System.out.println("Error: No table found for identifier " + kvObject.getIdentifier() + ". Cannot update KVObject.");
+            System.out.println("Error (" + storageId + "): No table found for identifier " + kvObject.getIdentifier() + ". Cannot update KVObject.");
             return;
         }
 
         // Check if id field exists
         Object idValue = kvObject.getFieldValue("id");
         if (idValue == null) {
-            System.out.println("Error: No id field found. Cannot update KVObject.");
+            System.out.println("Error (" + storageId + "): No id field found. Cannot update KVObject.");
             return;
         }
 
@@ -252,7 +255,8 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
             }
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error: Failed to get updateKVObject - ");
+            //e.printStackTrace(); // Handle exceptions
         }
     }
 
@@ -262,7 +266,7 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
 
         // Check if a table with the same identifier exists
         if (!tableExists(identifier)) {
-            System.out.println("Error: No table found for identifier " + identifier + ". Cannot remove KVObject.");
+            System.out.println("Error (" + storageId + "): No table found for identifier " + identifier + ". Cannot remove KVObject.");
             return false; // Exit if the table does not exist
         }
 
@@ -272,7 +276,8 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
             pstmt.setInt(1, (int) kvObject.getFieldValue("id")); // Assuming getId() returns the primary key value
             return pstmt.executeUpdate() > 0; // Return true if a row was deleted
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error: Failed to get removeKVObject - ");
+            //e.printStackTrace(); // Handle exceptions
             return false; // Return false in case of exception
         }
     }
@@ -312,10 +317,10 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
         try {
             subjectStorage = manager.getSubjectStorage(namespace, storageType);
             
-            if (!(subjectStorage instanceof MongoDBKVSubjectStorage)) {
+            if (!(subjectStorage instanceof SqlDbKVSubjectStorage)) {
                 throw new IllegalArgumentException(
                     "Subject storage '" + storageType + "' in namespace '" + namespace + 
-                    "' is not a MongoDBKVSubjectStorage instance"
+                    "' is not a SqlDbKVSubjectStorage instance"
                 );
             }
         } catch (Exception e) {
@@ -325,21 +330,21 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
 
         // Check if the table with the given identifier exists
         if (!tableExists(identifier)) {
-            System.out.println("Error: No table found for identifier " + identifier + ". Cannot retrieve KVObjects.");
+            System.out.println("Error (" + storageId + "): No table found for identifier " + identifier + ". Cannot retrieve KVObjects.");
             return Collections.emptyList();
         }
 
         // Get the KVSubject associated with the identifier
         KVSubject kvSubject = subjectStorage.getKVSubject(identifier);
         if (kvSubject == null) {
-            System.out.println("Error: No KVSubject found for identifier " + identifier + ". Cannot retrieve KVObjects.");
+            System.out.println("Error (" + storageId + "): No KVSubject found for identifier " + identifier + ". Cannot retrieve KVObjects.");
             return Collections.emptyList();
         }
 
         // Get the field type map from the KVSubject
         Map<String, KVObjectField> fieldTypeMap = kvSubject.getFieldTypeMap();
         if (fieldTypeMap == null || fieldTypeMap.isEmpty()) {
-            System.out.println("Error: FieldTypeMap is empty for identifier " + identifier + ". Cannot retrieve KVObjects.");
+            System.out.println("Error (" + storageId + "): FieldTypeMap is empty for identifier " + identifier + ". Cannot retrieve KVObjects.");
             return Collections.emptyList();
         }
 
@@ -371,7 +376,8 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
                 kvObjects.add(kvObject); // Add the populated KVObject to the list
             }
         } catch (SQLException e) {
-            e.printStackTrace(); // Handle SQL exceptions
+            System.err.println("Error: Failed to get getKVObjects - ");
+            //e.printStackTrace(); // Handle exceptions
         }
 
         return kvObjects; // Return the list of KVObjects
@@ -381,7 +387,7 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
     public int countKVObjects(String identifier) {
         // Check if a table with the same identifier exists
         if (!tableExists(identifier)) {
-            System.out.println("Error: No table found for identifier " + identifier + ". Cannot count KVObjects.");
+            System.out.println("Error (" + storageId + "): No table found for identifier " + identifier + ". Cannot count KVObjects.");
             return 0; // Return 0 if the table does not exist
         }
 
@@ -392,7 +398,8 @@ public class DatabaseKVObjectStorage implements KVObjectStorage {
                 return rs.getInt("total"); // Return the count of records
             }
         } catch (SQLException e) {
-            e.printStackTrace(); // Handle exceptions
+            System.err.println("Error: Failed to get countKVObjects - ");
+            //e.printStackTrace(); // Handle exceptions
         }
         return 0; // Return 0 if count fails or no records found
     }

@@ -100,4 +100,30 @@ public class ConfigManager {
         }
         return currentSection;
     }
+
+    /**
+     * Returns the ConfigManager as a JSONObject representation
+     * @return JSONObject containing all ConfigManager state
+     */
+    public JSONObject toJSON() {
+        JSONObject json = new JSONObject();
+        json.put("appDataFolder", appDataFolder);
+        json.put("configFile", configFile);
+        json.put("configData", configData);
+        return json;
+    }
+
+    /**
+     * Returns a formatted string representation of the ConfigManager
+     * @return String representation using toJSON()
+     */
+    @Override
+    public String toString() {
+        return toString(0);
+    }
+
+    public String toString(int... indentation) {
+        int indent = indentation.length > 0 ? indentation[0] : 0;
+        return toJSON().toString(indent);
+    }
 }

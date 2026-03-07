@@ -102,7 +102,10 @@ public class InputUI {
     public String getUserInput(String argName, JSONObject argTypeAttr) {
         String argField = (new TokenizedString(argTypeAttr.optString("field", argName), "@")).getPart(-1);
         String argDescription = argTypeAttr.optString("description", argField);
-        String argType = (new TokenizedString(argTypeAttr.optString("type", "str"), "@")).getPart(-1);
+        String argType = argTypeAttr.optJSONObject("referencedfield") != null ? 
+            argTypeAttr.optJSONObject("referencedfield").optString("type", argTypeAttr.optString("type", "str")) : 
+            argTypeAttr.optString("type", "str");        
+        argType = (new TokenizedString(argType, "@")).getPart(-1);
         String argModifier = argTypeAttr.optString("modifier", "user");
         boolean argMandatory = argTypeAttr.optBoolean("mandatory", true);
         String argDefault = argTypeAttr.optString("default", "");

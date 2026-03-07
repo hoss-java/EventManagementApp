@@ -40,7 +40,6 @@ public class PayloadHandler extends CommandHandler{
     private KVObjectHandler kvObjectHandler;
     private KVSubjectHandler kvSubjectHandler;
     private CommandManager commandManager;
-    JSONObject commands;
 
     public PayloadHandler(KVObjectHandler kvObjectHandler, KVSubjectHandler kvSubjectHandler, CommandManager commandManager) {
         super();
@@ -49,7 +48,6 @@ public class PayloadHandler extends CommandHandler{
         this.kvObjectHandler = kvObjectHandler;
         this.kvSubjectHandler = kvSubjectHandler;
         this.commandManager = commandManager;
-        this.commands = commands;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -138,7 +136,7 @@ public class PayloadHandler extends CommandHandler{
         }
     }
 
-    private String refineValueFromChaine(String fieldChaineStr, String typeChaineStr, String defaultSubject, String currentValue){
+    private String refineValueFromChaine(String namespace, String fieldChaineStr, String typeChaineStr, String defaultSubject, String currentValue){
         //DebugUtil.debug(fieldChaineStr,typeChaineStr, defaultSubject, currentValue);
         //"field" : "eventid@id:event.title",
         //"type": "int@str",
@@ -158,6 +156,7 @@ public class PayloadHandler extends CommandHandler{
         // The last item containes only the field name
         String currentFieldName = fieldChaineLastItem;
         String currentSubject = defaultSubject;
+        String currentIdentifier = currentSubject;
         String currentReturnFieldName = "id";
 
         TokenizedString currentTokenizedField = new TokenizedString(fieldChaineLastItem);
@@ -170,6 +169,7 @@ public class PayloadHandler extends CommandHandler{
                 currentSubject = currentTokenizedSubject.getPart(1);            
                 currentReturnFieldName = currentTokenizedSubject.getPart(0);
             }
+            currentIdentifier = currentSubject+"@"+namespace;
         }
 
         TokenizedString tokenizedTypeChaine = new TokenizedString(typeChaineStr,"@");
@@ -180,6 +180,7 @@ public class PayloadHandler extends CommandHandler{
 
         // Using custom replacements
         Map<String, String> customReplacements = new HashMap<>();
+        customReplacements.put("%IDENTIFIER%",currentIdentifier != null ? currentIdentifier : "");
         customReplacements.put("%FIELD%",currentFieldName != null ? currentFieldName : "");
         customReplacements.put("%TYPE%",currentType != null ? currentType : "");
         customReplacements.put("%VALUE%",currentValue != null ? currentValue : "");
@@ -214,7 +215,6 @@ public class PayloadHandler extends CommandHandler{
                                 System.out.println("No " +
                                     "('" + currentValue + "'@'" + currentSubject + "') found.");
                             }
-                            //DebugUtil.debug(currentValue,currentSubject,newCurrentValue);
                         } catch (JSONException e) {
                             // Handle the exception if the key does not exist
                             System.out.println("Error: " +
@@ -223,7 +223,7 @@ public class PayloadHandler extends CommandHandler{
                         }
 
                         if ( currentFieldChaineCount > 2 ){
-                            return refineValueFromChaine(tokenizedfieldChaine.removePart(currentFieldChaineCount - 1), 
+                            return refineValueFromChaine(namespace,tokenizedfieldChaine.removePart(currentFieldChaineCount - 1), 
                                 tokenizedTypeChaine.removePart(currentFieldChaineCount - 1),
                                 defaultSubject, newCurrentValue);
                         }
@@ -243,7 +243,6 @@ public class PayloadHandler extends CommandHandler{
 
     private boolean refineCommands(String namespace, String storage, String identifier, List<PayloadCommand> commands) {
         boolean success = true;  // Assume success initially
-
         for (PayloadCommand command : commands) {
             String subjectId = identifier;
 
@@ -275,14 +274,23 @@ public class PayloadHandler extends CommandHandler{
 
                         if ("auto".equals(fieldDetail.getModifier())) {
                             value = String.valueOf(subject.getNextId());
-                            System.out.println("auto value " + value);
+                            //System.out.println("auto value " + value);
                         } else {
                             String fieldStr = fieldDetail.getField();
-                            String typeStr = fieldDetail.getTypeChaine();
+                            String typeStr = fieldDetail.getType();
+                            if ( fieldDetail.getReferencedFieldByKey("link") != null && !fieldDetail.getReferencedFieldByKey("link").equals("")){
+                                fieldStr = fieldDetail.getField() + "@" + fieldDetail.getReferencedFieldByKey("link");
+                                //fieldStr = fieldDetail.getReferencedFieldByKey("link");
+                                typeStr = commandManager.getFieldProperty(namespace, identifier+"@"+namespace,fieldDetail.getField(),"type").toString();
+                                typeStr = typeStr + "@" + fieldDetail.getReferencedFieldByKey("type");
+                                //typeStr = fieldDetail.getReferencedFieldByKey("type");
 
-                            value = (String) data.get(fieldStr);
-
-                            value = refineValueFromChaine(fieldStr,typeStr,identifier,value);
+                                value = (String) data.get(fieldName);
+                                value = refineValueFromChaine(namespace,fieldStr,typeStr,identifier,value);
+                            }
+                            else{
+                                value = (String) data.get(fieldStr);
+                            }
                             data.put(fieldName, value != null ? value : "");  // Put an empty string as a fallback
 
                             // Check for mandatory fields
@@ -296,8 +304,7 @@ public class PayloadHandler extends CommandHandler{
                             if (value == null || "".equals(value)) {
                                 value = fieldDetail.getDefaultValueByKey(defaultValueType);
                             }
-                       }
-
+                        }
                         // Make sure not to put a null value into the data map
                         data.put(fieldName, value != null ? value : "");  // Put an empty string as a fallback
                     }

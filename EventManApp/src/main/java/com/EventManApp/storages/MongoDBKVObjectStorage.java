@@ -2,10 +2,12 @@ package com.EventManApp.storages;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import com.mongodb.MongoCredential;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import com.mongodb.MongoCredential;
+import com.mongodb.MongoException;
+import com.mongodb.MongoServerException;
 import org.bson.Document;
 
 import javax.crypto.SecretKey;
@@ -30,6 +32,7 @@ import com.EventManApp.storages.MongoDBKVSubjectStorage;
 import com.EventManApp.storages.StorageSettings;
 
 public class MongoDBKVObjectStorage implements KVObjectStorage {
+    private static final String storageId = "MongoDB";
     private StorageSettings dbSettings; 
 
     private MongoClient mongoClient;
@@ -55,6 +58,42 @@ public class MongoDBKVObjectStorage implements KVObjectStorage {
         // Create a new MongoClient
         mongoClient = MongoClients.create(connectionString);
         database = mongoClient.getDatabase(dbSettings.get("database"));
+    }
+
+    private boolean verifyMongoDBConnection() {
+        try {
+            database.runCommand(new Document("ping", 1));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean verifyCollectionCreationPermission() {
+        try {
+            String username = dbSettings.get("username");
+            
+            Document command = new Document("usersInfo", username);
+            Document result = database.runCommand(command);
+            
+            @SuppressWarnings("unchecked")
+            List<Document> users = (List<Document>) result.get("users");
+            
+            if (users == null || users.isEmpty()) {
+                return false;
+            }
+            
+            Document userInfo = users.get(0);
+            @SuppressWarnings("unchecked")
+            List<Document> roles = (List<Document>) userInfo.get("roles");
+            
+            boolean hasReadWrite = roles.stream()
+                .anyMatch(role -> role.getString("role").equals("readWrite"));
+            
+            return hasReadWrite;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private String getDecryptedPassword(StorageSettings dbSettings) {
@@ -86,64 +125,81 @@ public class MongoDBKVObjectStorage implements KVObjectStorage {
 
     @Override
     public void addKVObject(KVObject kvObject) {
-        String collectionName = kvObject.getIdentifier();
-        MongoCollection<Document> collection = database.getCollection(collectionName);
+        try {
+            String collectionName = kvObject.getIdentifier();
+            MongoCollection<Document> collection = database.getCollection(collectionName);
 
-        Document document = new Document();
-        kvObject.getFieldTypeMap().forEach((fieldName, fieldType) -> {
-            document.append(fieldName, kvObject.getFieldValue(fieldName).toString());
-        });
+            Document document = new Document();
+            kvObject.getFieldTypeMap().forEach((fieldName, fieldType) -> {
+                document.append(fieldName, kvObject.getFieldValue(fieldName).toString());
+            });
 
-        collection.insertOne(document);
-        System.out.println("KVObject added to collection: " + collectionName);
+            collection.insertOne(document);
+            System.out.println("KVObject added to collection: " + collectionName);
+        } catch (Exception e) {
+            System.err.println("Error: Failed to get addKVObject - ");
+        }
     }
 
     @Override
     public void updateKVObject(KVObject kvObject) {
-        String collectionName = kvObject.getIdentifier();
-        MongoCollection<Document> collection = database.getCollection(collectionName);
+        try {
+            String collectionName = kvObject.getIdentifier();
+            MongoCollection<Document> collection = database.getCollection(collectionName);
 
-        Document document = new Document();
-        kvObject.getFieldTypeMap().forEach((fieldName, fieldType) -> {
-            document.append(fieldName, kvObject.getFieldValue(fieldName).toString());
-        });
+            Document document = new Document();
+            kvObject.getFieldTypeMap().forEach((fieldName, fieldType) -> {
+                document.append(fieldName, kvObject.getFieldValue(fieldName).toString());
+            });
 
-        String id = document.getString("id");
-        collection.replaceOne(Filters.eq("id", id), document);
-        System.out.println("KVObject updated in collection: " + collectionName);
+            String id = document.getString("id");
+            collection.replaceOne(Filters.eq("id", id), document);
+            System.out.println("KVObject updated in collection: " + collectionName);
+        } catch (Exception e) {
+            System.err.println("Error: Failed to get updateKVObject - ");
+        }
     }
 
     @Override
     public boolean removeKVObject(KVObject kvObject) {
-        String collectionName = kvObject.getIdentifier();
-        MongoCollection<Document> collection = database.getCollection(collectionName);
+        try {
+            String collectionName = kvObject.getIdentifier();
+            MongoCollection<Document> collection = database.getCollection(collectionName);
 
-        // Create a Document object to hold the query criteria, excluding the id
-        Document query = new Document();
-        
-        kvObject.getFieldTypeMap().forEach((fieldName, fieldType) -> {
-            if (!fieldName.equals("id")) { // Exclude the id field from the query
-                query.append(fieldName, kvObject.getFieldValue(fieldName));
-            }
-        });
+            // Create a Document object to hold the query criteria, excluding the id
+            Document query = new Document();
+            
+            kvObject.getFieldTypeMap().forEach((fieldName, fieldType) -> {
+                if (!fieldName.equals("id")) { // Exclude the id field from the query
+                    query.append(fieldName, kvObject.getFieldValue(fieldName));
+                }
+            });
 
-        long deletedCount = collection.deleteOne(query).getDeletedCount();
-        System.out.println("Removed KVObject from collection: " + collectionName);
-        return deletedCount > 0;
+            long deletedCount = collection.deleteOne(query).getDeletedCount();
+            System.out.println("Removed KVObject from collection: " + collectionName);
+            return deletedCount > 0;
+        } catch (Exception e) {
+            System.err.println("Error: Failed to get removeKVObject - ");
+            return false;
+        }
     }
 
     private boolean collectionExists(String collectionName) {
         boolean exists = false;
-
-        // Get the list of existing collections in the database
-        for (String name : this.database.listCollectionNames()) {
-            if (name.equals(collectionName)) {
-                exists = true; // Collection exists
-                break;
+        try {
+            // Get the list of existing collections in the database
+            for (String name : this.database.listCollectionNames()) {
+                if (name.equals(collectionName)) {
+                    exists = true; // Collection exists
+                    break;
+                }
             }
-        }
 
-        return exists; // Return whether the collection exists
+            return exists; // Return whether the collection exists
+        } catch (Exception e) {
+            System.err.println("Error: Failed to get collectionExists - ");
+            return false;
+        }
     }
 
     @Override
@@ -173,7 +229,7 @@ public class MongoDBKVObjectStorage implements KVObjectStorage {
         
         // Check if the collection with the given identifier exists
         if (!collectionExists(identifier)) {
-            System.out.println("Error: No collection found for identifier " + identifier + 
+            System.out.println("Error (" + storageId + "): No collection found for identifier " + identifier + 
                              ". Cannot retrieve KVObjects.");
             return new ArrayList<>();
         }
@@ -181,47 +237,49 @@ public class MongoDBKVObjectStorage implements KVObjectStorage {
         // Get the KVSubject associated with the identifier
         KVSubject kvSubject = subjectStorage.getKVSubject(identifier);
         if (kvSubject == null) {
-            System.out.println("Error: No KVSubject found for identifier " + identifier + 
+            System.out.println("Error(" + storageId + "): No KVSubject found for identifier " + identifier + 
                              ". Cannot retrieve KVObjects.");
             return new ArrayList<>();
-        }
-
-        String nameSpace = kvSubject.getNamespace();
-        
-        // Verify namespace consistency
-        if (!nameSpace.equals(namespace)) {
-            System.out.println("Warning: KVSubject namespace '" + nameSpace + 
-                             "' does not match StorageSettings namespace '" + namespace + "'");
         }
 
         // Get the field type map from the KVSubject
         Map<String, KVObjectField> fieldTypeMap = kvSubject.getFieldTypeMap();
         if (fieldTypeMap == null || fieldTypeMap.isEmpty()) {
-            System.out.println("Error: FieldTypeMap is empty for identifier " + identifier + 
+            System.out.println("Error (" + storageId + "): FieldTypeMap is empty for identifier " + identifier + 
                              ". Cannot retrieve KVObjects.");
             return new ArrayList<>();
         }
 
-        // Prepare to read records from the specified collection
-        MongoCollection<Document> collection = database.getCollection(identifier);
-        List<KVObject> kvObjects = new ArrayList<>();
+        try {
+            // Prepare to read records from the specified collection
+            MongoCollection<Document> collection = database.getCollection(identifier);
+            List<KVObject> kvObjects = new ArrayList<>();
 
-        for (Document doc : collection.find()) {
-            Map<String, String> jsonFields = new HashMap<>();
-            for (String fieldName : doc.keySet()) {
-                jsonFields.put(fieldName, doc.get(fieldName).toString());
+            for (Document doc : collection.find()) {
+                Map<String, String> jsonFields = new HashMap<>();
+                for (String fieldName : doc.keySet()) {
+                    jsonFields.put(fieldName, doc.get(fieldName).toString());
+                }
+                KVObject kvObject = new KVObject(namespace, identifier, fieldTypeMap, jsonFields);
+                kvObjects.add(kvObject);
             }
-            KVObject kvObject = new KVObject(nameSpace, identifier, fieldTypeMap, jsonFields);
-            kvObjects.add(kvObject);
+            return kvObjects;
+        } catch (Exception e) {
+            System.err.println("Error: Failed to get getKVObjects - ");
+            return null;
         }
-        return kvObjects;
     }
 
     @Override
     public int countKVObjects(String identifier) {
-        MongoCollection<Document> collection = database.getCollection(identifier);
-        long count = collection.countDocuments();
-        return (int) count;
+        try {
+            MongoCollection<Document> collection = database.getCollection(identifier);
+            long count = collection.countDocuments();
+            return (int) count;
+        } catch (Exception e) {
+            System.err.println("Error: Failed to get getKVObjects - ");
+            return 0;
+        }
     }
 
     @Override

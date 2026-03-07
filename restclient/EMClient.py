@@ -227,7 +227,10 @@ def get_user_input(field_info, action):
     """
     field_name = field_info['field']
     description = field_info.get('description', field_name)
-    field_type = field_info['type']
+    # Check if referencedfield exists and has a type, otherwise use the main type
+    referenced_field = field_info.get('referencedfield')
+    field_type = referenced_field.get('type') if referenced_field else field_info.get('type')
+
     mandatory = field_info.get('mandatory', False)
     modifier = field_info.get('modifier')
     default_value = get_default_value(field_info, action)
@@ -235,8 +238,11 @@ def get_user_input(field_info, action):
     if modifier == "auto":
         return default_value
 
+    # Add * to description if mandatory
+    prompt_description = f"{description}*" if mandatory else description
+
     while True:
-        user_input = input(f"Enter {description} ({field_type}): ")
+        user_input = input(f"Enter {prompt_description} ({field_type}): ")
 
         if mandatory and user_input.strip() == "":
             print(f"{description} is mandatory. Please provide a value.")
@@ -283,7 +289,7 @@ def run_command(selected_command, root_identifier, app_id):
     action = get_action_type(selected_command)
     
     payload = {
-        "identifier": f"{root_identifier}@{app_id}",
+        "identifier": f"{root_identifier}",
         "commands": [{
             "args": {},
             "data": {},
@@ -349,7 +355,7 @@ def handle_selection(commands, app_id, level=0):
             if 'commands' in selected_command:
                 handle_selection(selected_command['commands'], app_id, level + 1)
             else:
-                root_identifier = selected_command.get('id', 'root')
+                root_identifier = selected_command.get('id', 'root').split('.')[0] + '@' + app_id
                 run_command(selected_command, root_identifier, app_id)
                 input("Press Enter to continue...")
         else:

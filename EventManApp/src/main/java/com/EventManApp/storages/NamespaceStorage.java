@@ -50,9 +50,10 @@ public class NamespaceStorage {
     public KVSubjectStorage getSubjectStorage(String storageName) {
         KVSubjectStorage storage = subjectStorages.get(getStorageNameToUse(storageName));
         if (storage == null) {
-            throw new IllegalArgumentException(
-                "Subject storage '" + getStorageNameToUse(storageName) + "' not found in namespace '" + namespaceName + "'"
-            );
+            String errorMsg = "Subject storage '" + getStorageNameToUse(storageName)
+                + "' not found in namespace '" + namespaceName + "'";
+            System.err.println(errorMsg);  // or use a logger
+            return null;
         }
         return storage;
     }
@@ -74,9 +75,10 @@ public class NamespaceStorage {
     public KVObjectStorage getObjectStorage(String storageName) {
         KVObjectStorage storage = objectStorages.get(getStorageNameToUse(storageName));
         if (storage == null) {
-            throw new IllegalArgumentException(
-                "Object storage '" + getStorageNameToUse(storageName) + "' not found in namespace '" + namespaceName + "'"
-            );
+            String errorMsg = "Object storage '" + getStorageNameToUse(storageName) + 
+                "' not found in namespace '" + namespaceName + "'";
+            System.err.println(errorMsg);  // or use a logger
+            return null;
         }
         return storage;
     }
@@ -95,13 +97,15 @@ public class NamespaceStorage {
     /**
      * Add a subject storage dynamically
      */
-    public void addSubjectStorage(String storageName, KVSubjectStorage storage) {
+    public KVSubjectStorage addSubjectStorage(String storageName, KVSubjectStorage storage) {
         if (subjectStorages.containsKey(getStorageNameToUse(storageName))) {
-            throw new IllegalArgumentException(
-                "Subject storage '" + getStorageNameToUse(storageName) + "' already exists in namespace '" + namespaceName + "'"
-            );
+            String errorMsg = "Subject storage '" + getStorageNameToUse(storageName) 
+                + "' already exists in namespace '" + namespaceName + "'";
+            System.err.println(errorMsg);  // or use a logger
+            return null;
         }
         subjectStorages.put(getStorageNameToUse(storageName), storage);
+        return storage;  // return the added storage
     }
     
     /**
@@ -109,9 +113,9 @@ public class NamespaceStorage {
      */
     public void addObjectStorage(String storageName, KVObjectStorage storage) {
         if (objectStorages.containsKey(getStorageNameToUse(storageName))) {
-            throw new IllegalArgumentException(
-                "Object storage '" + getStorageNameToUse(storageName) + "' already exists in namespace '" + namespaceName + "'"
-            );
+            String errorMsg = "Object storage '" + getStorageNameToUse(storageName)
+                + "' already exists in namespace '" + namespaceName + "'";
+            System.err.println(errorMsg);  // or use a logger
         }
         objectStorages.put(getStorageNameToUse(storageName), storage);
     }
@@ -227,11 +231,13 @@ public class NamespaceStorage {
     }
 
     @Override
-    public String toString() {
-        try {
-            return toJSON().toString(2);
-        } catch (Exception e) {
-            return toJSON().toString();
-        }
+     public String toString() {
+        return toString(0);
     }
+
+    public String toString(int... indentation) {
+        int indent = indentation.length > 0 ? indentation[0] : 0;
+        return toJSON().toString(indent);
+    }
+
 }

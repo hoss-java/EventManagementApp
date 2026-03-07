@@ -306,7 +306,6 @@ public class CustomCommandFactory implements CommandFactory {
 
             try {
                 SshConsoleInterface sshConsoleInterface = new SshConsoleInterface(callback, out, in);
-                DebugUtil.debug(commands.toString());
                 JSONObject result = sshConsoleInterface.executeCommands(appCommands);
                 return appId + " execution completed.\r\n";
             } catch (Exception e) {

@@ -277,7 +277,11 @@ public class StorageConfig {
      */
     @Override
     public String toString() {
-        return toJSON().toString();
+        return toString(0);
+    }
+    public String toString(int... indentation) {
+        int indent = indentation.length > 0 ? indentation[0] : 0;
+        return toJSON().toString(indent);
     }
 
     /**

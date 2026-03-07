@@ -111,7 +111,8 @@ get_user_input() {
     
     local field_name=$(echo "$field_info" | jq -r '.field')
     local description=$(echo "$field_info" | jq -r --arg field_name "$field_name" '.description // $field_name')
-    local field_type=$(echo "$field_info" | jq -r '.type')
+    # Check if referencedfield exists and has a type, otherwise use the main type
+    local field_type=$(echo "$field_info" | jq -r '.referencedfield.type // .type')
     local mandatory=$(echo "$field_info" | jq -r '.mandatory // false')
     local modifier=$(echo "$field_info" | jq -r '.modifier // "user"')
 
@@ -121,7 +122,13 @@ get_user_input() {
             return
         fi
         
-        read -p "Enter $description ($field_type): " user_input
+        # Add * to description if mandatory
+        local prompt_description="$description"
+        if [[ "$mandatory" == "true" ]]; then
+            prompt_description="${description}*"
+        fi
+        
+        read -p "Enter $prompt_description ($field_type): " user_input
 
         if [[ "$mandatory" == "true" && -z "$user_input" ]]; then
             echostd "$description is mandatory. Please provide a value."
@@ -178,9 +185,17 @@ create_payload() {
             
             # Check if this action is supported for this field (case-insensitive)
             local supports=$(echo "$field_info" | jq -r '(keys_unsorted[] | select(ascii_downcase == "supports")) as $key | .[$key] // []')
-            
+
+            # Get modifier (case-insensitive)
+            local modifier=$(echo "$field_info" | jq -r '(keys_unsorted[] | select(ascii_downcase == "modifier")) as $key | .[$key] // "user"')            
+
             if ! echo "$supports" | jq -e --arg action "$action" '.[] | select(. == $action)' > /dev/null 2>&1; then
                 # Action not supported for this field, skip it
+                continue
+            fi
+
+            # Skip fields with modifier "auto"
+            if [[ "$modifier" == "auto" ]]; then
                 continue
             fi
 

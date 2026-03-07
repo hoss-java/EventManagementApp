@@ -1,5 +1,8 @@
 package com.EventManApp.storages;
 
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 import org.json.JSONObject;
 
 import org.json.JSONObject;
@@ -129,9 +132,10 @@ public class MultiNamespaceStorageManager {
                 System.out.println("Subject storage '" + namespaceStorage.getStorageNameToUse(storageName)  + "' added to namespace '" + namespaceName + "'");
                 
             } catch (Exception e) {
-                throw new RuntimeException(
-                    "Failed to add subject storage '" + namespaceStorage.getStorageNameToUse(storageName) + "' to namespace '" + namespaceName + "': " + e.getMessage(), e
-                );
+                System.out.println("Failed to add subject storage '" + namespaceStorage.getStorageNameToUse(storageName) + "' to namespace '" + namespaceName);
+                //throw new RuntimeException(
+                //    "Failed to add subject storage '" + namespaceStorage.getStorageNameToUse(storageName) + "' to namespace '" + namespaceName + "': " + e.getMessage(), e
+                //);
             }
         }
     }
@@ -146,24 +150,26 @@ public class MultiNamespaceStorageManager {
     public void addObjectStorage(String namespaceName, String storageName, StorageSettings storageSettings) {
         NamespaceStorage namespaceStorage = getNamespace(namespaceName);
         String type = namespaceStorage.getStorageNameToUse(storageName);
+        StorageSettings storageSettingsToUse =  storageSettings == null ? storageConfig.getStorageConfig(namespaceName, type) : storageSettings;
 
         if ( hasObjectStorage(namespaceName, storageName) == false ){
             try {
-                KVObjectStorage storage = ObjectStorageFactory.createKVObjectStorage(type, storageSettings);
+                KVObjectStorage storage = ObjectStorageFactory.createKVObjectStorage(type, storageSettingsToUse);
                 namespaceStorage.addObjectStorage(storageName, storage);
                 
                 // Update config if it exists
                 NamespaceStorageConfig existingConfig = namespaceConfigs.get(namespaceName);
                 if (existingConfig != null) {
-                    existingConfig.putSubjectStorage(storageName, storageSettings);
+                    existingConfig.putSubjectStorage(storageName, storageSettingsToUse);
                 }
                 
                 System.out.println("Object storage '" + namespaceStorage.getStorageNameToUse(storageName) + "' added to namespace '" + namespaceName + "'");
                 
             } catch (Exception e) {
-                throw new RuntimeException(
-                    "Failed to add object storage '" + namespaceStorage.getStorageNameToUse(storageName) + "' to namespace '" + namespaceName + "': " + e.getMessage(), e
-                );
+                System.out.println("Failed to add object storage '" + namespaceStorage.getStorageNameToUse(storageName) + "' to namespace '" + namespaceName );
+                //throw new RuntimeException(
+                //    "Failed to add object storage '" + namespaceStorage.getStorageNameToUse(storageName) + "' to namespace '" + namespaceName + "': " + e.getMessage(), e
+                //);
             }
         }
     }
@@ -219,7 +225,12 @@ public class MultiNamespaceStorageManager {
      * Get a specific subject storage
      */
     public KVSubjectStorage getSubjectStorage(String namespaceName, String storageName) {
-        return getNamespace(namespaceName).getSubjectStorage(storageName);
+        KVSubjectStorage kvSubjectStorage = getNamespace(namespaceName).getSubjectStorage(storageName);
+        if ( kvSubjectStorage == null ){
+            addSubjectStorage(namespaceName, storageName);
+            kvSubjectStorage = getNamespace(namespaceName).getSubjectStorage(storageName);
+        }
+        return kvSubjectStorage;
     }
 
     /**
@@ -233,7 +244,12 @@ public class MultiNamespaceStorageManager {
      * Get a specific object storage
      */
     public KVObjectStorage getObjectStorage(String namespaceName, String storageName) {
-        return getNamespace(namespaceName).getObjectStorage(storageName);
+        KVObjectStorage kvObjectStorage = getNamespace(namespaceName).getObjectStorage(storageName);
+        if ( kvObjectStorage == null ){
+            addObjectStorage(namespaceName, storageName);
+            kvObjectStorage = getNamespace(namespaceName).getObjectStorage(storageName);
+        }
+        return kvObjectStorage;
     }
 
     /**
@@ -327,10 +343,11 @@ public class MultiNamespaceStorageManager {
 
     @Override
     public String toString() {
-        try {
-            return toJSON().toString(2);
-        } catch (Exception e) {
-            return toJSON().toString();
-        }
+        return toString(0);
+    }
+
+    public String toString(int... indentation) {
+        int indent = indentation.length > 0 ? indentation[0] : 0;
+        return toJSON().toString(indent);
     }
 }

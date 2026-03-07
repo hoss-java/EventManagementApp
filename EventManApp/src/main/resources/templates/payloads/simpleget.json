@@ -1,5 +1,5 @@
 {
-    "identifier" : "%SUBJECT%",
+    "identifier" : "%IDENTIFIER%",
     "commands": [{
 		"id": "%SUBJECT%.get",	
 		"args":{

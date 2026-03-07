@@ -22,6 +22,7 @@ import com.EventManApp.kvhandler.SerializationUtil;
 import com.EventManApp.helper.DebugUtil;
 
 public class FileKVSubjectStorage implements KVSubjectStorage {
+    private static final String storageId = "File";
     private StorageSettings dbSettings;
     private File storageDirectory;
 
@@ -61,7 +62,8 @@ public class FileKVSubjectStorage implements KVSubjectStorage {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("No subject file found/Create a new on namespace '" + dbSettings.getNamespace() + "'("+file.getAbsolutePath()+"): " + identifier);
+            //e.printStackTrace();
         }
 
         // Create new subject JSON
@@ -178,7 +180,8 @@ public class FileKVSubjectStorage implements KVSubjectStorage {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("No subject file found for namespace '" + dbSettings.getNamespace() + "' : " + identifier);
+            //e.printStackTrace();
         }
         return null; // Not found
     }

@@ -22,6 +22,7 @@ import com.EventManApp.storages.StorageSettings;
 import com.EventManApp.storages.FileKVSubjectStorage;
 
 public class FileKVObjectStorage implements KVObjectStorage {
+    private static final String storageId = "File";
     private StorageSettings dbSettings;
     private File storageDirectory;
 
@@ -79,7 +80,7 @@ public class FileKVObjectStorage implements KVObjectStorage {
         });
 
         if (!ensureFileAndDirectoryExists(file)) {
-            System.err.println("Error: Could not create file: " + file.getAbsolutePath());
+            System.err.println("Error (" + storageId + "): Could not create file: " + file.getAbsolutePath());
             return;
         }
 
@@ -121,7 +122,7 @@ public class FileKVObjectStorage implements KVObjectStorage {
         });
 
         if (!ensureFileAndDirectoryExists(file)) {
-            System.err.println("Error: Could not create file: " + file.getAbsolutePath());
+            System.err.println("Error (" + storageId + "): Could not create file: " + file.getAbsolutePath());
             return;
         }
 
@@ -208,23 +209,15 @@ public class FileKVObjectStorage implements KVObjectStorage {
         // Get the KVSubject associated with the identifier
         KVSubject kvSubject = subjectStorage.getKVSubject(identifier);
         if (kvSubject == null) {
-            System.out.println("Error: No KVSubject found for identifier " + identifier + 
+            System.out.println("Error (" + storageId + "): No KVSubject found for identifier " + identifier + 
                              ". Cannot retrieve KVObjects.");
             return new ArrayList<>();
-        }
-
-       String nameSpace = kvSubject.getNamespace();
-        
-        // Verify namespace consistency
-        if (!nameSpace.equals(namespace)) {
-            System.out.println("Warning: KVSubject namespace '" + nameSpace + 
-                             "' does not match StorageSettings namespace '" + namespace + "'");
         }
 
         // Get the field type map from the KVSubject
         Map<String, KVObjectField> fieldTypeMap = kvSubject.getFieldTypeMap();
         if (fieldTypeMap == null || fieldTypeMap.isEmpty()) {
-            System.out.println("Error: FieldTypeMap is empty for identifier " + identifier + 
+            System.out.println("Error (" + storageId + "): FieldTypeMap is empty for identifier " + identifier + 
                              ". Cannot retrieve KVObjects.");
             return new ArrayList<>();
         }
@@ -247,7 +240,7 @@ public class FileKVObjectStorage implements KVObjectStorage {
                     jsonFields.put(fieldName, jsonObject.get(fieldName).toString());
                 }
                 
-                KVObject kvObject = new KVObject(nameSpace, identifier, fieldTypeMap, jsonFields);
+                KVObject kvObject = new KVObject(namespace, identifier, fieldTypeMap, jsonFields);
                 kvObjects.add(kvObject);
             }
         } catch (IOException e) {

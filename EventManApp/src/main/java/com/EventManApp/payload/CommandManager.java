@@ -3,16 +3,74 @@ package com.EventManApp.payload;
 import org.json.JSONObject;
 import org.json.JSONArray;
 import java.util.*;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.nio.charset.StandardCharsets;
+
 import com.EventManApp.helper.DebugUtil;
+import com.EventManApp.helper.TokenizedString;
 
 public class CommandManager {
     private JSONObject commandsJson;
 
+    private String appDataFolder;
     /**
      * Constructor accepts a JSONObject (not a string)
      */
-    public CommandManager(JSONObject commandsJson) {
+    public CommandManager(String appDataFolder, JSONObject commandsJson) {
+        this.appDataFolder = appDataFolder;
         this.commandsJson = commandsJson;
+        refineCommandsJson();
+    }
+
+    private void refineCommandsJson() {
+        List<String> appIds = getAllAppIds();
+        
+        for (String appId : appIds) {
+            JSONObject app = getApp(appId);
+            if (app != null) {
+                List<String> commandIds = getAllCommandIds(app);
+                for (String commandId : commandIds) {
+                    JSONObject args = getCommandArgs(app, commandId);
+                    if (args != null && args.length() > 0) {
+                        refineArgsFields(appId, args);
+                    }
+                }
+            }
+        }
+    }
+
+    private void refineArgsFields(String appId, JSONObject args) {
+        Iterator<String> keys = args.keys();
+        
+        while (keys.hasNext()) {
+            String fieldName = keys.next();
+            JSONObject field = args.optJSONObject(fieldName);
+            
+            if (field != null) {
+                // Check if this field has a "referencedfield" object with a "link" property
+                JSONObject referencedField = field.optJSONObject("referencedfield");
+                if (referencedField != null && referencedField.has("link")) {
+                    // Add "type": "str" to the referencedfield object
+                    String namespace = appId;
+                    TokenizedString linkFieldTokens = new TokenizedString(referencedField.getString("link"),":");
+                    String fieldIdStr = linkFieldTokens.getPart(1);
+                    if ( fieldIdStr != null ){
+                        TokenizedString fieldIdTokens = new TokenizedString(fieldIdStr,".");
+                        String linkId = fieldIdTokens.getPart(0);
+                        String linkField = fieldIdTokens.getPart(1);
+                        if ( linkId != null  && linkField != null ){
+                            String linkFieldType = getFieldProperty(appId, linkId+"@"+appId,linkField,"type").toString();
+                            if ( linkFieldType != null ){
+                                referencedField.put("type", "str");
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -147,6 +205,34 @@ public class CommandManager {
         return getAllCommandIds(getApp(appId));
     }
 
+
+    /**
+     * Get all command IDs from an app
+     * Recursively collects all command IDs including nested ones
+     * 
+     * @param appId the application ID (e.g., "eventmanapp")
+     * @return List of all command IDs in the app
+     */
+    public List<String> getAllSectionsIds(String appId){
+        List<String> sectionIds = new ArrayList<>();
+
+        JSONObject app = getApp(appId);
+        if (app == null) {
+            return sectionIds;
+        }
+
+        // Get the commands array from the app
+        JSONArray commands = app.optJSONArray("commands");
+        if (commands == null) {
+            return sectionIds;
+        }
+
+        // Recursively collect all command IDs
+        collectAllCommandIds(commands, sectionIds, appId);
+        
+        return sectionIds;
+    }
+
     /**
      * Get only executable command IDs from an app (leaf commands only)
      * Recursively collects only commands that have an "action" field
@@ -174,6 +260,62 @@ public class CommandManager {
     }
     public List<String> getLeafCommandIds(String appId) {
         return getLeafCommandIds(getApp(appId));
+    }
+
+    public Object getFieldProperty(String appId, String sectionId, String fieldName, String propertyName) {
+        JSONObject field = getFieldFromSection(appId, sectionId, fieldName);
+        if (field != null) {
+            return field.opt(propertyName);
+        }
+        return null;
+    }
+
+    public JSONObject getFieldFromSection(String appId, String sectionId, String fieldName) {
+        JSONObject section = findSectionRecursively(getApp(appId), sectionId);
+        if (section != null) {
+            // Search for the field in all commands under this section
+            JSONArray commands = section.optJSONArray("commands");
+            return findFieldInCommands(commands, fieldName);
+        }
+        return null;
+    }
+
+    private JSONObject findSectionRecursively(JSONObject app, String sectionId) {
+        if (app == null) return null;
+        
+        JSONArray commands = app.optJSONArray("commands");
+        return searchSectionInCommands(commands, sectionId);
+    }
+
+    private JSONObject searchSectionInCommands(JSONArray commands, String sectionId) {
+        if (commands == null) return null;
+        
+        for (int i = 0; i < commands.length(); i++) {
+            JSONObject item = commands.optJSONObject(i);
+            if (item != null) {
+                if (sectionId.equals(item.optString("id"))) {
+                    return item;
+                }
+                JSONObject found = searchSectionInCommands(item.optJSONArray("commands"), sectionId);
+                if (found != null) return found;
+            }
+        }
+        return null;
+    }
+
+    private JSONObject findFieldInCommands(JSONArray commands, String fieldName) {
+        if (commands == null) return null;
+        
+        for (int i = 0; i < commands.length(); i++) {
+            JSONObject command = commands.optJSONObject(i);
+            if (command != null) {
+                JSONObject args = command.optJSONObject("args");
+                if (args != null && args.has(fieldName)) {
+                    return args.optJSONObject(fieldName);
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -218,21 +360,27 @@ public class CommandManager {
      * 
      * @param commands JSONArray of commands to process
      * @param commandIds List to accumulate command IDs
+     * @param appIds limit list to only sections id
      */
-    private void collectAllCommandIds(JSONArray commands, List<String> commandIds) {
+    private void collectAllCommandIds(JSONArray commands, List<String> commandIds, String appId) {
         for (int i = 0; i < commands.length(); i++) {
             JSONObject command = commands.getJSONObject(i);
             String commandId = command.getString("id");
             
             // Add this command's ID
-            commandIds.add(commandId);
+            if ((appId != null && commandId.matches(".*@[^@]+$")) || appId == null) {
+                commandIds.add(commandId);
+            }
             
             // If this command has nested commands, recurse into them
             if (command.has("commands")) {
                 JSONArray nestedCommands = command.getJSONArray("commands");
-                collectAllCommandIds(nestedCommands, commandIds);
+                collectAllCommandIds(nestedCommands, commandIds, appId);
             }
         }
+    }
+    private void collectAllCommandIds(JSONArray commands, List<String> commandIds) {
+        collectAllCommandIds(commands, commandIds, null);
     }
 
     /**
@@ -256,6 +404,45 @@ public class CommandManager {
                 collectLeafCommandIds(nestedCommands, commandIds);
             }
         }
+    }
+
+    /**
+     * Get the generated commands JSON
+     */
+    public JSONObject getCommandsJson() {
+        return commandsJson;
+    }
+
+    /**
+     * Save the generated JSON to a file with default path and overwrite if exists
+     */
+    public void saveToFile() {
+        String defaultPath = Paths.get(appDataFolder, "commands.json").toString();
+        saveToFile(commandsJson, defaultPath);
+    }
+
+    public void saveToFile(JSONObject commands) {
+        String defaultPath = Paths.get(appDataFolder, "commands.json").toString();
+        saveToFile(commands, defaultPath);
+    }
+
+    public void saveToFile(JSONObject commands, String outputFilePath) {
+        try {
+            if (commands != null) {
+                String jsonString = commands.toString(2);
+                Files.write(Paths.get(outputFilePath), jsonString.getBytes(), 
+                    StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save commands to file: " + outputFilePath, e);
+        }
+    }
+
+    /**
+     * Save the generated JSON to a file
+     */
+    public void saveToFile(String outputFilePath) {
+        saveToFile(commandsJson, outputFilePath);
     }
 
     /**

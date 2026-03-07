@@ -2,7 +2,7 @@
 -- Settings should be updated according to local requirements.
 SET @username := 'eventman';
 SET @password := 'eventmanpass';
-SET @database := 'eventman';
+SET @database := 'eventmanapp';
 SET @ip_range := '172.32.0.%';
 
 -- Drop the user if it exists

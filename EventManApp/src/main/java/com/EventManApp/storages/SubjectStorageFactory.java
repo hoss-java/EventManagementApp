@@ -6,9 +6,10 @@ import java.sql.SQLException;
 
 import com.EventManApp.kvhandler.KVSubjectStorage;
 import com.EventManApp.storages.MongoDBKVSubjectStorage;
-import com.EventManApp.storages.DatabaseKVSubjectStorage;
+import com.EventManApp.storages.SqlDbKVSubjectStorage;
 import com.EventManApp.storages.FileKVSubjectStorage;
 import com.EventManApp.storages.MemoryKVSubjectStorage;
+import com.EventManApp.helper.DebugUtil;
 
 public class SubjectStorageFactory {
     public static KVSubjectStorage createKVSubjectStorage(String type, StorageSettings storageSettings) {
@@ -21,9 +22,9 @@ public class SubjectStorageFactory {
                 } catch (IOException e) {
                     throw new RuntimeException("Failed to create FileKVSubjectStorage: " + e.getMessage(), e);
                 }
-            case "database":
+            case "sqldb":
                 try {
-                    return new DatabaseKVSubjectStorage(storageSettings); // Handle SQLException
+                    return new SqlDbKVSubjectStorage(storageSettings); // Handle SQLException
                 } catch (SQLException e) {
                     throw new RuntimeException("Failed to create DatabaseKVSubjectStorage: " + e.getMessage(), e);
                 }

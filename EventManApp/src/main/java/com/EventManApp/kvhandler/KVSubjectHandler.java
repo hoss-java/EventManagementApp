@@ -92,7 +92,7 @@ public class KVSubjectHandler implements KVSubjectHandlerInterface {
             }
         } catch (Exception e) {
             System.out.println("Error reading root attributes from XML: " + xmlFilePath);
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         
         return attributes;
@@ -106,13 +106,13 @@ public class KVSubjectHandler implements KVSubjectHandlerInterface {
         try {
             // Get all root attributes in one call
             Map<String, String> rootAttributes = getRootAttributesFromXML(xmlFilePath, fromResources);
-            
+
             // Check if XML is empty
             if (rootAttributes.isEmpty()) {
                System.out.println("XML file is empty, skipping: " + xmlFilePath);
                 return;
             }
-            
+
             String namespace = rootAttributes.getOrDefault("namespace", defaultNamespace);
             String storage = rootAttributes.getOrDefault("storage", defaultStorage);
 
@@ -132,7 +132,7 @@ public class KVSubjectHandler implements KVSubjectHandlerInterface {
             
         } catch (Exception e) {
             System.out.println("Error processing XML file: " + xmlFilePath);
-            e.printStackTrace();
+            //e.printStackTrace();
         }
     }
 
@@ -177,24 +177,34 @@ public class KVSubjectHandler implements KVSubjectHandlerInterface {
         }
         // Check if the storage already contains the identifier
         KVSubjectAttribute kvSubjectAttribute = initializeSubjectAttributes(subjectElement);        
-        if (namespaceManager.getSubjectStorage(namespace,storage).getKVSubject(kvSubjectAttribute.getIdentifier()) == null) {
+        KVSubjectStorage storageToUse = namespaceManager.getSubjectStorage(namespace,storage);
+        if (storageToUse != null && storageToUse.getKVSubject(kvSubjectAttribute.getIdentifier()) == null) {
             KVSubject subject = new KVSubject(kvSubjectAttribute);
-            initializeFieldTypeMap(subject, subjectElement);
-            namespaceManager.getSubjectStorage(namespace,storage).addKVSubject(subject); // Use storage method to add
+            if (subject != null){
+                initializeFieldTypeMap(subject, subjectElement);
+                storageToUse.addKVSubject(subject); // Use storage method to add
+            }
         }
     }
 
     @Override
     public void removeKVSubject(String namespace, String storage, String identifier) {
-        KVSubject subject = namespaceManager.getSubjectStorage(namespace,storage).getKVSubject(identifier);
-        if (subject != null) {
-            namespaceManager.getSubjectStorage(namespace,storage).removeKVSubject(subject); // Use storage method to remove
+        KVSubjectStorage storageToUse = namespaceManager.getSubjectStorage(namespace,storage);
+        if (storageToUse != null) {
+            KVSubject subject = storageToUse.getKVSubject(identifier);
+            if (subject != null) {
+                storageToUse.removeKVSubject(subject); // Use storage method to remove
+            }
         }
     }
 
     @Override
     public KVSubject getKVSubject(String namespace, String storage, String identifier) {
-        return namespaceManager.getSubjectStorage(namespace,storage).getKVSubject(identifier); // Use storage method to get
+        KVSubjectStorage storageToUse = namespaceManager.getSubjectStorage(namespace,storage);
+        if (storageToUse != null) {
+            return namespaceManager.getSubjectStorage(namespace,storage).getKVSubject(identifier); // Use storage method to get
+        }
+        return null;
     }
 
     // New method to get fieldTypeMap for a given identifier

@@ -77,25 +77,36 @@ public class KVObjectHandler implements KVObjectHandlerInterface {
     // Remove a kvObject(s)
     public Boolean removeKVObject(String namespace, String storage, String identifier,  Predicate<KVObject> validator) {
         KVObject kvObjectToRemove = getKVObject(namespace , storage, identifier, validator);
-        if (kvObjectToRemove != null) {
-            return namespaceManager.getObjectStorage(namespace,storage).removeKVObject(kvObjectToRemove); // Use storage's remove method
+        KVObjectStorage storageToUse = namespaceManager.getObjectStorage(namespace,storage);
+        if (storageToUse != null) {
+            if (kvObjectToRemove != null) {
+                return storageToUse.removeKVObject(kvObjectToRemove); // Use storage's remove method
+            }
         }
         return false;
     }
 
     // Existing method that returns a KVObject based on identifier and a validator function
     public KVObject getKVObject(String namespace, String storage, String identifier, Predicate<KVObject> validator) {
-        return namespaceManager.getObjectStorage(namespace,storage).getKVObjects(identifier).stream()
-            .filter(kvObject -> kvObject.getIdentifier().equals(identifier) && validator.test(kvObject))
-            .findFirst()
-            .orElse(null);
+        KVObjectStorage storageToUse = namespaceManager.getObjectStorage(namespace,storage);
+        if (storageToUse != null) {
+            return storageToUse.getKVObjects(identifier).stream()
+                .filter(kvObject -> kvObject.getIdentifier().equals(identifier) && validator.test(kvObject))
+                .findFirst()
+                .orElse(null);
+        }
+        return null;
     }
 
     // Existing method that returns a list of KVObjects based on identifier and a validator function
     public List<KVObject> getKVObjects(String namespace, String storage, String identifier, Predicate<KVObject> validator) {
-        return namespaceManager.getObjectStorage(namespace,storage).getKVObjects(identifier).stream()
-            .filter(kvObject -> kvObject.getIdentifier().equals(identifier) && validator.test(kvObject))
-            .collect(Collectors.toList());
+        KVObjectStorage storageToUse = namespaceManager.getObjectStorage(namespace,storage);
+        if (storageToUse != null) {
+            return storageToUse.getKVObjects(identifier).stream()
+                .filter(kvObject -> kvObject.getIdentifier().equals(identifier) && validator.test(kvObject))
+                .collect(Collectors.toList());
+        }
+        return null;
     }
 
     // New method to get a KVObject by identifier without a validator (default to accepting all)

@@ -21,8 +21,8 @@ import org.xml.sax.SAXException;
 import java.util.*;
 
 public class CommandBuilder {
-    private static final String defaultSubjectsXmlFile = "subjects.xml";
     private static final String defaultCommandsJsonFile = "commands.json";
+    private static final String defaultSubjectsXmlFile = "subjects.xml";
     private JSONObject commandsJson;
     private Map<String, String> actionDescriptions;
     private Map<String, String> fieldTypeCompareModes;
@@ -342,9 +342,16 @@ public class CommandBuilder {
             if ("name".equals(attrName)) {
                 continue;
             }
+
+            if ("referencedfield".equals(attrName)) {
+                JSONObject referencedField = new JSONObject();;
+                referencedField.put("link", attrValue);
+                fieldObj.put("referencedfield", referencedField);
+                continue;
+            }
             
-            // Convert mandatory to boolean
-            if ("mandatory".equals(attrName)) {
+            // Check if the value is a boolean string and convert accordingly
+            if (isBooleanValue(attrValue)) {
                 fieldObj.put(attrName, Boolean.parseBoolean(attrValue));
             } else if (!attrValue.isEmpty()) {
                 fieldObj.put(attrName, attrValue);
@@ -358,6 +365,11 @@ public class CommandBuilder {
         }
 
         return fieldObj;
+    }
+
+    // Helper method to check if a string value is a boolean
+    private boolean isBooleanValue(String value) {
+        return "true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value);
     }
 
     private JSONObject extractDefaultValues(Element fieldElement) {
@@ -396,7 +408,7 @@ public class CommandBuilder {
         JSONObject args = new JSONObject();
 
         // Create args only for actions that have arguments
-        if (!"getsall".equals(action)) {
+        if (!Boolean.parseBoolean(getMainActionOption(subjectElement, action, "noargs", "false"))){
             args = createActionArgs(fieldNodes, action);
         }
 
@@ -428,31 +440,45 @@ public class CommandBuilder {
 
             JSONObject fieldObj = createFieldObject(fieldElement);
 
+            // Get mandatory option with default false
+            String description = getActionOption(fieldElement, action, "description", fieldName);
+            fieldObj.put("description", description);
+
             // Add all supported actions
             JSONArray supportsArray = extractSupportedActions(fieldElement);
             if (supportsArray.length() > 0) {
                 fieldObj.put("supports", supportsArray);
             }
 
-            // Action-specific configurations
-            if ("gets".equals(action)) {
-                String type = getAttribute(fieldElement, "type", "str");
-                fieldObj.put("mandatory", false);
-                fieldObj.put("compareMode", getCompareMode(type));
-            } else if ("remove".equals(action)) {
-                if ("id".equals(fieldName)) {
-                    fieldObj.put("mandatory", true);
-                    fieldObj.put("compareMode", "=");
-                    args.put(fieldName, fieldObj);
-                    break;
-                }
+            // Get mandatory option with default false
+            String mandatory = getActionOption(fieldElement, action, "mandatory", "false");
+            fieldObj.put("mandatory", Boolean.parseBoolean(mandatory));
+
+            // Get compareMode with default based on type
+            String type = getActionOption(fieldElement, action, "type", "str");
+            fieldObj.put("type", type);
+            String defaultCompareMode = getCompareMode(type);
+            String compareMode = getActionOption(fieldElement, action, "compareMode", defaultCompareMode);
+            fieldObj.put("compareMode", compareMode);
+
+            // Skip field if action doesn't support it (for remove action with non-id fields)
+            if ("remove".equals(action) && !fieldName.equals("id")) {
                 continue;
             }
 
             args.put(fieldName, fieldObj);
+
+            // Break after processing id field for remove action
+            if ("remove".equals(action) && fieldName.equals("id")) {
+                break;
+            }
         }
 
         return args;
+    }
+
+    private String getMainActionOption(Element fieldElement, String actionName, String optionName, String defaultValue) {
+        return getElementOption(fieldElement, ACTIONS_TAG, actionName, optionName, defaultValue);
     }
 
     private JSONArray extractSupportedActions(Element fieldElement) {
@@ -473,6 +499,42 @@ public class CommandBuilder {
         }
         
         return supportsArray;
+    }
+
+    private String getActionOption(Element fieldElement, String actionName, String optionName, String defaultValue) {
+        return getElementOption(fieldElement, USEDBY_TAG, actionName, optionName, defaultValue);
+    }
+
+    private String getElementOption(Element fieldElement, String rootTag, String actionName, String optionName, String defaultValue) {
+        NodeList usedbyNodeList = fieldElement.getElementsByTagName(rootTag);
+        if (usedbyNodeList.getLength() > 0) {
+            Element usedbyElement = (Element) usedbyNodeList.item(0);
+            NodeList actionNodeList = usedbyElement.getElementsByTagName(ACTION_TAG);
+            
+            for (int i = 0; i < actionNodeList.getLength(); i++) {
+                Element actionElement = (Element) actionNodeList.item(i);
+                String name = getAttribute(actionElement, "name", "");
+                
+                if (name.equals(actionName)) {
+                    // Check if action has the option
+                    String actionOption = getAttribute(actionElement, optionName, null);
+                    if (actionOption != null) {
+                        return actionOption;
+                    }
+                    
+                    // Fall back to field element option
+                    String fieldOption = getAttribute(fieldElement, optionName, null);
+                    if (fieldOption != null) {
+                        return fieldOption;
+                    }
+                    
+                    // Return default if neither action nor field has the option
+                    return defaultValue;
+                }
+            }
+        }
+        
+        return defaultValue;
     }
 
     /**
@@ -529,33 +591,15 @@ public class CommandBuilder {
     }
 
     /**
-     * Save the generated JSON to a file with default path and overwrite if exists
-     */
-    public void saveToFile() {
-        String defaultPath = Paths.get(appDataFolder, "commands.json").toString();
-        saveToFile(defaultPath);
-    }
-
-    /**
-     * Save the generated JSON to a file
-     */
-    public void saveToFile(String outputFilePath) {
-        try {
-            if (commandsJson != null) {
-                String jsonString = commandsJson.toString(2);
-                Files.write(Paths.get(outputFilePath), jsonString.getBytes(), 
-                    StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to save commands to file: " + outputFilePath, e);
-        }
-    }
-
-    /**
      * Get the JSON as a string
      */
     @Override
     public String toString() {
-        return commandsJson != null ? commandsJson.toString(2) : "No commands generated";
+        return toString(0);
+    }
+
+    public String toString(int... indentation) {
+        int indent = indentation.length > 0 ? indentation[0] : 0;
+        return commandsJson != null ? commandsJson.toString(indent) : "No commands generated";
     }
 }
